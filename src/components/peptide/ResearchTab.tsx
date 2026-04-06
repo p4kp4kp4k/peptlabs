@@ -1,19 +1,29 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Beaker } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 
-interface Reference {
-  titulo: string;
-  fonte: string;
-  ano: number;
-}
+interface Reference { titulo: string; fonte: string; ano: number; }
 
 interface ResearchTabProps {
   mechanism?: string | null;
   mechanism_points?: string[] | null;
   evidence_level?: string | null;
   scientific_references?: Json | null;
+}
+
+function SectionCard({ children }: { children: React.ReactNode }) {
+  return <div className="rounded-xl border border-border/25 bg-card/80 p-5">{children}</div>;
+}
+
+function SectionTitle({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
+  return (
+    <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2.5">
+      <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-400/10 text-amber-400">
+        <Icon className="h-3.5 w-3.5" />
+      </div>
+      {children}
+    </h3>
+  );
 }
 
 export default function ResearchTab({ mechanism, mechanism_points, evidence_level, scientific_references }: ResearchTabProps) {
@@ -23,66 +33,52 @@ export default function ResearchTab({ mechanism, mechanism_points, evidence_leve
     <div className="space-y-4">
       {/* Mecanismo de Ação */}
       {(mechanism || (mechanism_points && mechanism_points.length > 0)) && (
-        <Card className="border-border/30 bg-card/90">
-          <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              <Beaker className="h-4 w-4 text-amber-400" />
-              Mecanismo de Ação
-            </h3>
-            {mechanism && (
-              <p className="text-xs text-muted-foreground leading-relaxed mb-4">{mechanism}</p>
-            )}
-            {mechanism_points && mechanism_points.length > 0 && (
-              <div className="space-y-3">
-                {mechanism_points.map((point, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-[10px] font-bold">
-                      {i + 1}
-                    </span>
-                    <span className="text-xs text-muted-foreground leading-relaxed">{point}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <SectionCard>
+          <SectionTitle icon={Beaker}>Mecanismo de Ação</SectionTitle>
+          {mechanism && (
+            <p className="text-xs text-muted-foreground leading-[1.8] mb-4">{mechanism}</p>
+          )}
+          {mechanism_points && mechanism_points.length > 0 && (
+            <div className="space-y-2.5">
+              {mechanism_points.map((point, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/40 border border-border/15">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-[10px] font-bold mt-0.5">
+                    {i + 1}
+                  </span>
+                  <span className="text-xs text-muted-foreground leading-relaxed">{point}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
       )}
 
       {/* Referências Científicas */}
       {refs && refs.length > 0 && (
-        <Card className="border-border/30 bg-card/90">
-          <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              <BookOpen className="h-4 w-4 text-amber-400" />
-              Referências Científicas
-            </h3>
-            <div className="space-y-3">
-              {refs.map((ref, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/40">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-[10px] font-bold">
-                    {i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-foreground font-semibold leading-relaxed">{ref.titulo}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[11px] text-muted-foreground">{ref.fonte}</span>
-                      <span className="text-[10px] text-muted-foreground">•</span>
-                      <Badge variant="outline" className="text-[10px] border-border/50">{ref.ano}</Badge>
-                    </div>
-                  </div>
+        <SectionCard>
+          <SectionTitle icon={BookOpen}>Referências Científicas</SectionTitle>
+          <div className="space-y-2.5">
+            {refs.map((ref, i) => (
+              <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/40 border border-border/15">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-[10px] font-bold mt-0.5">
+                  {i + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-foreground font-semibold leading-relaxed mb-1">{ref.titulo}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {ref.fonte} · <span className="text-muted-foreground/70">{ref.ano}</span>
+                  </p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
       )}
 
       {!mechanism && !mechanism_points?.length && !refs?.length && (
-        <Card className="border-border/30 bg-card/90">
-          <CardContent className="p-5">
-            <p className="text-xs text-muted-foreground italic">Informações de pesquisa não disponíveis para este peptídeo.</p>
-          </CardContent>
-        </Card>
+        <SectionCard>
+          <p className="text-xs text-muted-foreground italic">Informações de pesquisa não disponíveis para este peptídeo.</p>
+        </SectionCard>
       )}
     </div>
   );
