@@ -18,25 +18,27 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Navigate to="/" replace />} />
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Navigate to="/" replace />} />
 
-          <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
-          <Route path="/library" element={<AppLayout><Library /></AppLayout>} />
-          <Route path="/finder" element={<AppLayout><Finder /></AppLayout>} />
-          <Route path="/learn" element={<AppLayout><Learn /></AppLayout>} />
-          <Route path="/calculator" element={<AppLayout><Calculator /></AppLayout>} />
-          <Route path="/admin" element={<AppLayout><Admin /></AppLayout>} />
+            <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+            <Route path="/library" element={<AppLayout><Library /></AppLayout>} />
+            <Route path="/finder" element={<AppLayout><Finder /></AppLayout>} />
+            <Route path="/learn" element={<AppLayout><Learn /></AppLayout>} />
+            <Route path="/calculator" element={<AppLayout><Calculator /></AppLayout>} />
+            <Route path="/admin" element={<AppLayout><Admin /></AppLayout>} />
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
