@@ -58,7 +58,7 @@ export default function PeptideDetail() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="p-3 sm:p-4 space-y-3 max-w-5xl mx-auto">
       {/* Hero Banner */}
       <PeptideHero
         name={peptide.name}
@@ -70,11 +70,11 @@ export default function PeptideDetail() {
       />
 
       {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 items-start">
         {/* Main content */}
         <div>
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="bg-card/80 border border-border/25 w-full justify-start gap-1 h-auto flex-wrap p-1 rounded-xl">
+            <TabsList className="bg-card/80 border border-border/25 w-full justify-start gap-0.5 h-auto flex-wrap p-0.5 rounded-lg">
               {[
                 { value: "overview", icon: Zap, label: "Visão Geral" },
                 { value: "protocols", icon: Syringe, label: "Protocolos" },
@@ -84,14 +84,14 @@ export default function PeptideDetail() {
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="text-xs gap-1.5 font-semibold rounded-lg px-3 py-2 data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-sm transition-all"
+                  className="text-[11px] gap-1 font-semibold rounded-md px-2.5 py-1.5 data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-sm transition-all"
                 >
-                  <tab.icon className="h-3 w-3" /> {tab.label}
+                  <tab.icon className="h-2.5 w-2.5" /> {tab.label}
                 </TabsTrigger>
               ))}
             </TabsList>
 
-            <TabsContent value="overview" className="mt-4">
+            <TabsContent value="overview" className="mt-3">
               <OverviewTab
                 name={peptide.name}
                 mechanism={peptide.mechanism}
@@ -102,7 +102,7 @@ export default function PeptideDetail() {
               />
             </TabsContent>
 
-            <TabsContent value="protocols" className="mt-4">
+            <TabsContent value="protocols" className="mt-3">
               <ProtocolsTab
                 dosage_info={peptide.dosage_info}
                 dosage_table={peptide.dosage_table}
@@ -113,7 +113,7 @@ export default function PeptideDetail() {
               />
             </TabsContent>
 
-            <TabsContent value="research" className="mt-4">
+            <TabsContent value="research" className="mt-3">
               <ResearchTab
                 mechanism={peptide.mechanism}
                 mechanism_points={peptide.mechanism_points}
@@ -122,7 +122,7 @@ export default function PeptideDetail() {
               />
             </TabsContent>
 
-            <TabsContent value="synergy" className="mt-4">
+            <TabsContent value="synergy" className="mt-3">
               <SynergyTab
                 interactions={peptide.interactions}
                 stacks={peptide.stacks}

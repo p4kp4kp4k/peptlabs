@@ -12,13 +12,13 @@ interface SidebarProps {
 
 export default function PeptideSidebar({ classification, evidence_level, half_life, reconstitution, alternative_names, category }: SidebarProps) {
   return (
-    <div className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm p-5 space-y-5">
+    <div className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm p-3.5 space-y-3.5 text-[11px]">
       {/* FATOS RÁPIDOS */}
       <div>
-        <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest mb-4 pb-2 border-b border-border/30">
+        <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest mb-2.5 pb-1.5 border-b border-border/30">
           Fatos Rápidos
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-2.5">
           {[
             { icon: Tag, label: "Classificação", value: classification, highlight: false },
             { icon: Activity, label: "Nível de Evidência", value: evidence_level, highlight: true },
