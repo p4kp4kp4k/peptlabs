@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FlaskConical, LayoutDashboard, Syringe, Search, ArrowLeftRight,
   BookOpen, Calculator, Layers, Triangle, MapPin, CalendarDays,
-  User, HelpCircle, Moon, Menu, X
+  User, HelpCircle, Moon, Menu, X, LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
-  { label: "Painel", icon: LayoutDashboard, path: "/" },
+  { label: "Painel", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Peptídeos Individuais", icon: Syringe, path: "/library" },
   { label: "Encontre seu Peptídeo", icon: Search, path: "/finder" },
   { label: "Comparar Peptídeos", icon: ArrowLeftRight, path: "#" },
@@ -22,15 +24,16 @@ const navItems = [
   { label: "Cronograma", icon: CalendarDays, path: "#" },
 ];
 
-const bottomItems = [
-  { label: "Minha Conta", icon: User, path: "#" },
-  { label: "Suporte", icon: HelpCircle, path: "#" },
-  { label: "Modo Escuro", icon: Moon, path: "#" },
-];
-
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { profile, signOut, user } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -59,17 +62,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
-        <div className="border-t border-border/40 px-2 py-3">
-          {bottomItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.path}
-              className="mb-0.5 flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground"
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </a>
-          ))}
+        <div className="border-t border-border/40 px-2 py-3 space-y-0.5">
+          <div className="flex items-center gap-2.5 rounded-lg px-3 py-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+              {(profile?.display_name || user?.email || "U")[0].toUpperCase()}
+            </div>
+            <span className="text-xs text-foreground truncate flex-1">{profile?.display_name || user?.email?.split("@")[0]}</span>
+          </div>
+          <button
+            onClick={handleSignOut}
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            Sair
+          </button>
         </div>
       </aside>
 
@@ -105,13 +111,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               ))}
             </nav>
+            <div className="absolute bottom-0 left-0 right-0 border-t border-border/40 px-2 py-3">
+              <button
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:bg-secondary"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                Sair
+              </button>
+            </div>
           </aside>
         </div>
       )}
 
       {/* Main content */}
       <div className="flex flex-1 flex-col">
-        {/* Top bar */}
         <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 px-4 backdrop-blur-xl">
           <button className="md:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
@@ -128,7 +142,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="ml-auto" />
         </header>
 
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
