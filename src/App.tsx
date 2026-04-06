@@ -12,6 +12,7 @@ import Learn from "./pages/Learn";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Calculator from "./pages/Calculator";
+import PeptideDetail from "./pages/PeptideDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/learn" element={<AppLayout><Learn /></AppLayout>} />
             <Route path="/calculator" element={<AppLayout><Calculator /></AppLayout>} />
             <Route path="/admin" element={<AppLayout><Admin /></AppLayout>} />
+            <Route path="/peptide/:slug" element={<AppLayout><PeptideDetail /></AppLayout>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

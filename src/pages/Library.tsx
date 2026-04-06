@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Lock, Star, Sparkles, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ interface DBPeptide {
 }
 
 export default function Library() {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -139,6 +141,7 @@ export default function Library() {
           {filtered.map((p) => (
             <div
               key={p.id}
+              onClick={() => navigate(`/peptide/${p.slug}`)}
               className="group cursor-pointer overflow-hidden rounded-xl border border-border/40 bg-card transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
             >
               <div className={`relative h-28 bg-gradient-to-br ${categoryGradients[p.category] || "from-gray-500 to-gray-700"} opacity-80 transition-opacity group-hover:opacity-100`}>
