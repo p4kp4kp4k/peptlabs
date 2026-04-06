@@ -12,14 +12,14 @@ interface SynergyTabProps {
 }
 
 function SectionCard({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-xl border border-border/25 bg-card/80 p-5">{children}</div>;
+  return <div className="rounded-xl border border-border/25 bg-card/80 p-3.5">{children}</div>;
 }
 
 function SectionTitle({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
   return (
-    <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2.5">
-      <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-400/10 text-amber-400">
-        <Icon className="h-3.5 w-3.5" />
+    <h3 className="text-xs font-bold text-foreground mb-2.5 flex items-center gap-2">
+      <div className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-400/10 text-amber-400">
+        <Icon className="h-3 w-3" />
       </div>
       {children}
     </h3>
@@ -58,7 +58,7 @@ export default function SynergyTab({ interactions, stacks }: SynergyTabProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Interações */}
       {allInteractions.length > 0 && (
         <SectionCard>
