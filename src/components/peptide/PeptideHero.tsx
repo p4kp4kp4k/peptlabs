@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
-import { getCategoryColor } from "./peptideUtils";
 
 interface PeptideHeroProps {
   name: string;
@@ -25,24 +24,41 @@ export default function PeptideHero({ name, category, classification, descriptio
       </button>
 
       {/* Hero Banner */}
-      <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(220,30%,12%)] to-[hsl(220,40%,8%)] p-6 sm:p-8 border border-border/30">
-        {/* Decorative bg */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSA2MCAwIEwgMCAwIDAgNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50" />
-        
-        <div className="relative z-10">
-          {/* Category badges */}
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <Badge className="bg-primary/90 text-primary-foreground text-[10px] font-semibold">{category}</Badge>
+      <div className="relative rounded-2xl overflow-hidden border border-border/20">
+        {/* Background layers */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(215,35%,11%)] to-[hsl(220,40%,7%)]" />
+        <div className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage: `radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.15) 0%, transparent 50%),
+                              radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.08) 0%, transparent 40%)`,
+          }}
+        />
+        <div className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='g' width='60' height='60' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 60 0 L 0 0 0 60' fill='none' stroke='rgba(255,255,255,0.04)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3C/svg%3E")`,
+          }}
+        />
+
+        <div className="relative z-10 p-6 sm:p-8">
+          {/* Badges row */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <Badge className="bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-0.5 rounded-md">
+              {category}
+            </Badge>
             {classification && (
-              <Badge variant="outline" className="text-[10px] border-border/50 text-muted-foreground">{classification}</Badge>
+              <Badge variant="outline" className="text-[10px] border-white/10 text-white/60 bg-white/5 backdrop-blur-sm">
+                {classification}
+              </Badge>
             )}
             {evidence_level && (
-              <Badge variant="outline" className="text-[10px] border-border/50 text-muted-foreground">{evidence_level}</Badge>
+              <Badge variant="outline" className="text-[10px] border-white/10 text-white/60 bg-white/5 backdrop-blur-sm">
+                {evidence_level}
+              </Badge>
             )}
           </div>
 
           {/* Name */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 tracking-tight">
             {name}
           </h1>
 
@@ -53,8 +69,8 @@ export default function PeptideHero({ name, category, classification, descriptio
 
           {/* Alt names */}
           {alternative_names && alternative_names.length > 0 && (
-            <p className="text-[11px] text-muted-foreground">
-              Também conhecido como: {alternative_names.join(', ')}
+            <p className="text-[11px] text-muted-foreground/70">
+              Também conhecido como: <span className="text-muted-foreground">{alternative_names.join(', ')}</span>
             </p>
           )}
         </div>

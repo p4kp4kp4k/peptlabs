@@ -33,10 +33,14 @@ export default function PeptideDetail() {
     return (
       <div className="p-4 sm:p-6 space-y-4 max-w-5xl mx-auto">
         <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-48 w-full rounded-xl" />
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-48 w-full rounded-2xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6">
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full rounded-xl" />
+            <Skeleton className="h-48 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+          </div>
+          <Skeleton className="h-80 w-full rounded-xl" />
         </div>
       </div>
     );
@@ -65,24 +69,26 @@ export default function PeptideDetail() {
         alternative_names={peptide.alternative_names}
       />
 
-      {/* Two-column layout: Main + Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6">
-        {/* Main content with tabs */}
+      {/* Two-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6 items-start">
+        {/* Main content */}
         <div>
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="bg-card border border-border/30 w-full justify-start gap-0.5 h-auto flex-wrap p-1">
-              <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-foreground data-[state=active]:text-background font-medium">
-                <Zap className="h-3 w-3" /> Visão Geral
-              </TabsTrigger>
-              <TabsTrigger value="protocols" className="text-xs gap-1.5 data-[state=active]:bg-foreground data-[state=active]:text-background font-medium">
-                <Syringe className="h-3 w-3" /> Protocolos
-              </TabsTrigger>
-              <TabsTrigger value="research" className="text-xs gap-1.5 data-[state=active]:bg-foreground data-[state=active]:text-background font-medium">
-                <BookOpen className="h-3 w-3" /> Pesquisa
-              </TabsTrigger>
-              <TabsTrigger value="synergy" className="text-xs gap-1.5 data-[state=active]:bg-foreground data-[state=active]:text-background font-medium">
-                <GitMerge className="h-3 w-3" /> Sinergia
-              </TabsTrigger>
+            <TabsList className="bg-card/80 border border-border/25 w-full justify-start gap-1 h-auto flex-wrap p-1 rounded-xl">
+              {[
+                { value: "overview", icon: Zap, label: "Visão Geral" },
+                { value: "protocols", icon: Syringe, label: "Protocolos" },
+                { value: "research", icon: BookOpen, label: "Pesquisa" },
+                { value: "synergy", icon: GitMerge, label: "Sinergia" },
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="text-xs gap-1.5 font-semibold rounded-lg px-3 py-2 data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-sm transition-all"
+                >
+                  <tab.icon className="h-3 w-3" /> {tab.label}
+                </TabsTrigger>
+              ))}
             </TabsList>
 
             <TabsContent value="overview" className="mt-4">
