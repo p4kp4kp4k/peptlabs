@@ -1,55 +1,69 @@
 
+# Plano: Evolução PeptídeosHealth → SaaS Profissional
 
-# Plano: Biblioteca de Peptídeos - Landing Page
+## Fase 1 — Infraestrutura & Arquitetura
+- Ativar Lovable Cloud (Supabase) para banco, auth e storage
+- Reorganizar estrutura de pastas: `features/`, `services/`, `hooks/`, `types/`, `schemas/`
+- Criar tipos TypeScript centralizados (`types/peptide.ts`, `types/user.ts`, `types/protocol.ts`)
 
-## Resumo
-Criar uma página completa de biblioteca de peptídeos inspirada no PeptídeosHealth, com design próprio usando o tema escuro com acentos em teal/ciano. Inclui todos os 70 peptídeos extraídos do site, com sistema de categorias, busca, e cards visuais.
+## Fase 2 — Banco de Dados
+Tabelas:
+- `profiles` (id, user_id FK, display_name, avatar_url, created_at)
+- `user_roles` (id, user_id FK, role enum: admin/user)
+- `peptides` (id, name, slug, category, description, benefits, dosage_info, etc.)
+- `protocols` (id, user_id FK, name, description, peptides JSONB, status, created_at)
+- `protocol_history` (id, protocol_id FK, action, details, created_at)
+- `recommendations` (id, user_id FK, goals JSONB, recommended_peptides JSONB, created_at)
+- RLS em todas as tabelas
 
-## Conteúdo Extraído
-- 70 peptídeos com nome, categoria e descrição curta
-- 16 categorias: Anti-aging, Antioxidante, Biorregulador, Cardiovascular, Emagrecimento, Estética, GH/Secretagogos, Hormonal, Imunidade, Metabolismo, Neuroproteção, Nootrópicos, Performance, Recuperação, Sexual, Sono/Recuperação
-- Peptídeo do dia em destaque (Tirzepatide)
+## Fase 3 — Autenticação
+- Login/cadastro com email + senha
+- Reset de senha com página `/reset-password`
+- Proteção de rotas (público vs autenticado vs admin)
+- Hook `useAuth` centralizado
+- Componente `ProtectedRoute`
 
-## Estrutura da Página
+## Fase 4 — Dashboard do Usuário
+- Visão geral: protocolos ativos, peptídeos favoritos, recomendações
+- Cards com métricas (total protocolos, dias ativo, etc.)
+- Gráficos com Recharts (progresso, histórico)
+- Lista de atividade recente
 
-### 1. Design System (index.css)
-- Tema escuro: background `#0f1419`, cards `#1a2332`
-- Acento principal: teal/ciano `#00d4aa`
-- Texto: branco e cinza claro
-- Bordas sutis com gradientes
+## Fase 5 — Painel Admin
+- Rota `/admin` protegida por role
+- Gestão de usuários (listar, ver detalhes)
+- Métricas do sistema (total usuários, protocolos criados, etc.)
+- Gestão de peptídeos (CRUD via banco)
 
-### 2. Componentes
+## Fase 6 — Engine Inteligente (Recomendador)
+- Questionário: objetivos de saúde (emagrecimento, longevidade, performance, etc.)
+- Edge function com Lovable AI para processar respostas e recomendar peptídeos
+- Exibição do plano personalizado com peptídeos sugeridos, doses e cronograma
+- Salvar recomendação no banco
 
-**Header/Navbar** - Logo "PeptídeosHealth", barra de busca, navegação lateral simplificada como menu horizontal
+## Fase 7 — Funcionalidades Clínicas
+- Calculadora de doses (peso do frasco, diluente, dose alvo)
+- Comparador de peptídeos side-by-side
+- Mapa de aplicação (locais de injeção)
+- Cronograma visual de protocolo
 
-**Hero - Peptídeo do Dia** - Card destacado com Tirzepatide, badge "Peptídeo do Dia", botão CTA "Explorar Agora"
+## Fase 8 — Páginas de Conteúdo
+- Manter e melhorar: Biblioteca, Finder, Learn
+- Adicionar detalhes expandidos por peptídeo (`/peptide/:slug`)
 
-**Filtros por Categoria** - Chips/badges clicáveis para filtrar por categoria, com "Todos" selecionado por padrão
+## Ordem de Execução
+1. Ativar Cloud + criar banco (Fases 1-2)
+2. Auth + proteção de rotas (Fase 3)
+3. Dashboard usuário (Fase 4)
+4. Admin panel (Fase 5)
+5. Engine inteligente (Fase 6)
+6. Ferramentas clínicas (Fase 7)
+7. Melhorias de conteúdo (Fase 8)
 
-**Barra de Busca** - Input para buscar por nome, categoria ou variante
-
-**Grid de Peptídeos** - Cards responsivos (5 colunas desktop, 2 mobile) com:
-  - Gradient placeholder colorido por categoria (sem imagens externas)
-  - Badge de categoria
-  - Badge PRO/Grátis
-  - Nome e descrição curta
-
-**CTA Bottom** - Banner para upgrade com "Desbloqueie todos os peptídeos"
-
-### 3. Funcionalidades
-- Filtro por categoria (client-side)
-- Busca por nome (client-side)
-- Estado ativo nos filtros
-- Responsive design
-
-### 4. Arquivos
-- `src/pages/Index.tsx` - Página principal com toda a lógica
-- `src/index.css` - Tema escuro atualizado
-- `src/App.css` - Limpar estilos default
-
-## Detalhes Técnicos
-- Dados dos peptídeos como array estático em arquivo separado `src/data/peptides.ts`
-- useState para filtro ativo e termo de busca
-- Cores de gradiente por categoria para visual rico sem imagens externas
-- Lucide icons para ícones (Search, Lock, Sparkles, etc.)
-
+## Stack
+- React 18 + TypeScript + Tailwind + shadcn/ui
+- Lovable Cloud (Supabase) para banco, auth, storage, edge functions
+- Lovable AI para engine de recomendação
+- Recharts para gráficos
+- Zod para validação
+- Framer Motion 11 para animações
