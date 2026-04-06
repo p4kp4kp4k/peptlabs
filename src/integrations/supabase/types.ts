@@ -16,42 +16,60 @@ export type Database = {
     Tables: {
       peptides: {
         Row: {
+          alternative_names: string[] | null
           benefits: string[] | null
           category: string
+          classification: string | null
           created_at: string
           description: string | null
           dosage_info: string | null
+          evidence_level: string | null
+          half_life: string | null
           id: string
           mechanism: string | null
           name: string
+          reconstitution: string | null
           side_effects: string | null
           slug: string
+          timeline: Json | null
           updated_at: string
         }
         Insert: {
+          alternative_names?: string[] | null
           benefits?: string[] | null
           category: string
+          classification?: string | null
           created_at?: string
           description?: string | null
           dosage_info?: string | null
+          evidence_level?: string | null
+          half_life?: string | null
           id?: string
           mechanism?: string | null
           name: string
+          reconstitution?: string | null
           side_effects?: string | null
           slug: string
+          timeline?: Json | null
           updated_at?: string
         }
         Update: {
+          alternative_names?: string[] | null
           benefits?: string[] | null
           category?: string
+          classification?: string | null
           created_at?: string
           description?: string | null
           dosage_info?: string | null
+          evidence_level?: string | null
+          half_life?: string | null
           id?: string
           mechanism?: string | null
           name?: string
+          reconstitution?: string | null
           side_effects?: string | null
           slug?: string
+          timeline?: Json | null
           updated_at?: string
         }
         Relationships: []
