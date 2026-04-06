@@ -1,13 +1,39 @@
 import { useState, useMemo } from "react";
-import { Search, Lock, Star, Sparkles } from "lucide-react";
+import { Search, Lock, Star, Sparkles, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { peptides, categories, categoryGradients } from "@/data/peptides";
+import { categories, categoryGradients } from "@/data/peptides";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+
+interface DBPeptide {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+  description: string | null;
+  benefits: string[] | null;
+  dosage_info: string | null;
+  mechanism: string | null;
+  side_effects: string | null;
+}
 
 export default function Library() {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
+
+  const { data: peptides = [], isLoading } = useQuery({
+    queryKey: ["peptides"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("peptides")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data as DBPeptide[];
+    },
+  });
 
   const filtered = useMemo(() => {
     return peptides.filter((p) => {
@@ -17,11 +43,13 @@ export default function Library() {
         p.category.toLowerCase().includes(searchTerm.toLowerCase());
       return matchCat && matchSearch;
     });
-  }, [activeCategory, searchTerm]);
+  }, [activeCategory, searchTerm, peptides]);
+
+  const freeCount = 2;
+  const totalCount = peptides.length;
 
   return (
     <div className="p-4 sm:p-6">
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           Peptídeos Individuais
@@ -31,7 +59,7 @@ export default function Library() {
         </p>
       </div>
 
-      {/* Featured - Peptídeo do Dia */}
+      {/* Featured */}
       <div className="mb-6 rounded-xl border border-border/40 bg-card p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="h-20 w-20 shrink-0 rounded-lg bg-gradient-to-br from-orange-400 to-amber-600" />
@@ -61,10 +89,10 @@ export default function Library() {
         <div className="flex items-center gap-2">
           <Star className="h-4 w-4 text-primary" />
           <span className="text-xs text-muted-foreground">
-            <span className="font-semibold text-foreground">2 de 70</span> peptídeos acessíveis
+            <span className="font-semibold text-foreground">{freeCount} de {totalCount}</span> peptídeos acessíveis
           </span>
           <div className="h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
-            <div className="h-full w-[3%] rounded-full bg-primary" />
+            <div className="h-full rounded-full bg-primary" style={{ width: `${(freeCount / Math.max(totalCount, 1)) * 100}%` }} />
           </div>
         </div>
         <Badge className="border-0 bg-primary/15 text-primary text-[10px]">GRÁTIS</Badge>
@@ -98,48 +126,50 @@ export default function Library() {
         ))}
       </div>
 
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      )}
+
       {/* Peptide Grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {filtered.map((p) => (
-          <div
-            key={p.id}
-            className="group cursor-pointer overflow-hidden rounded-xl border border-border/40 bg-card transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
-          >
-            <div className={`relative h-28 bg-gradient-to-br ${categoryGradients[p.category] || "from-gray-500 to-gray-700"} opacity-80 transition-opacity group-hover:opacity-100`}>
-              <span className="absolute left-2 top-2 rounded-md bg-background/70 px-1.5 py-0.5 text-[9px] font-medium text-foreground backdrop-blur-sm">
-                {p.category}
-              </span>
-              {p.isNew && (
-                <Badge className="absolute left-2 top-7 border-0 bg-primary text-primary-foreground text-[8px] px-1 py-0">Novo</Badge>
-              )}
-              {p.isPro ? (
-                <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-background/80 px-1.5 py-0.5 text-[9px] font-semibold text-primary backdrop-blur-sm">
-                  <Lock className="h-2.5 w-2.5" /> PRO
+      {!isLoading && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {filtered.map((p) => (
+            <div
+              key={p.id}
+              className="group cursor-pointer overflow-hidden rounded-xl border border-border/40 bg-card transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
+            >
+              <div className={`relative h-28 bg-gradient-to-br ${categoryGradients[p.category] || "from-gray-500 to-gray-700"} opacity-80 transition-opacity group-hover:opacity-100`}>
+                <span className="absolute left-2 top-2 rounded-md bg-background/70 px-1.5 py-0.5 text-[9px] font-medium text-foreground backdrop-blur-sm">
+                  {p.category}
                 </span>
-              ) : (
                 <span className="absolute right-2 top-2 rounded-full bg-primary/90 px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground">
                   GRÁTIS
                 </span>
-              )}
-              {p.isPro && (
-                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-foreground/70 opacity-0 transition-opacity group-hover:opacity-100">
-                  Toque para preview
-                </span>
-              )}
+              </div>
+              <div className="p-3">
+                <h3 className="text-xs font-semibold leading-tight text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  {p.name}
+                </h3>
+                <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-muted-foreground">{p.description}</p>
+              </div>
             </div>
-            <div className="p-3">
-              <h3 className="text-xs font-semibold leading-tight text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                {p.name}
-              </h3>
-              <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-muted-foreground">{p.description}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && filtered.length === 0 && (
+        <div className="py-12 text-center text-sm text-muted-foreground">
+          Nenhum peptídeo encontrado para essa busca.
+        </div>
+      )}
 
       {/* Bottom CTA */}
       <div className="mt-8 rounded-xl border border-primary/20 bg-card p-6 text-center">
-        <p className="text-sm font-semibold text-foreground">Você está vendo apenas 2 de 70 peptídeos</p>
+        <p className="text-sm font-semibold text-foreground">Você está vendo apenas {freeCount} de {totalCount} peptídeos</p>
         <p className="mt-1 text-xs text-muted-foreground">Desbloqueie dosagens, protocolos e referências científicas completas</p>
         <Button className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
           Upgrade
