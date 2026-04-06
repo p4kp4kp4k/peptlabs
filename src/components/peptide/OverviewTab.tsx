@@ -12,7 +12,7 @@ interface OverviewTabProps {
 
 function SectionCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-border/25 bg-card/80 p-5 ${className}`}>
+    <div className={`rounded-xl border border-border/25 bg-card/80 p-3.5 ${className}`}>
       {children}
     </div>
   );
@@ -20,9 +20,9 @@ function SectionCard({ children, className = "" }: { children: React.ReactNode; 
 
 function SectionTitle({ icon: Icon, children, iconColor = "text-amber-400" }: { icon: React.ElementType; children: React.ReactNode; iconColor?: string }) {
   return (
-    <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2.5">
-      <div className={`flex h-6 w-6 items-center justify-center rounded-lg bg-amber-400/10 ${iconColor}`}>
-        <Icon className="h-3.5 w-3.5" />
+    <h3 className="text-xs font-bold text-foreground mb-2.5 flex items-center gap-2">
+      <div className={`flex h-5 w-5 items-center justify-center rounded-md bg-amber-400/10 ${iconColor}`}>
+        <Icon className="h-3 w-3" />
       </div>
       {children}
     </h3>
@@ -33,12 +33,12 @@ export default function OverviewTab({ name, mechanism, mechanism_points, benefit
   const timelineData = timeline as unknown as Array<{ period: string; description: string }> | null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* O que é */}
       {mechanism && (
         <SectionCard>
           <SectionTitle icon={Zap}>O que é {name}</SectionTitle>
-          <p className="text-xs text-muted-foreground leading-[1.8]">{mechanism}</p>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">{mechanism}</p>
         </SectionCard>
       )}
 
@@ -46,13 +46,13 @@ export default function OverviewTab({ name, mechanism, mechanism_points, benefit
       {benefits && benefits.length > 0 && (
         <SectionCard>
           <SectionTitle icon={CheckCircle2}>Benefícios Comprovados</SectionTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
             {benefits.map((b: string, i: number) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50 border border-border/15">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-[10px] font-bold mt-0.5">
+              <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-secondary/50 border border-border/15">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-[9px] font-bold mt-0.5">
                   {i + 1}
                 </span>
-                <span className="text-xs text-foreground/90 leading-relaxed">{b}</span>
+                <span className="text-[11px] text-foreground/90 leading-relaxed">{b}</span>
               </div>
             ))}
           </div>

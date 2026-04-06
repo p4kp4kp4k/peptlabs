@@ -39,37 +39,30 @@ export default function PeptideHero({ name, category, classification, descriptio
           }}
         />
 
-        <div className="relative z-10 p-6 sm:p-8">
-          {/* Badges row */}
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <Badge className="bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-0.5 rounded-md">
+      <div className="relative z-10 p-4 sm:p-5">
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            <Badge className="bg-primary text-primary-foreground text-[9px] font-bold px-2 py-0.5 rounded-md">
               {category}
             </Badge>
             {classification && (
-              <Badge variant="outline" className="text-[10px] border-white/10 text-white/60 bg-white/5 backdrop-blur-sm">
+              <Badge variant="outline" className="text-[9px] border-white/10 text-white/60 bg-white/5 backdrop-blur-sm">
                 {classification}
               </Badge>
             )}
             {evidence_level && (
-              <Badge variant="outline" className="text-[10px] border-white/10 text-white/60 bg-white/5 backdrop-blur-sm">
+              <Badge variant="outline" className="text-[9px] border-white/10 text-white/60 bg-white/5 backdrop-blur-sm">
                 {evidence_level}
               </Badge>
             )}
           </div>
-
-          {/* Name */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold text-foreground mb-1 tracking-tight">
             {name}
           </h1>
-
-          {/* Description */}
           {description && (
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl mb-3">{description}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl mb-1.5">{description}</p>
           )}
-
-          {/* Alt names */}
           {alternative_names && alternative_names.length > 0 && (
-            <p className="text-[11px] text-muted-foreground/70">
+            <p className="text-[10px] text-muted-foreground/70">
               Também conhecido como: <span className="text-muted-foreground">{alternative_names.join(', ')}</span>
             </p>
           )}
