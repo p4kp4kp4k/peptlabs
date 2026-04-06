@@ -90,9 +90,6 @@ const Index = () => {
                 {item}
               </a>
             ))}
-            <Button size="sm" className="ml-2 bg-primary text-primary-foreground hover:bg-primary/90">
-              Entrar / Criar Conta
-            </Button>
           </nav>
 
           <button className="md:hidden" onClick={() => setMobileMenu(!mobileMenu)}>
@@ -107,7 +104,7 @@ const Index = () => {
                 {item}
               </a>
             ))}
-            <Button className="mt-3 w-full bg-primary text-primary-foreground">Entrar / Criar Conta</Button>
+            
           </div>
         )}
       </header>
