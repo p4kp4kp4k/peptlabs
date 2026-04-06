@@ -32,15 +32,13 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* Authenticated */}
-            <Route path="/dashboard" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
-            <Route path="/library" element={<ProtectedRoute><AppLayout><Library /></AppLayout></ProtectedRoute>} />
-            <Route path="/finder" element={<ProtectedRoute><AppLayout><Finder /></AppLayout></ProtectedRoute>} />
-            <Route path="/learn" element={<ProtectedRoute><AppLayout><Learn /></AppLayout></ProtectedRoute>} />
-            <Route path="/calculator" element={<ProtectedRoute><AppLayout><Calculator /></AppLayout></ProtectedRoute>} />
-
-            {/* Admin */}
-            <Route path="/admin" element={<ProtectedRoute requireAdmin><AppLayout><Admin /></AppLayout></ProtectedRoute>} />
+            {/* App pages - no auth required for now */}
+            <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+            <Route path="/library" element={<AppLayout><Library /></AppLayout>} />
+            <Route path="/finder" element={<AppLayout><Finder /></AppLayout>} />
+            <Route path="/learn" element={<AppLayout><Learn /></AppLayout>} />
+            <Route path="/calculator" element={<AppLayout><Calculator /></AppLayout>} />
+            <Route path="/admin" element={<AppLayout><Admin /></AppLayout>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
