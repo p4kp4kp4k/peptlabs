@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Beaker } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 
-interface Reference { titulo: string; fonte: string; ano: number; }
+interface Reference { titulo: string; fonte: string; ano: number; pmid?: string; }
 
 interface ResearchTabProps {
   mechanism?: string | null;
@@ -64,9 +64,12 @@ export default function ResearchTab({ mechanism, mechanism_points, evidence_leve
                   {i + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-foreground font-semibold leading-relaxed mb-1">{ref.titulo}</p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[11px] text-foreground font-semibold leading-relaxed mb-0.5">{ref.titulo}</p>
+                  <p className="text-[10px] text-muted-foreground">
                     {ref.fonte} · <span className="text-muted-foreground/70">{ref.ano}</span>
+                    {ref.pmid && (
+                      <> · <a href={`https://pubmed.ncbi.nlm.nih.gov/${ref.pmid}/`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PubMed</a></>
+                    )}
                   </p>
                 </div>
               </div>
