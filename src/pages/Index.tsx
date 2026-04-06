@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Sparkles, ChevronRight, BookOpen, Calculator, Users, Zap, Shield,
   Star, Check, ArrowRight, Beaker, Brain, Dumbbell, Lock,
-  ChevronDown, Stethoscope, Activity, Gift
+  ChevronDown, Stethoscope, Activity, Gift, FlaskConical, LogIn
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -40,9 +42,39 @@ const faqs = [
 
 const Index = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleCTA = () => navigate(user ? "/dashboard" : "/auth");
 
   return (
     <div className="pb-8">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <FlaskConical className="h-5 w-5 text-primary" />
+            <span className="text-sm font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              Peptídeos<span className="text-primary">Health</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {user ? (
+              <Button size="sm" className="gap-1.5 text-xs" onClick={() => navigate("/dashboard")}>
+                Meu Painel <ArrowRight className="h-3 w-3" />
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/auth")}>Entrar</Button>
+                <Button size="sm" className="gap-1.5 text-xs" onClick={() => navigate("/auth")}>
+                  Criar Conta <ArrowRight className="h-3 w-3" />
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
       {/* Hero */}
       <section className="relative overflow-hidden pb-12 pt-12 sm:pb-16 sm:pt-16">
         <div className="absolute inset-0">
