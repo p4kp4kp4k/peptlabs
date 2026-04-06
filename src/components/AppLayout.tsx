@@ -17,7 +17,7 @@ const navItems = [
   { label: "Comparar Peptídeos", icon: ArrowLeftRight, path: "#" },
   { label: "Meus Protocolos", icon: Layers, path: "#" },
   { label: "Aprender", icon: BookOpen, path: "/learn" },
-  { label: "Calculadora", icon: Calculator, path: "#" },
+  { label: "Calculadora", icon: Calculator, path: "/calculator" },
   { label: "Biblioteca de Stacks", icon: Layers, path: "#" },
   { label: "Interações", icon: Triangle, path: "#" },
   { label: "Mapa de Aplicação", icon: MapPin, path: "#" },
