@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GitMerge, Layers, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import { GitMerge, Layers } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 
 interface Interaction {
@@ -28,44 +28,31 @@ interface SynergyTabProps {
 
 function StatusBadge({ status }: { status: string }) {
   const upper = status.toUpperCase();
-  if (upper === "SINÉRGICO" || upper === "SINERGICO" || upper === "COMPATÍVEL") {
-    return <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{status}</Badge>;
+  if (upper.includes("SINÉR") || upper.includes("SINERG") || upper.includes("COMPATÍV")) {
+    return <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-bold">{status}</Badge>;
   }
-  if (upper === "MONITORAR") {
-    return <Badge className="text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30">{status}</Badge>;
+  if (upper.includes("MONITOR")) {
+    return <Badge className="text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30 font-bold">{status}</Badge>;
   }
-  if (upper === "EVITAR") {
-    return <Badge className="text-[10px] bg-red-500/20 text-red-400 border-red-500/30">{status}</Badge>;
+  if (upper.includes("EVITAR")) {
+    return <Badge className="text-[10px] bg-red-500/20 text-red-400 border-red-500/30 font-bold">{status}</Badge>;
   }
-  return <Badge variant="outline" className="text-[10px]">{status}</Badge>;
-}
-
-function StatusIcon({ status }: { status: string }) {
-  const upper = status.toUpperCase();
-  if (upper === "SINÉRGICO" || upper === "SINERGICO" || upper === "COMPATÍVEL") {
-    return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />;
-  }
-  if (upper === "MONITORAR") {
-    return <AlertCircle className="h-3.5 w-3.5 text-amber-400 shrink-0" />;
-  }
-  if (upper === "EVITAR") {
-    return <XCircle className="h-3.5 w-3.5 text-red-400 shrink-0" />;
-  }
-  return null;
+  return <Badge variant="outline" className="text-[10px] font-bold">{status}</Badge>;
 }
 
 export default function SynergyTab({ interactions, stacks }: SynergyTabProps) {
   const interactionsData = interactions as unknown as InteractionsData | null;
   const stacksData = stacks as unknown as Stack[] | null;
 
-  const hasInteractions = interactionsData &&
-    ((interactionsData.peptideos && interactionsData.peptideos.length > 0) ||
-     (interactionsData.outras_substancias && interactionsData.outras_substancias.length > 0));
+  const allInteractions = [
+    ...(interactionsData?.peptideos || []),
+    ...(interactionsData?.outras_substancias || []),
+  ];
 
-  if (!hasInteractions && (!stacksData || stacksData.length === 0)) {
+  if (allInteractions.length === 0 && (!stacksData || stacksData.length === 0)) {
     return (
-      <Card className="border-border/40 bg-card/80">
-        <CardContent className="p-4">
+      <Card className="border-border/30 bg-card/90">
+        <CardContent className="p-5">
           <p className="text-xs text-muted-foreground italic">Informações de sinergia não disponíveis para este peptídeo.</p>
         </CardContent>
       </Card>
@@ -74,78 +61,59 @@ export default function SynergyTab({ interactions, stacks }: SynergyTabProps) {
 
   return (
     <div className="space-y-4">
-      {/* Peptide Interactions */}
-      {interactionsData?.peptideos && interactionsData.peptideos.length > 0 && (
-        <Card className="border-border/40 bg-card/80">
-          <CardContent className="p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              <GitMerge className="inline h-3.5 w-3.5 text-primary mr-1.5" />
+      {/* Interações - Table format like PDF */}
+      {allInteractions.length > 0 && (
+        <Card className="border-border/30 bg-card/90">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              <GitMerge className="h-4 w-4 text-amber-400" />
               Interações com Outros Peptídeos
             </h3>
-            <div className="space-y-3">
-              {interactionsData.peptideos.map((item, i) => (
-                <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg bg-secondary/30">
-                  <StatusIcon status={item.status} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-foreground">{item.nome}</span>
-                      <StatusBadge status={item.status} />
-                    </div>
-                    <p className="text-[11px] text-muted-foreground">{item.descricao}</p>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border/30">
+                    <th className="text-left py-2.5 pr-4 text-muted-foreground font-medium">Peptídeo</th>
+                    <th className="text-left py-2.5 pr-4 text-muted-foreground font-medium">Status</th>
+                    <th className="text-left py-2.5 text-muted-foreground font-medium">Descrição</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allInteractions.map((item, i) => (
+                    <tr key={i} className="border-b border-border/20 last:border-0 align-top">
+                      <td className="py-3 pr-4 text-foreground font-semibold whitespace-nowrap">{item.nome}</td>
+                      <td className="py-3 pr-4"><StatusBadge status={item.status} /></td>
+                      <td className="py-3 text-muted-foreground leading-relaxed">{item.descricao}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Other Substances */}
-      {interactionsData?.outras_substancias && interactionsData.outras_substancias.length > 0 && (
-        <Card className="border-border/40 bg-card/80">
-          <CardContent className="p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Interações com Outras Substâncias
-            </h3>
-            <div className="space-y-3">
-              {interactionsData.outras_substancias.map((item, i) => (
-                <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg bg-secondary/30">
-                  <StatusIcon status={item.status} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-foreground">{item.nome}</span>
-                      <StatusBadge status={item.status} />
-                    </div>
-                    <p className="text-[11px] text-muted-foreground">{item.descricao}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Stacks */}
+      {/* Stacks Recomendados */}
       {stacksData && stacksData.length > 0 && (
-        <Card className="border-border/40 bg-card/80">
-          <CardContent className="p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              <Layers className="inline h-3.5 w-3.5 text-primary mr-1.5" />
+        <Card className="border-border/30 bg-card/90">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              <Layers className="h-4 w-4 text-amber-400" />
               Stacks Recomendados
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {stacksData.map((stack, i) => (
-                <div key={i} className="p-3 rounded-lg bg-secondary/30 border border-border/30">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-semibold text-foreground">{stack.nome}</span>
-                    <Badge variant="outline" className="text-[10px]">{stack.objetivo}</Badge>
+                <div key={i} className="p-4 rounded-lg bg-secondary/40">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-foreground">{stack.nome}</span>
+                    <Badge className="text-[10px] bg-primary/20 text-primary border-primary/30">{stack.objetivo}</Badge>
                   </div>
-                  <p className="text-[11px] text-muted-foreground mb-2">{stack.descricao}</p>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1.5 mb-2">
                     {stack.peptideos.map((p) => (
-                      <Badge key={p} className="text-[10px] bg-primary/10 text-primary border-primary/30">{p}</Badge>
+                      <Badge key={p} className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{p}</Badge>
                     ))}
                   </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{stack.descricao}</p>
                 </div>
               ))}
             </div>
