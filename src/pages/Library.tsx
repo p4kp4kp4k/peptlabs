@@ -21,6 +21,7 @@ interface DBPeptide {
 }
 
 export default function Library() {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
 
