@@ -15,7 +15,7 @@ interface ResearchTabProps {
 }
 
 export default function ResearchTab({ evidence_level, scientific_references }: ResearchTabProps) {
-  const refs = scientific_references as Reference[] | null;
+  const refs = scientific_references as unknown as Reference[] | null;
 
   return (
     <div className="space-y-4">

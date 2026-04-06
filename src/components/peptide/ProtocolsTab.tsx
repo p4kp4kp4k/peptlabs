@@ -29,8 +29,8 @@ interface ProtocolsTabProps {
 export default function ProtocolsTab({
   dosage_info, dosage_table, protocol_phases, reconstitution, reconstitution_steps, half_life
 }: ProtocolsTabProps) {
-  const dosageRows = dosage_table as DosageRow[] | null;
-  const phases = protocol_phases as PhaseRow[] | null;
+  const dosageRows = dosage_table as unknown as DosageRow[] | null;
+  const phases = protocol_phases as unknown as PhaseRow[] | null;
 
   return (
     <div className="space-y-4">

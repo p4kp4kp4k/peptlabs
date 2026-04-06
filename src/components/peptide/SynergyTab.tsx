@@ -55,8 +55,8 @@ function StatusIcon({ status }: { status: string }) {
 }
 
 export default function SynergyTab({ interactions, stacks }: SynergyTabProps) {
-  const interactionsData = interactions as InteractionsData | null;
-  const stacksData = stacks as Stack[] | null;
+  const interactionsData = interactions as unknown as InteractionsData | null;
+  const stacksData = stacks as unknown as Stack[] | null;
 
   const hasInteractions = interactionsData &&
     ((interactionsData.peptideos && interactionsData.peptideos.length > 0) ||
