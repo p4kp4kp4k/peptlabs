@@ -23,14 +23,21 @@ export type Database = {
           created_at: string
           description: string | null
           dosage_info: string | null
+          dosage_table: Json | null
           evidence_level: string | null
           half_life: string | null
           id: string
+          interactions: Json | null
           mechanism: string | null
+          mechanism_points: string[] | null
           name: string
+          protocol_phases: Json | null
           reconstitution: string | null
+          reconstitution_steps: string[] | null
+          scientific_references: Json | null
           side_effects: string | null
           slug: string
+          stacks: Json | null
           timeline: Json | null
           updated_at: string
         }
@@ -42,14 +49,21 @@ export type Database = {
           created_at?: string
           description?: string | null
           dosage_info?: string | null
+          dosage_table?: Json | null
           evidence_level?: string | null
           half_life?: string | null
           id?: string
+          interactions?: Json | null
           mechanism?: string | null
+          mechanism_points?: string[] | null
           name: string
+          protocol_phases?: Json | null
           reconstitution?: string | null
+          reconstitution_steps?: string[] | null
+          scientific_references?: Json | null
           side_effects?: string | null
           slug: string
+          stacks?: Json | null
           timeline?: Json | null
           updated_at?: string
         }
@@ -61,14 +75,21 @@ export type Database = {
           created_at?: string
           description?: string | null
           dosage_info?: string | null
+          dosage_table?: Json | null
           evidence_level?: string | null
           half_life?: string | null
           id?: string
+          interactions?: Json | null
           mechanism?: string | null
+          mechanism_points?: string[] | null
           name?: string
+          protocol_phases?: Json | null
           reconstitution?: string | null
+          reconstitution_steps?: string[] | null
+          scientific_references?: Json | null
           side_effects?: string | null
           slug?: string
+          stacks?: Json | null
           timeline?: Json | null
           updated_at?: string
         }
