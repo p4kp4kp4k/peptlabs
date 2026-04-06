@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Sparkles, ChevronRight, BookOpen, Calculator, Users, Zap, Shield,
   Star, Check, ArrowRight, Beaker, Brain, Dumbbell, Lock,
-  ChevronDown, Stethoscope, Activity, Gift
+  ChevronDown, Stethoscope, Activity, Gift, FlaskConical, LogIn
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -40,9 +42,39 @@ const faqs = [
 
 const Index = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleCTA = () => navigate(user ? "/dashboard" : "/auth");
 
   return (
     <div className="pb-8">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <FlaskConical className="h-5 w-5 text-primary" />
+            <span className="text-sm font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              Peptídeos<span className="text-primary">Health</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {user ? (
+              <Button size="sm" className="gap-1.5 text-xs" onClick={() => navigate("/dashboard")}>
+                Meu Painel <ArrowRight className="h-3 w-3" />
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/auth")}>Entrar</Button>
+                <Button size="sm" className="gap-1.5 text-xs" onClick={() => navigate("/auth")}>
+                  Criar Conta <ArrowRight className="h-3 w-3" />
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
       {/* Hero */}
       <section className="relative overflow-hidden pb-12 pt-12 sm:pb-16 sm:pt-16">
         <div className="absolute inset-0">
@@ -64,7 +96,7 @@ const Index = () => {
             A plataforma definitiva com <strong className="text-foreground">protocolos baseados em evidências</strong>, calculadoras exatas e guias práticos para profissionais de saúde e atletas de alto rendimento.
           </motion.p>
           <motion.div variants={fadeUp} className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button size="lg" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">Começar Grátis <ArrowRight className="h-4 w-4" /></Button>
+            <Button size="lg" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCTA}>Começar Grátis <ArrowRight className="h-4 w-4" /></Button>
             <Button size="lg" variant="outline" className="gap-2 border-border text-foreground hover:border-primary/50">Ver Planos <ArrowRight className="h-4 w-4" /></Button>
           </motion.div>
         </motion.div>
@@ -110,7 +142,7 @@ const Index = () => {
                   <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />{i}</li>
                 ))}
               </ul>
-              <Button className="mt-4 gap-2 bg-primary text-primary-foreground hover:bg-primary/90" size="sm">Começar Grátis <ArrowRight className="h-3.5 w-3.5" /></Button>
+              <Button className="mt-4 gap-2 bg-primary text-primary-foreground hover:bg-primary/90" size="sm" onClick={handleCTA}>Começar Grátis <ArrowRight className="h-3.5 w-3.5" /></Button>
             </div>
             <div className="rounded-xl border border-border/40 bg-card p-6">
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"><Activity className="h-5 w-5 text-primary" /></div>
@@ -120,7 +152,7 @@ const Index = () => {
                   <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />{i}</li>
                 ))}
               </ul>
-              <Button className="mt-4 gap-2 bg-primary text-primary-foreground hover:bg-primary/90" size="sm">Começar Grátis <ArrowRight className="h-3.5 w-3.5" /></Button>
+              <Button className="mt-4 gap-2 bg-primary text-primary-foreground hover:bg-primary/90" size="sm" onClick={handleCTA}>Começar Grátis <ArrowRight className="h-3.5 w-3.5" /></Button>
             </div>
           </div>
         </div>
@@ -286,7 +318,7 @@ const Index = () => {
           <Zap className="mx-auto mb-3 h-8 w-8 text-primary" />
           <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Comece sua jornada agora</h2>
           <p className="mx-auto mb-5 max-w-md text-xs text-muted-foreground">Junte-se a mais de 3.000 profissionais de saúde e atletas que já usam a PeptideosHealth.</p>
-          <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"><Sparkles className="h-4 w-4" /> Começar Grátis</Button>
+          <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCTA}><Sparkles className="h-4 w-4" /> Começar Grátis</Button>
         </div>
       </section>
     </div>
