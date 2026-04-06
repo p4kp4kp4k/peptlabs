@@ -96,7 +96,7 @@ const Index = () => {
             A plataforma definitiva com <strong className="text-foreground">protocolos baseados em evidências</strong>, calculadoras exatas e guias práticos para profissionais de saúde e atletas de alto rendimento.
           </motion.p>
           <motion.div variants={fadeUp} className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button size="lg" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">Começar Grátis <ArrowRight className="h-4 w-4" /></Button>
+            <Button size="lg" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCTA}>Começar Grátis <ArrowRight className="h-4 w-4" /></Button>
             <Button size="lg" variant="outline" className="gap-2 border-border text-foreground hover:border-primary/50">Ver Planos <ArrowRight className="h-4 w-4" /></Button>
           </motion.div>
         </motion.div>
@@ -142,7 +142,7 @@ const Index = () => {
                   <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />{i}</li>
                 ))}
               </ul>
-              <Button className="mt-4 gap-2 bg-primary text-primary-foreground hover:bg-primary/90" size="sm">Começar Grátis <ArrowRight className="h-3.5 w-3.5" /></Button>
+              <Button className="mt-4 gap-2 bg-primary text-primary-foreground hover:bg-primary/90" size="sm" onClick={handleCTA}>Começar Grátis <ArrowRight className="h-3.5 w-3.5" /></Button>
             </div>
             <div className="rounded-xl border border-border/40 bg-card p-6">
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"><Activity className="h-5 w-5 text-primary" /></div>
@@ -152,7 +152,7 @@ const Index = () => {
                   <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />{i}</li>
                 ))}
               </ul>
-              <Button className="mt-4 gap-2 bg-primary text-primary-foreground hover:bg-primary/90" size="sm">Começar Grátis <ArrowRight className="h-3.5 w-3.5" /></Button>
+              <Button className="mt-4 gap-2 bg-primary text-primary-foreground hover:bg-primary/90" size="sm" onClick={handleCTA}>Começar Grátis <ArrowRight className="h-3.5 w-3.5" /></Button>
             </div>
           </div>
         </div>
@@ -318,7 +318,7 @@ const Index = () => {
           <Zap className="mx-auto mb-3 h-8 w-8 text-primary" />
           <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Comece sua jornada agora</h2>
           <p className="mx-auto mb-5 max-w-md text-xs text-muted-foreground">Junte-se a mais de 3.000 profissionais de saúde e atletas que já usam a PeptideosHealth.</p>
-          <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"><Sparkles className="h-4 w-4" /> Começar Grátis</Button>
+          <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCTA}><Sparkles className="h-4 w-4" /> Começar Grátis</Button>
         </div>
       </section>
     </div>
