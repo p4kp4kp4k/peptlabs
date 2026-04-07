@@ -50,7 +50,7 @@ export default function PeptideDetail() {
     return (
       <div className="flex min-h-[50vh] items-center justify-center flex-col gap-3">
         <p className="text-sm text-muted-foreground">Peptídeo não encontrado.</p>
-        <button onClick={() => navigate("/library")} className="text-xs text-primary hover:underline">
+        <button onClick={() => navigate("/app/peptides")} className="text-xs text-primary hover:underline">
           Voltar à Biblioteca
         </button>
       </div>
