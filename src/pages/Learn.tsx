@@ -28,6 +28,7 @@ const categoryIcons: Record<string, typeof BookOpen> = {
 };
 
 export default function Learn() {
+  const { slug } = useParams<{ slug: string }>();
   const [activeTab, setActiveTab] = useState<"guias" | "estudos" | "seguranca">("guias");
   const { isPremium, isAdmin } = useEntitlements();
   const hasFullAccess = isPremium || isAdmin;
