@@ -291,6 +291,7 @@ export default function Finder() {
           </>
         )}
       </div>
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason={gateReason} />
     </div>
   );
 }
