@@ -32,23 +32,28 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
 
     // Parse body
     const body = await req.json().catch(() => ({}));
-    const resource = body.resource as string | undefined; // "protocol" | "stack" | "calculation"
+    const resource = body.resource as string | undefined;
+
+    // Use service role client for counting (bypasses RLS)
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
     // Get subscription status
-    const { data: sub } = await supabase
+    const { data: sub } = await adminClient
       .from("subscriptions")
       .select("status, current_period_end")
       .eq("user_id", userId)
@@ -60,14 +65,13 @@ Deno.serve(async (req) => {
       sub?.status === "trialing";
 
     // Check admin
-    const { data: roles } = await supabase
+    const { data: roles } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
 
     const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
 
-    // If premium or admin, always allow
     if (isPremium || isAdmin) {
       return new Response(
         JSON.stringify({
@@ -83,15 +87,15 @@ Deno.serve(async (req) => {
 
     // Count usage for free user
     const [protocolsRes, stacksRes, calcsRes] = await Promise.all([
-      supabase
+      adminClient
         .from("protocols")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId),
-      supabase
+      adminClient
         .from("stacks")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId),
-      supabase
+      adminClient
         .from("calculations")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
@@ -118,9 +122,8 @@ Deno.serve(async (req) => {
       reason = `Limite de ${FREE_LIMITS.maxCalculationsPerMonth} cálculos/mês atingido no plano gratuito.`;
     }
 
-    // Log blocked attempt
     if (!allowed) {
-      await supabase.from("history").insert({
+      await adminClient.from("history").insert({
         user_id: userId,
         kind: "premium_gate",
         metadata: { resource, reason, usage },
