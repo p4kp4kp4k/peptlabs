@@ -25,29 +25,7 @@ export default function Interactions() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  const { data: peptides, isLoading } = useQuery({
-    queryKey: ["peptides-interactions"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("peptides")
-        .select("name, slug, category, interactions")
-        .not("interactions", "is", null);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const allPeptides = useMemo<PeptideInteractions[]>(() => {
-    if (!peptides) return [];
-    return peptides
-      .map((p) => ({
-        name: p.name,
-        slug: p.slug,
-        category: p.category,
-        interactions: normalizeInteractions(p.interactions),
-      }))
-      .filter((p) => p.interactions.length > 0)
-      .sort((a, b) => a.name.localeCompare(b.name));
+  const { data: allPeptides = [], isLoading } = usePeptidesWithInteractions();
   }, [peptides]);
 
   const categories = useMemo(() => {
