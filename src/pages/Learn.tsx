@@ -141,7 +141,7 @@ export default function Learn() {
       {!slug && activeTab === "seguranca" && <SafetyTab />}
 
       {/* Guides grid */}
-      {!slug && activeTab !== "seguranca" && (
+      {!slug && (
         <>
           <div className="grid gap-3 sm:grid-cols-2">
             {filtered.map((guide, i) => {
