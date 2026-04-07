@@ -3,9 +3,63 @@ import { Syringe, ListChecks, Beaker, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Json } from "@/integrations/supabase/types";
 
-interface DosageRow { indicacao?: string; objetivo?: string; dose: string; frequencia: string; duracao: string; }
-// Old format: {fase, dose, notas, unidades}  New format: {fase, duracao, descricao}
-interface PhaseRow { fase: string; dose?: string; notas?: string; unidades?: string; duracao?: string; descricao?: string; }
+// Normalize both old and new dosage_table formats
+interface RawDosageRow {
+  indicacao?: string;
+  objetivo?: string;
+  dose: string;
+  frequencia: string;
+  duracao: string;
+}
+interface NormalizedDosageRow {
+  indicacao: string;
+  dose: string;
+  frequencia: string;
+  duracao: string;
+}
+
+// Normalize both old and new protocol_phases formats
+interface RawPhaseRow {
+  fase: string;
+  dose?: string;
+  notas?: string;
+  unidades?: string;
+  duracao?: string;
+  descricao?: string;
+}
+interface NormalizedPhaseRow {
+  fase: string;
+  dose: string;
+  detalhes: string;
+}
+
+function normalizeDosage(rows: RawDosageRow[]): NormalizedDosageRow[] {
+  return rows.map((r) => ({
+    indicacao: r.indicacao || r.objetivo || "—",
+    dose: r.dose,
+    frequencia: r.frequencia,
+    duracao: r.duracao,
+  }));
+}
+
+function normalizePhases(rows: RawPhaseRow[]): NormalizedPhaseRow[] {
+  return rows.map((r) => {
+    // New format: {fase, duracao, descricao} → extract dose from descricao
+    if (r.descricao) {
+      // Try to extract dose pattern from descricao (e.g. "100 mcg antes de dormir")
+      const doseMatch = r.descricao.match(/^([\d.,\-–]+\s*(?:mcg|mg|μg|UI|IU|mL|g|%)[^\s]*(?:\s*(?:\/(?:dia|semana|kg)|\d*x\/(?:dia|semana)))?)/i);
+      const dose = doseMatch ? doseMatch[1] : r.duracao || "—";
+      const detalhes = doseMatch ? r.descricao.slice(doseMatch[0].length).trim() : r.descricao;
+      return { fase: r.fase, dose, detalhes: detalhes || r.duracao || "—" };
+    }
+    // Old format: {fase, dose, notas/unidades}
+    return {
+      fase: r.fase,
+      dose: r.dose || "—",
+      detalhes: r.unidades || r.notas || "—",
+    };
+  });
+}
 
 interface ProtocolsTabProps {
   dosage_info?: string | null;
@@ -36,11 +90,11 @@ function SectionTitle({ icon: Icon, children, action }: { icon: React.ElementTyp
 
 export default function ProtocolsTab({ dosage_info, dosage_table, protocol_phases, reconstitution, reconstitution_steps, half_life }: ProtocolsTabProps) {
   const navigate = useNavigate();
-  const dosageRows = dosage_table as unknown as DosageRow[] | null;
-  const phases = protocol_phases as unknown as PhaseRow[] | null;
+  const rawDosage = dosage_table as unknown as RawDosageRow[] | null;
+  const rawPhases = protocol_phases as unknown as RawPhaseRow[] | null;
 
-  // Detect if phases use new format (duracao/descricao) vs old (dose/notas)
-  const isNewPhaseFormat = phases && phases.length > 0 && !!phases[0].descricao;
+  const dosageRows = rawDosage ? normalizeDosage(rawDosage) : null;
+  const phases = rawPhases ? normalizePhases(rawPhases) : null;
 
   if (!dosageRows && !phases && !dosage_info && !reconstitution_steps && !reconstitution) {
     return (
@@ -69,7 +123,7 @@ export default function ProtocolsTab({ dosage_info, dosage_table, protocol_phase
         </SectionCard>
       )}
 
-      {/* Dosagem por Indicação */}
+      {/* Dosagem por Indicação — formato unificado */}
       {dosageRows && dosageRows.length > 0 && (
         <SectionCard>
           <SectionTitle icon={Syringe}>Dosagem por Indicação</SectionTitle>
@@ -85,7 +139,7 @@ export default function ProtocolsTab({ dosage_info, dosage_table, protocol_phase
               <tbody>
                 {dosageRows.map((row, i) => (
                   <tr key={i} className="border-b border-border/15 last:border-0 hover:bg-secondary/30 transition-colors">
-                    <td className="py-3 px-3 text-foreground font-medium">{row.indicacao || row.objetivo}</td>
+                    <td className="py-3 px-3 text-foreground font-medium">{row.indicacao}</td>
                     <td className="py-3 px-3 text-primary font-bold whitespace-nowrap">{row.dose}</td>
                     <td className="py-3 px-3 text-muted-foreground">{row.frequencia}</td>
                     <td className="py-3 px-3 text-muted-foreground">{row.duracao}</td>
@@ -97,63 +151,34 @@ export default function ProtocolsTab({ dosage_info, dosage_table, protocol_phase
         </SectionCard>
       )}
 
-      {/* Fases do Protocolo */}
+      {/* Fases do Protocolo — formato unificado */}
       {phases && phases.length > 0 && (
         <SectionCard>
           <SectionTitle icon={ListChecks}>Fases do Protocolo</SectionTitle>
-          {isNewPhaseFormat ? (
-            <div className="overflow-x-auto -mx-2">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border/30">
-                    <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider w-8">#</th>
-                    <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">Fase</th>
-                    <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">Duração</th>
-                    <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">Descrição</th>
+          <div className="overflow-x-auto -mx-2">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border/30">
+                  <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider w-8">#</th>
+                  <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">Fase</th>
+                  <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">Dose</th>
+                  <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">Detalhes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {phases.map((row, i) => (
+                  <tr key={i} className="border-b border-border/15 last:border-0 hover:bg-secondary/30 transition-colors">
+                    <td className="py-3 px-3">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary text-[10px] font-bold">{i + 1}</span>
+                    </td>
+                    <td className="py-3 px-3 text-foreground font-medium">{row.fase}</td>
+                    <td className="py-3 px-3 text-primary font-bold whitespace-nowrap">{row.dose}</td>
+                    <td className="py-3 px-3 text-muted-foreground">{row.detalhes}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {phases.map((row, i) => (
-                    <tr key={i} className="border-b border-border/15 last:border-0 hover:bg-secondary/30 transition-colors">
-                      <td className="py-3 px-3">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary text-[10px] font-bold">{i + 1}</span>
-                      </td>
-                      <td className="py-3 px-3 text-foreground font-medium">{row.fase}</td>
-                      <td className="py-3 px-3 text-primary font-bold whitespace-nowrap">{row.duracao}</td>
-                      <td className="py-3 px-3 text-muted-foreground">{row.descricao}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="overflow-x-auto -mx-2">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border/30">
-                    <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider w-8">#</th>
-                    <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">Fase</th>
-                    <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">Dose</th>
-                    {phases[0]?.unidades && <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">Unidades</th>}
-                    {phases[0]?.notas && <th className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">Notas</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {phases.map((row, i) => (
-                    <tr key={i} className="border-b border-border/15 last:border-0 hover:bg-secondary/30 transition-colors">
-                      <td className="py-3 px-3">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary text-[10px] font-bold">{i + 1}</span>
-                      </td>
-                      <td className="py-3 px-3 text-foreground font-medium">{row.fase}</td>
-                      <td className="py-3 px-3 text-primary font-bold whitespace-nowrap">{row.dose}</td>
-                      {row.unidades && <td className="py-3 px-3 text-muted-foreground">{row.unidades}</td>}
-                      {row.notas && <td className="py-3 px-3 text-muted-foreground">{row.notas}</td>}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                ))}
+              </tbody>
+            </table>
+          </div>
         </SectionCard>
       )}
 
@@ -164,7 +189,7 @@ export default function ProtocolsTab({ dosage_info, dosage_table, protocol_phase
             icon={Beaker}
             action={
               <button
-                onClick={() => navigate("/calculator")}
+                onClick={() => navigate("/app/calculator")}
                 className="flex items-center gap-1.5 text-[11px] font-bold bg-foreground text-background px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
               >
                 <Syringe className="h-3 w-3" />
