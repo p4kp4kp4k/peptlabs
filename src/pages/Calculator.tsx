@@ -113,82 +113,43 @@ export default function CalculatorPage() {
   const [protocolOpen, setProtocolOpen] = useState(false);
   const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
 
-  const applyProtocol = (p: typeof presetProtocols[0]) => {
+  // Fetch protocols dynamically from stacks table
+  const { data: stackProtocols } = useQuery({
+    queryKey: ["stack-protocols"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stacks")
+        .select("name, peptides")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []).flatMap((stack) => {
+        const peptides = stack.peptides as { name: string; dose: string }[];
+        return peptides.map((p) => {
+          // Parse dose string to extract vial, water, mcg
+          const doseNum = parseDoseToMcg(p.dose);
+          return {
+            label: `${p.name} ${stack.name}`,
+            peptide: p.name,
+            stack: stack.name,
+            vial: "5",
+            water: "2",
+            dose: String(doseNum),
+            doseRaw: p.dose,
+          };
+        });
+      });
+    },
+  });
+
+  const protocols = useMemo(() => stackProtocols ?? [], [stackProtocols]);
+
+  const applyProtocol = (p: { label: string; vial: string; water: string; dose: string }) => {
     setVialMg(p.vial);
     setDiluentMl(p.water);
     setDesiredDoseMcg(p.dose);
-    setSelectedProtocol(p.name);
+    setSelectedProtocol(p.label);
     setProtocolOpen(false);
   };
-
-  const vial = parseFloat(vialMg) || 0;
-  const diluent = parseFloat(diluentMl) || 0;
-  const dose = parseFloat(desiredDoseMcg) || 0;
-
-  const concentrationMcgPerMl = vial > 0 && diluent > 0 ? (vial * 1000) / diluent : 0;
-  const volumeToInjectMl = concentrationMcgPerMl > 0 && dose > 0 ? dose / concentrationMcgPerMl : 0;
-  const volumeToInjectUnits = volumeToInjectMl * selectedSyringe.units / selectedSyringe.value;
-  const dosesPerVial = dose > 0 && vial > 0 ? (vial * 1000) / dose : 0;
-
-  const hasInput = vial > 0 && diluent > 0 && dose > 0;
-  const syringeFillPercent = hasInput ? Math.min((volumeToInjectMl / selectedSyringe.value) * 100, 100) : 0;
-
-  const reset = () => { setVialMg(""); setDiluentMl(""); setDesiredDoseMcg(""); setSelectedProtocol(null); };
-
-  return (
-    <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-bold text-foreground sm:text-xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            <CalcIcon className="inline h-4.5 w-4.5 mr-2 text-primary" />
-            Calculadora de Doses
-          </h1>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Ferramenta profissional para reconstituição e dosagem de peptídeos</p>
-        </div>
-        <Button variant="ghost" size="icon" onClick={reset} title="Limpar" className="h-8 w-8">
-          <RotateCcw className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-
-      {/* Protocol selector */}
-      <Collapsible open={protocolOpen} onOpenChange={setProtocolOpen}>
-        <CollapsibleTrigger className="w-full">
-          <div className="flex items-center justify-between rounded-xl border border-border/40 bg-card/80 px-4 py-3 hover:border-border/60 transition-colors">
-            <div className="flex items-center gap-2.5">
-              <ClipboardList className="h-4 w-4 text-primary" />
-              <div className="text-left">
-                <p className="text-[11px] font-semibold text-foreground">
-                  Selecionar protocolo <span className="text-muted-foreground font-normal">(opcional)</span>
-                </p>
-                {selectedProtocol ? (
-                  <p className="text-[10px] text-primary">{selectedProtocol}</p>
-                ) : (
-                  <p className="text-[10px] text-muted-foreground">Escolha um protocolo para pré-preencher...</p>
-                )}
-              </div>
-            </div>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${protocolOpen ? "rotate-180" : ""}`} />
-          </div>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="mt-1 rounded-xl border border-border/40 bg-card/80 overflow-hidden divide-y divide-border/20">
-            {presetProtocols.map((p) => (
-              <button
-                key={p.name}
-                onClick={() => applyProtocol(p)}
-                className={`w-full text-left px-4 py-3 hover:bg-primary/5 transition-colors ${
-                  selectedProtocol === p.name ? "bg-primary/10" : ""
-                }`}
-              >
-                <p className="text-[12px] font-semibold text-foreground">{p.name}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {p.vial}mg · {p.water}ml · {p.dose}mcg
-                </p>
-              </button>
-            ))}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
 
       <Tabs defaultValue="calculator" className="space-y-4">
         <TabsList className="h-9 bg-secondary/60 p-0.5">
