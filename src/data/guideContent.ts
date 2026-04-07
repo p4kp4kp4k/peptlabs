@@ -271,6 +271,7 @@ export const guideContents: Record<string, GuideContent> = {
         title: "Higiene e Assepsia",
         content: [
           "Sempre use swabs de álcool 70% em movimentos circulares de dentro para fora no local de aplicação.",
+          "Use um recipiente de descarte de agulhas (sharps container). Nunca jogue agulhas no lixo comum.",
           "Lave as mãos com água e sabão antes de manipular materiais.",
           "Nunca reutilize agulhas ou seringas.",
         ],
