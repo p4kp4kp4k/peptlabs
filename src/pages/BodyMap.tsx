@@ -380,8 +380,8 @@ function BodySilhouette({
   onSiteClick: (site: InjectionSite) => void;
 }) {
   return (
-    <div className="relative mx-auto" style={{ width: "220px", height: "440px" }}>
-      <svg viewBox="0 0 220 440" className="w-full h-full">
+    <div className="relative mx-auto" style={{ width: "220px", height: "460px" }}>
+      <svg viewBox="0 0 220 410" className="w-full h-full">
         <defs>
           <linearGradient id={`bodyFill-${side}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="hsl(var(--muted))" stopOpacity="0.3" />
