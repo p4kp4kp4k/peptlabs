@@ -236,7 +236,7 @@ export default function CalculatorPage() {
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <div className="mt-1 rounded-lg border border-border/40 bg-card overflow-hidden divide-y divide-border/20 max-h-60 overflow-y-auto">
-                        {protocols.map((p) => (
+                        {protocolPresets.map((p) => (
                           <button
                             key={p.label}
                             onClick={() => applyProtocol(p)}
@@ -244,15 +244,12 @@ export default function CalculatorPage() {
                               selectedProtocol === p.label ? "bg-primary/10" : ""
                             }`}
                           >
-                            <p className="text-[12px] font-semibold text-foreground">{p.peptide} {p.stack}</p>
+                            <p className="text-[12px] font-semibold text-foreground">{p.label}</p>
                             <p className="text-[10px] text-muted-foreground">
                               {p.vial}mg · {p.water}ml · {p.dose}mcg
                             </p>
                           </button>
                         ))}
-                        {protocols.length === 0 && (
-                          <p className="text-[11px] text-muted-foreground p-4 text-center">Carregando protocolos...</p>
-                        )}
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
