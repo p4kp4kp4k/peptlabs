@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Search, Triangle, ArrowRight, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Json } from "@/integrations/supabase/types";
-import type { Json } from "@/integrations/supabase/types";
 
 interface NormalizedInteraction {
   nome: string;
@@ -244,7 +243,6 @@ export default function Interactions() {
 
       {/* Interaction cards */}
       {!isLoading && filtered.map((peptide) => {
-        const catColor = getCategoryColor(peptide.category);
         return (
           <div key={peptide.slug} className="rounded-xl border border-border/25 bg-card/70 overflow-hidden">
             {/* Peptide header */}
