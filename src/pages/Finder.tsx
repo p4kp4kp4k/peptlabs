@@ -377,7 +377,7 @@ export default function Finder() {
                     <CardContent className="p-3 space-y-2">
                       {engineResult.peptides.map((p, i) => {
                         // Find slug from engine rules
-                        const slug = p.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                        const slug = p.slug || p.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
                         return (
                           <button
                             key={p.name}
