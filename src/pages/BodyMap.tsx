@@ -494,13 +494,6 @@ function BodySilhouette({
             </span>
           </button>
         );
-      })}
-            <span className={`relative block h-3 w-3 rounded-full border-2 border-background shadow-lg transition-transform group-hover:scale-125 ${
-              isCompleted ? "bg-primary" : "bg-primary/70"
-            }`} />
-          </button>
-        );
-      })}
     </div>
   );
 }
