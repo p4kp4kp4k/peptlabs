@@ -170,6 +170,11 @@ export default function CalculatorPage() {
   const [selectedSyringe, setSelectedSyringe] = useState(syringeSizes[2]);
   const [protocolOpen, setProtocolOpen] = useState(false);
   const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
+  const [protocolSearch, setProtocolSearch] = useState("");
+
+  const filteredProtocols = protocolPresets.filter((p) =>
+    p.label.toLowerCase().includes(protocolSearch.toLowerCase())
+  );
 
   const applyProtocol = (p: { label: string; vial: string; water: string; dose: string }) => {
     setVialMg(p.vial);
@@ -243,29 +248,43 @@ export default function CalculatorPage() {
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className="mt-1 rounded-lg border border-border/40 bg-card overflow-hidden divide-y divide-border/20 max-h-60 overflow-y-auto">
-                        {protocolPresets.map((p) => (
-                          <button
-                            key={p.label}
-                            onClick={() => applyProtocol(p)}
-                            className={`w-full text-left px-4 py-3 hover:bg-primary/5 transition-colors ${
-                              selectedProtocol === p.label ? "bg-primary/10" : ""
-                            }`}
-                          >
-                            <p className="text-[12px] font-semibold text-foreground">{p.label}</p>
-                            <p className="text-[10px] text-muted-foreground">
-                              {p.vial}mg · {p.water}ml · {p.dose}mcg
-                            </p>
-                          </button>
-                        ))}
-                        {selectedProtocol && (
-                          <button
-                            onClick={() => { setSelectedProtocol(null); setProtocolOpen(false); }}
-                            className="w-full text-left px-4 py-3 text-[11px] text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-colors border-t border-border/20"
-                          >
-                            Limpar seleção
-                          </button>
-                        )}
+                      <div className="mt-1 rounded-lg border border-border/40 bg-card overflow-hidden">
+                        <div className="p-2 border-b border-border/20">
+                          <Input
+                            placeholder="Buscar protocolo..."
+                            value={protocolSearch}
+                            onChange={(e) => setProtocolSearch(e.target.value)}
+                            className="h-8 text-[11px]"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="divide-y divide-border/20 max-h-52 overflow-y-auto">
+                          {filteredProtocols.map((p) => (
+                            <button
+                              key={p.label}
+                              onClick={() => { applyProtocol(p); setProtocolSearch(""); }}
+                              className={`w-full text-left px-4 py-3 hover:bg-primary/5 transition-colors ${
+                                selectedProtocol === p.label ? "bg-primary/10" : ""
+                              }`}
+                            >
+                              <p className="text-[12px] font-semibold text-foreground">{p.label}</p>
+                              <p className="text-[10px] text-muted-foreground">
+                                {p.vial}mg · {p.water}ml · {p.dose}mcg
+                              </p>
+                            </button>
+                          ))}
+                          {filteredProtocols.length === 0 && (
+                            <p className="text-[11px] text-muted-foreground p-4 text-center">Nenhum protocolo encontrado</p>
+                          )}
+                          {selectedProtocol && (
+                            <button
+                              onClick={() => { setSelectedProtocol(null); setProtocolOpen(false); setProtocolSearch(""); }}
+                              className="w-full text-left px-4 py-3 text-[11px] text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-colors border-t border-border/20"
+                            >
+                              Limpar seleção
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
