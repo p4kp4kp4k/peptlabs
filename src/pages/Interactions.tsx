@@ -256,7 +256,7 @@ export default function Interactions() {
                 >
                   {peptide.name}
                 </Link>
-                <Badge className={`text-[9px] bg-gradient-to-r ${catColor} border-0 font-medium px-2 shrink-0`}>
+                <Badge variant="outline" className="text-[9px] bg-primary/15 text-primary border-primary/25 font-semibold px-2 shrink-0">
                   {peptide.category}
                 </Badge>
               </div>
