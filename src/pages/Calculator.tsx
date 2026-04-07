@@ -1,6 +1,4 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,6 +109,50 @@ const commonErrors = [
   { text: "Reconstituir sem limpar o topo do frasco", fix: "Limpe com álcool 70% em movimentos circulares antes de perfurar" },
 ];
 
+// ── Complete protocol presets (from reference) ──
+const protocolPresets = [
+  { label: "BPC-157 Recuperação", vial: "5", water: "2", dose: "250" },
+  { label: "TB-500 Carga", vial: "5", water: "2", dose: "2500" },
+  { label: "MGF Reparo Muscular", vial: "5", water: "2", dose: "200" },
+  { label: "KLOW Recuperação", vial: "5", water: "2", dose: "250" },
+  { label: "Semaglutida 0.25mg", vial: "5", water: "1", dose: "250" },
+  { label: "Tirzepatida 2.5mg", vial: "10", water: "2", dose: "2500" },
+  { label: "Retatrutide 1mg", vial: "10", water: "2", dose: "1000" },
+  { label: "AOD-9604", vial: "5", water: "2", dose: "250" },
+  { label: "Cagrilintide", vial: "5", water: "2", dose: "500" },
+  { label: "HGH Fragment 176-191", vial: "5", water: "2", dose: "250" },
+  { label: "Mazdutide", vial: "5", water: "2", dose: "500" },
+  { label: "Survodutide", vial: "10", water: "2", dose: "500" },
+  { label: "Ipamorelin", vial: "5", water: "2", dose: "200" },
+  { label: "CJC-1295 DAC", vial: "2", water: "2", dose: "1000" },
+  { label: "CJC-1295 NO DAC", vial: "5", water: "2", dose: "100" },
+  { label: "Ipamorelin + CJC", vial: "5", water: "2", dose: "300" },
+  { label: "Tesamorelin + Ipamorelin", vial: "10", water: "2", dose: "1000" },
+  { label: "GHRP-2", vial: "5", water: "2", dose: "200" },
+  { label: "GHRP-6", vial: "5", water: "2", dose: "200" },
+  { label: "Sermorelin", vial: "5", water: "2", dose: "300" },
+  { label: "Hexarelin", vial: "5", water: "2", dose: "200" },
+  { label: "IGF-1 LR3", vial: "1", water: "1", dose: "50" },
+  { label: "HGH 191AA 10IU", vial: "10", water: "1", dose: "2000" },
+  { label: "GHK-Cu Anti-aging", vial: "50", water: "5", dose: "200" },
+  { label: "Epithalon", vial: "10", water: "2", dose: "5000" },
+  { label: "FOXO4-DRI", vial: "10", water: "2", dose: "500" },
+  { label: "NAD+ 500mg", vial: "500", water: "5", dose: "100000" },
+  { label: "Selank Ansiolítico", vial: "5", water: "2", dose: "200" },
+  { label: "Semax Nootrópico", vial: "5", water: "2", dose: "200" },
+  { label: "Dihexa", vial: "10", water: "2", dose: "500" },
+  { label: "PE-22-28", vial: "10", water: "2", dose: "500" },
+  { label: "DSIP Sono", vial: "5", water: "2", dose: "100" },
+  { label: "Pinealon", vial: "20", water: "2", dose: "200" },
+  { label: "Cortagen", vial: "20", water: "2", dose: "200" },
+  { label: "Gonadorelin", vial: "2", water: "2", dose: "100" },
+  { label: "HCG 5000IU", vial: "5000", water: "5", dose: "500" },
+  { label: "Kisspeptin-10", vial: "10", water: "2", dose: "500" },
+  { label: "Oxytocin", vial: "5", water: "2", dose: "200" },
+  { label: "PT-141 (Bremelanotide)", vial: "10", water: "2", dose: "1750" },
+  { label: "Thymosin Alpha-1", vial: "5", water: "1", dose: "1600" },
+];
+
 export default function CalculatorPage() {
   const [vialMg, setVialMg] = useState("");
   const [diluentMl, setDiluentMl] = useState("");
@@ -119,45 +161,12 @@ export default function CalculatorPage() {
   const [protocolOpen, setProtocolOpen] = useState(false);
   const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
 
-  // Fetch protocols dynamically from stacks table
-  const { data: stackProtocols } = useQuery({
-    queryKey: ["stack-protocols"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stacks")
-        .select("name, peptides")
-        .order("name");
-      if (error) throw error;
-      const seen = new Set<string>();
-      const results: { label: string; peptide: string; stack: string; vial: string; water: string; dose: string; doseRaw: string }[] = [];
-      for (const stack of (data ?? [])) {
-        const peptides = stack.peptides as { name: string; dose: string }[];
-        for (const p of peptides) {
-          const key = p.name.toLowerCase();
-          if (seen.has(key)) continue;
-          seen.add(key);
-          results.push({
-            label: `${p.name}`,
-            peptide: p.name,
-            stack: stack.name,
-            vial: "5",
-            water: "2",
-            dose: String(parseDoseToMcg(p.dose)),
-            doseRaw: p.dose,
-          });
-        }
-      }
-      return results;
-    },
-  });
-
-  const protocols = useMemo(() => stackProtocols ?? [], [stackProtocols]);
-
   const applyProtocol = (p: { label: string; vial: string; water: string; dose: string }) => {
     setVialMg(p.vial);
     setDiluentMl(p.water);
     setDesiredDoseMcg(p.dose);
     setSelectedProtocol(p.label);
+
     setProtocolOpen(false);
   };
 
@@ -225,7 +234,7 @@ export default function CalculatorPage() {
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <div className="mt-1 rounded-lg border border-border/40 bg-card overflow-hidden divide-y divide-border/20 max-h-60 overflow-y-auto">
-                        {protocols.map((p) => (
+                        {protocolPresets.map((p) => (
                           <button
                             key={p.label}
                             onClick={() => applyProtocol(p)}
@@ -233,15 +242,12 @@ export default function CalculatorPage() {
                               selectedProtocol === p.label ? "bg-primary/10" : ""
                             }`}
                           >
-                            <p className="text-[12px] font-semibold text-foreground">{p.peptide} {p.stack}</p>
+                            <p className="text-[12px] font-semibold text-foreground">{p.label}</p>
                             <p className="text-[10px] text-muted-foreground">
                               {p.vial}mg · {p.water}ml · {p.dose}mcg
                             </p>
                           </button>
                         ))}
-                        {protocols.length === 0 && (
-                          <p className="text-[11px] text-muted-foreground p-4 text-center">Carregando protocolos...</p>
-                        )}
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
