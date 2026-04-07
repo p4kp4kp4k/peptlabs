@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Beaker } from "lucide-react";
+import { BookOpen, Beaker, ExternalLink } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 
 interface Reference { titulo: string; fonte: string; ano: number; pmid?: string; }
@@ -12,14 +12,14 @@ interface ResearchTabProps {
 }
 
 function SectionCard({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-xl border border-border/25 bg-card/80 p-3.5">{children}</div>;
+  return <div className="rounded-xl border border-border/25 bg-card/80 p-4 sm:p-5">{children}</div>;
 }
 
 function SectionTitle({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
   return (
-    <h3 className="text-xs font-bold text-foreground mb-2.5 flex items-center gap-2">
-      <div className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-400/10 text-amber-400">
-        <Icon className="h-3 w-3" />
+    <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2.5">
+      <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-400/10 text-amber-400">
+        <Icon className="h-3.5 w-3.5" />
       </div>
       {children}
     </h3>
@@ -36,10 +36,10 @@ export default function ResearchTab({ mechanism, mechanism_points, evidence_leve
         <SectionCard>
           <SectionTitle icon={Beaker}>Mecanismo de Ação</SectionTitle>
           {mechanism && (
-            <p className="text-xs text-muted-foreground leading-[1.8] mb-4">{mechanism}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4">{mechanism}</p>
           )}
           {mechanism_points && mechanism_points.length > 0 && (
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {mechanism_points.map((point, i) => (
                 <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/40 border border-border/15">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-[10px] font-bold mt-0.5">
@@ -57,18 +57,18 @@ export default function ResearchTab({ mechanism, mechanism_points, evidence_leve
       {refs && refs.length > 0 && (
         <SectionCard>
           <SectionTitle icon={BookOpen}>Referências Científicas</SectionTitle>
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {refs.map((ref, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/40 border border-border/15">
+              <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/40 border border-border/15 group">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-[10px] font-bold mt-0.5">
                   {i + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] text-foreground font-semibold leading-relaxed mb-0.5">{ref.titulo}</p>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-xs text-foreground font-semibold leading-relaxed mb-0.5">{ref.titulo}</p>
+                  <p className="text-[11px] text-muted-foreground">
                     {ref.fonte} · <span className="text-muted-foreground/70">{ref.ano}</span>
                     {ref.pmid && (
-                      <> · <a href={`https://pubmed.ncbi.nlm.nih.gov/${ref.pmid}/`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PubMed</a></>
+                      <> · <a href={`https://pubmed.ncbi.nlm.nih.gov/${ref.pmid}/`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-0.5">PubMed <ExternalLink className="h-2.5 w-2.5" /></a></>
                     )}
                   </p>
                 </div>
