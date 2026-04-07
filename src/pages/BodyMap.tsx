@@ -105,9 +105,9 @@ const injectionSites: InjectionSite[] = [
   {
     id: "lombar-esq", name: "Lombar Lateral Esquerda", region: "Lombar", side: "dorsal",
     x: 58, y: 44, angle: "45° a 90°",
-    technique: "Mesmo procedimento da lombar direita.",
-    tips: ["Alternar com lado direito"],
-    idealFor: ["BPC-157 (lesão lombar)", "Peptídeos gerais"],
+    technique: "Mesmo procedimento na lombar esquerda.",
+    tips: ["Alternar com direita", "Boa opção para quem tem gordura lombar"],
+    idealFor: ["BPC-157", "Peptídeos gerais"],
   },
 ];
 
