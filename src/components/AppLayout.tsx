@@ -19,7 +19,7 @@ const navItems = [
   { label: "Aprender", icon: BookOpen, path: "/learn" },
   { label: "Calculadora", icon: Calculator, path: "/calculator" },
   { label: "Biblioteca de Stacks", icon: Layers, path: "/stacks" },
-  { label: "Interações", icon: Triangle, path: "#" },
+  { label: "Interações", icon: Triangle, path: "/interactions" },
   { label: "Mapa de Aplicação", icon: MapPin, path: "#" },
   { label: "Cronograma", icon: CalendarDays, path: "#" },
 ];
