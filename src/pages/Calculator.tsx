@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,19 +16,17 @@ import {
   Collapsible, CollapsibleContent, CollapsibleTrigger
 } from "@/components/ui/collapsible";
 
-// ── Preset protocols for quick fill ──
-const presetProtocols = [
-  { name: "BPC-157 Recuperação", vial: "5", water: "2", dose: "250" },
-  { name: "TB-500 Carga", vial: "5", water: "2", dose: "2500" },
-  { name: "MGF Reparo Muscular", vial: "5", water: "2", dose: "200" },
-  { name: "KLOW Recuperação", vial: "5", water: "2", dose: "250" },
-  { name: "Semaglutida 0.25mg", vial: "5", water: "1", dose: "250" },
-  { name: "Tirzepatida 2.5mg", vial: "10", water: "2", dose: "2500" },
-  { name: "CJC-1295 / Ipamorelin", vial: "5", water: "2", dose: "100" },
-  { name: "GHK-Cu Rejuvenescimento", vial: "5", water: "5", dose: "200" },
-  { name: "Selank Ansiolítico", vial: "5", water: "2", dose: "200" },
-  { name: "Epitalon Anti-aging", vial: "10", water: "2", dose: "5000" },
-];
+// Parse dose strings like "250 mcg/dia", "2.5 mg/dia", "5mg" to mcg number
+function parseDoseToMcg(doseStr: string): number {
+  const clean = doseStr.toLowerCase().replace(/[^\d.,a-z]/g, " ");
+  const match = clean.match(/([\d.,]+)\s*(mg|mcg|ug)/);
+  if (!match) return 250; // fallback
+  const num = parseFloat(match[1].replace(",", "."));
+  if (match[2] === "mg") return num * 1000;
+  return num;
+}
+
+
 
 // ── Syringe sizes chips ──
 const syringeSizes = [
@@ -119,11 +119,41 @@ export default function CalculatorPage() {
   const [protocolOpen, setProtocolOpen] = useState(false);
   const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
 
-  const applyProtocol = (p: typeof presetProtocols[0]) => {
+  // Fetch protocols dynamically from stacks table
+  const { data: stackProtocols } = useQuery({
+    queryKey: ["stack-protocols"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stacks")
+        .select("name, peptides")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []).flatMap((stack) => {
+        const peptides = stack.peptides as { name: string; dose: string }[];
+        return peptides.map((p) => {
+          // Parse dose string to extract vial, water, mcg
+          const doseNum = parseDoseToMcg(p.dose);
+          return {
+            label: `${p.name} ${stack.name}`,
+            peptide: p.name,
+            stack: stack.name,
+            vial: "5",
+            water: "2",
+            dose: String(doseNum),
+            doseRaw: p.dose,
+          };
+        });
+      });
+    },
+  });
+
+  const protocols = useMemo(() => stackProtocols ?? [], [stackProtocols]);
+
+  const applyProtocol = (p: { label: string; vial: string; water: string; dose: string }) => {
     setVialMg(p.vial);
     setDiluentMl(p.water);
     setDesiredDoseMcg(p.dose);
-    setSelectedProtocol(p.name);
+    setSelectedProtocol(p.label);
     setProtocolOpen(false);
   };
 
@@ -156,46 +186,6 @@ export default function CalculatorPage() {
         </Button>
       </div>
 
-      {/* Protocol selector */}
-      <Collapsible open={protocolOpen} onOpenChange={setProtocolOpen}>
-        <CollapsibleTrigger className="w-full">
-          <div className="flex items-center justify-between rounded-xl border border-border/40 bg-card/80 px-4 py-3 hover:border-border/60 transition-colors">
-            <div className="flex items-center gap-2.5">
-              <ClipboardList className="h-4 w-4 text-primary" />
-              <div className="text-left">
-                <p className="text-[11px] font-semibold text-foreground">
-                  Selecionar protocolo <span className="text-muted-foreground font-normal">(opcional)</span>
-                </p>
-                {selectedProtocol ? (
-                  <p className="text-[10px] text-primary">{selectedProtocol}</p>
-                ) : (
-                  <p className="text-[10px] text-muted-foreground">Escolha um protocolo para pré-preencher...</p>
-                )}
-              </div>
-            </div>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${protocolOpen ? "rotate-180" : ""}`} />
-          </div>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="mt-1 rounded-xl border border-border/40 bg-card/80 overflow-hidden divide-y divide-border/20">
-            {presetProtocols.map((p) => (
-              <button
-                key={p.name}
-                onClick={() => applyProtocol(p)}
-                className={`w-full text-left px-4 py-3 hover:bg-primary/5 transition-colors ${
-                  selectedProtocol === p.name ? "bg-primary/10" : ""
-                }`}
-              >
-                <p className="text-[12px] font-semibold text-foreground">{p.name}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {p.vial}mg · {p.water}ml · {p.dose}mcg
-                </p>
-              </button>
-            ))}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-
       <Tabs defaultValue="calculator" className="space-y-4">
         <TabsList className="h-9 bg-secondary/60 p-0.5">
           <TabsTrigger value="calculator" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
@@ -214,6 +204,46 @@ export default function CalculatorPage() {
           <div className="grid gap-4 lg:grid-cols-[1fr,280px]">
             {/* Left: Inputs */}
             <div className="space-y-4">
+              {/* Protocol selector - FIRST */}
+              <Card className="border-border/40 bg-card/80">
+                <CardContent className="p-4 space-y-3">
+                  <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <ClipboardList className="h-3 w-3 text-primary" /> Selecionar protocolo <span className="font-normal lowercase">(opcional)</span>
+                  </Label>
+                  <Collapsible open={protocolOpen} onOpenChange={setProtocolOpen}>
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between rounded-lg border border-border/40 bg-secondary/30 px-3 py-2.5 hover:border-border/60 transition-colors">
+                        <span className={`text-[12px] ${selectedProtocol ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                          {selectedProtocol || "Escolha um protocolo para pré-preencher..."}
+                        </span>
+                        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${protocolOpen ? "rotate-180" : ""}`} />
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="mt-1 rounded-lg border border-border/40 bg-card overflow-hidden divide-y divide-border/20 max-h-60 overflow-y-auto">
+                        {protocols.map((p) => (
+                          <button
+                            key={p.label}
+                            onClick={() => applyProtocol(p)}
+                            className={`w-full text-left px-4 py-3 hover:bg-primary/5 transition-colors ${
+                              selectedProtocol === p.label ? "bg-primary/10" : ""
+                            }`}
+                          >
+                            <p className="text-[12px] font-semibold text-foreground">{p.peptide} {p.stack}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {p.vial}mg · {p.water}ml · {p.dose}mcg
+                            </p>
+                          </button>
+                        ))}
+                        {protocols.length === 0 && (
+                          <p className="text-[11px] text-muted-foreground p-4 text-center">Carregando protocolos...</p>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </CardContent>
+              </Card>
+
               {/* Syringe selector chips */}
               <Card className="border-border/40 bg-card/80">
                 <CardContent className="p-4 space-y-3">
