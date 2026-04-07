@@ -43,14 +43,33 @@ export default function Compare() {
     );
   }
 
+  const POPULAR_COMPARISONS = [
+    { title: "Recuperação", desc: "Os dois peptídeos de recuperação mais populares", slugs: ["bpc-157", "tb-500"] },
+    { title: "Secretagogos de GH", desc: "Compare os liberadores de GH", slugs: ["cjc-1295-no-dac", "ipamorelin"] },
+    { title: "Emagrecimento", desc: "Líderes em perda de peso", slugs: ["semaglutide", "tirzepatide"] },
+    { title: "Nootrópicos", desc: "Peptídeos russos nootrópicos", slugs: ["selank", "semax"] },
+    { title: "Anti-aging", desc: "Peptídeos para longevidade", slugs: ["epithalon", "ghk-cu"] },
+    { title: "Stack Completo", desc: "Recuperação completa", slugs: ["bpc-157", "tb-500", "ghk-cu"] },
+  ];
+
+  const loadPopularComparison = (slugs: string[]) => {
+    const ids = peptides.filter((p) => slugs.includes(p.slug)).map((p) => p.id);
+    setSelected(ids);
+  };
+
+  const getPeptideNameBySlug = (slug: string) => {
+    const p = peptides.find((pep) => pep.slug === slug);
+    return p?.name || slug.toUpperCase().replace(/-/g, " ");
+  };
+
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           <ArrowLeftRight className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">Comparador</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Comparar Peptídeos</h1>
         </div>
-        <p className="text-sm text-muted-foreground">Selecione até 4 peptídeos para comparar lado a lado.</p>
+        <p className="text-sm text-muted-foreground">Compare até 3 peptídeos lado a lado — mecanismos, dosagens, benefícios e compatibilidade.</p>
       </div>
 
       {/* Selected chips */}
@@ -65,7 +84,7 @@ export default function Compare() {
         ))}
         {selected.length < 4 && (
           <Button variant="outline" size="sm" className="gap-1 text-xs h-7" onClick={() => setShowPicker(true)}>
-            <Plus className="h-3 w-3" /> Adicionar
+            <Plus className="h-3 w-3" /> Adicionar Peptídeo
           </Button>
         )}
       </div>
@@ -140,9 +159,28 @@ export default function Compare() {
           </table>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <ArrowLeftRight className="h-10 w-10 text-muted-foreground/20 mb-3" />
-          <p className="text-sm text-muted-foreground">Selecione pelo menos 2 peptídeos para comparar</p>
+        <div>
+          {/* Popular comparisons */}
+          <h2 className="text-base font-semibold text-foreground mb-4">Comparações Populares</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {POPULAR_COMPARISONS.map((comp) => (
+              <button
+                key={comp.title}
+                onClick={() => loadPopularComparison(comp.slugs)}
+                className="text-left rounded-xl border border-border/50 bg-card p-4 hover:border-primary/30 transition-colors"
+              >
+                <h3 className="text-sm font-semibold text-foreground">{comp.title}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5 mb-3">{comp.desc}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {comp.slugs.map((s) => (
+                    <span key={s} className="rounded-md bg-secondary px-2 py-0.5 text-[11px] text-foreground">
+                      {getPeptideNameBySlug(s)}
+                    </span>
+                  ))}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
