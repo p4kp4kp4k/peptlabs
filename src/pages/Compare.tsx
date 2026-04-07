@@ -43,14 +43,33 @@ export default function Compare() {
     );
   }
 
+  const POPULAR_COMPARISONS = [
+    { title: "Recuperação", desc: "Os dois peptídeos de recuperação mais populares", slugs: ["bpc-157", "tb-500"] },
+    { title: "Secretagogos de GH", desc: "Compare os liberadores de GH", slugs: ["cjc-1295-no-dac", "ipamorelin"] },
+    { title: "Emagrecimento", desc: "Líderes em perda de peso", slugs: ["semaglutide", "tirzepatide"] },
+    { title: "Nootrópicos", desc: "Peptídeos russos nootrópicos", slugs: ["selank", "semax"] },
+    { title: "Anti-aging", desc: "Peptídeos para longevidade", slugs: ["epithalon", "ghk-cu"] },
+    { title: "Stack Completo", desc: "Recuperação completa", slugs: ["bpc-157", "tb-500", "ghk-cu"] },
+  ];
+
+  const loadPopularComparison = (slugs: string[]) => {
+    const ids = peptides.filter((p) => slugs.includes(p.slug)).map((p) => p.id);
+    setSelected(ids);
+  };
+
+  const getPeptideNameBySlug = (slug: string) => {
+    const p = peptides.find((pep) => pep.slug === slug);
+    return p?.name || slug.toUpperCase().replace(/-/g, " ");
+  };
+
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           <ArrowLeftRight className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">Comparador</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Comparar Peptídeos</h1>
         </div>
-        <p className="text-sm text-muted-foreground">Selecione até 4 peptídeos para comparar lado a lado.</p>
+        <p className="text-sm text-muted-foreground">Compare até 3 peptídeos lado a lado — mecanismos, dosagens, benefícios e compatibilidade.</p>
       </div>
 
       {/* Selected chips */}
@@ -65,7 +84,7 @@ export default function Compare() {
         ))}
         {selected.length < 4 && (
           <Button variant="outline" size="sm" className="gap-1 text-xs h-7" onClick={() => setShowPicker(true)}>
-            <Plus className="h-3 w-3" /> Adicionar
+            <Plus className="h-3 w-3" /> Adicionar Peptídeo
           </Button>
         )}
       </div>
