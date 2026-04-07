@@ -222,7 +222,7 @@ export default function Learn() {
       )}
 
       {/* Bottom CTA */}
-      {!slug && (
+      {!slug && !hasFullAccess && (
       <div className="mt-10 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card">
         <div className="p-6 sm:p-8 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
