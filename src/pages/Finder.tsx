@@ -381,7 +381,7 @@ export default function Finder() {
                         return (
                           <button
                             key={p.name}
-                            onClick={() => navigate(`/app/library/${slug}`)}
+                            onClick={() => navigate(`/peptide/${slug}`)}
                             className="w-full rounded-lg bg-secondary/20 p-3 text-left hover:bg-secondary/40 transition-colors cursor-pointer"
                           >
                             <div className="flex items-center justify-between mb-1">
@@ -434,7 +434,7 @@ export default function Finder() {
                   <Save className="h-4 w-4" /> {saving ? "Salvando..." : "Salvar Protocolo"}
                 </Button>
               ) : (
-                <Button className="flex-1 gap-2" onClick={() => navigate("/app/library")}>
+                <Button className="flex-1 gap-2" onClick={() => navigate("/app/peptides")}>
                   Ver Biblioteca Completa <ArrowRight className="h-4 w-4" />
                 </Button>
               )}
