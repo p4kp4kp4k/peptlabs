@@ -19,9 +19,11 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const source = body.source || "all"; // "pubmed" | "ncbi_protein" | "all"
     const slugFilter = body.slug || null; // optional: sync single peptide
+    const offset = body.offset || 0;
+    const limit = body.limit || 10; // process in small chunks to avoid timeout
 
     // Get peptides to sync
-    let query = sb.from("peptides").select("id, name, slug, alternative_names, ncbi_protein_id, sequence");
+    let query = sb.from("peptides").select("id, name, slug, alternative_names, ncbi_protein_id, sequence").order("name").range(offset, offset + limit - 1);
     if (slugFilter) query = query.eq("slug", slugFilter);
     const { data: peptides, error: pErr } = await query;
     if (pErr) throw pErr;
