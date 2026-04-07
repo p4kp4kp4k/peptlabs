@@ -298,62 +298,70 @@ export const guideContents: Record<string, GuideContent> = {
   },
 
   "spray-nasal-selank-semax": {
-    intro: "Técnica de diluição mista para spray nasal de Selank/Semax que reduz irritação nasal e mantém a eficácia do peptídeo.",
+    intro: "Este guia utiliza uma técnica de diluição mista para reduzir a irritação nasal causada pelo álcool benzílico, mantendo a eficácia do peptídeo.",
+    sections: [
+      {
+        title: "Itens Necessários",
+        icon: "clipboard",
+        items: [
+          "Peptídeo: 1 frasco (vial) de Semax / Selank 10mg",
+          "Diluente 1: 2ml de Água Bacteriostática (conservante)",
+          "Diluente 2: 10ml de Soro Fisiológico (para diluição de conforto)",
+          "Frasco Spray: Vidro âmbar",
+          "Seringa de Insulina: Para medição precisa dos diluentes",
+          "Álcool 70%: Para higienização de superfícies e frascos",
+        ],
+      },
+      {
+        title: "Tabela de Dosagem",
+        icon: "table",
+        table: [
+          { label: "1 borrifada", value: "100mcg do peptídeo" },
+          { label: "2 borrifadas", value: "200mcg (dose padrão sugerida)" },
+          { label: "3 borrifadas", value: "300mcg" },
+        ],
+      },
+    ],
     steps: [
       {
-        title: "Materiais Necessários",
+        title: "Higienização",
         content: [
-          "Frasco de Selank ou Semax liofilizado.",
-          "Solução salina 0.9% (NaCl) como diluente.",
-          "Frasco spray nasal estéril de 10mL.",
-          "Seringa de 1mL para medição precisa.",
-          "Swabs de álcool 70%.",
+          "Utilize algodão ou gaze com álcool 70%.",
+          "Lave bem as mãos antes de iniciar o preparo.",
         ],
       },
       {
-        title: "Reconstituição",
+        title: "Reconstituição Inicial",
         content: [
-          "Limpe o topo do frasco com álcool.",
-          "Aspire o volume adequado de solução salina 0.9%.",
-          "Injete lentamente na lateral do frasco.",
-          "Gire suavemente até dissolver completamente.",
+          "Aspire 2ml de Água Bacteriostática com a seringa.",
+          "Injete o líquido no frasco de Semax lentamente, deixando a água escorrer pela parede interna do vidro.",
         ],
-        tip: "Use solução salina 0.9% em vez de água bacteriostática para maior conforto nasal e menor irritação.",
+        warning: "Nunca jogue o jato direto sobre o pó liofilizado para não degradar o peptídeo.",
       },
       {
-        title: "Transferir para Spray",
+        title: "Transferência e Complementação",
         content: [
-          "Aspire a solução reconstituída com seringa.",
-          "Transfira para o frasco spray nasal estéril.",
-          "Teste o spray com 2-3 bombas até sair uma névoa uniforme.",
+          "Abra o frasco de soro fisiológico e adicione 10ml diretamente no frasco de spray para completar a mistura.",
+          "Feche o frasco de spray e inverta-o suavemente duas ou três vezes para homogeneizar.",
         ],
+        tip: "Com esta diluição (10mg em 12ml totais) e um spray de 12,5 µl, cada borrifada entrega ~100mcg do peptídeo.",
       },
       {
-        title: "Técnica de Aplicação",
+        title: "Armazenamento e Validade",
         content: [
-          "Assoe o nariz suavemente antes da aplicação.",
-          "Incline levemente a cabeça para frente (NÃO para trás).",
-          "Insira a ponta do spray na narina.",
-          "Aponte para a parede lateral do nariz (não para o septo).",
-          "Pressione o spray enquanto inspira suavemente.",
-          "Alterne as narinas a cada dose.",
+          "Temperatura: Semax e Selank são termolábeis. Manter obrigatoriamente na geladeira (2°C a 8°C).",
+          "Nunca deixe no congelador ou na porta da geladeira.",
+          "Proteção: vidro âmbar protege contra a luz, mas mantenha o frasco dentro de uma caixa ou local escuro na geladeira.",
         ],
-        warning: "Não incline a cabeça para trás ao aplicar — isso faz o peptídeo escorrer para a garganta, reduzindo a absorção.",
+        warning: "A mistura com soro fisiológico reduz a validade para 10-20 dias na geladeira. Rotule com a data de preparo!",
       },
       {
-        title: "Dosagem Típica",
+        title: "Dicas de Uso e Higiene",
         content: [
-          "Selank: 200-400mcg por spray, 1-2x ao dia.",
-          "Semax: 200-600mcg por spray, 1-2x ao dia.",
-          "Ciclos: 4-8 semanas com pausa de 2-4 semanas.",
-        ],
-      },
-      {
-        title: "Armazenamento",
-        content: [
-          "Refrigerar a 2-8°C após reconstituição.",
-          "Válido por até 30 dias refrigerado.",
-          "Proteger da luz direta.",
+          "Aplique uma borrifada em cada narina, inspirando levemente.",
+          "Evite inspirar com muita força para que o líquido não desça para a garganta.",
+          "Após cada aplicação, limpe o bico ejetor com álcool 70% antes de colocar a tampa protetora.",
+          "Isso evita que bactérias da mucosa contaminem o restante da solução.",
         ],
       },
     ],
