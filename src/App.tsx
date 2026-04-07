@@ -70,7 +70,7 @@ const App = () => (
             <Route path="/app/settings" element={<AppRoute><SettingsPage /></AppRoute>} />
             <Route path="/app/billing" element={<AppRoute><Billing /></AppRoute>} />
             <Route path="/app/learn" element={<AppRoute><Learn /></AppRoute>} />
-            <Route path="/app/learn/:slug" element={<AppRoute><GuideDetail /></AppRoute>} />
+            <Route path="/app/learn/:slug" element={<AppRoute><Learn /></AppRoute>} />
             <Route path="/app/admin" element={<AppRoute requireAdmin><Admin /></AppRoute>} />
             <Route path="/peptide/:slug" element={<AppRoute><PeptideDetail /></AppRoute>} />
 
