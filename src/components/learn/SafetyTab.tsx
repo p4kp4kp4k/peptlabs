@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, FileText, ShieldAlert, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { AlertTriangle, FileText, ShieldAlert, ChevronDown, ChevronUp, Check, Ban, AlertOctagon, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
