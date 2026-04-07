@@ -115,7 +115,17 @@ export default function CalculatorPage() {
   const [vialMg, setVialMg] = useState("");
   const [diluentMl, setDiluentMl] = useState("");
   const [desiredDoseMcg, setDesiredDoseMcg] = useState("");
-  const [selectedSyringe, setSelectedSyringe] = useState(syringeSizes[2]); // 1.0mL default
+  const [selectedSyringe, setSelectedSyringe] = useState(syringeSizes[2]);
+  const [protocolOpen, setProtocolOpen] = useState(false);
+  const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
+
+  const applyProtocol = (p: typeof presetProtocols[0]) => {
+    setVialMg(p.vial);
+    setDiluentMl(p.water);
+    setDesiredDoseMcg(p.dose);
+    setSelectedProtocol(p.name);
+    setProtocolOpen(false);
+  };
 
   const vial = parseFloat(vialMg) || 0;
   const diluent = parseFloat(diluentMl) || 0;
