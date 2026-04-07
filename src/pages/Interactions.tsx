@@ -26,7 +26,7 @@ export default function Interactions() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const { data: allPeptides = [], isLoading } = usePeptidesWithInteractions();
-  }, [peptides]);
+  
 
   const categories = useMemo(() => {
     return Array.from(new Set(allPeptides.map((p) => p.category))).sort();
