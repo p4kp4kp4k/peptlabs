@@ -146,10 +146,15 @@ export default function Learn() {
                       {guide.category}
                     </Badge>
                   </div>
-                  {guide.isPro ? (
+                  {guide.isPro && !hasFullAccess ? (
                     <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5">
                       <Lock className="h-2.5 w-2.5 text-amber-400" />
                       <span className="text-[9px] font-semibold text-amber-400">PRO</span>
+                    </div>
+                  ) : guide.isPro && hasFullAccess ? (
+                    <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5">
+                      <Unlock className="h-2.5 w-2.5 text-emerald-400" />
+                      <span className="text-[9px] font-semibold text-emerald-400">DESBLOQUEADO</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5">
