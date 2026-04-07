@@ -56,14 +56,14 @@ export async function fetchPeptideCount(): Promise<number> {
 
 /** Admin: create peptide */
 export async function createPeptide(peptide: Partial<Peptide> & { name: string; slug: string; category: string }) {
-  const { data, error } = await supabase.from("peptides").insert(peptide).select().single();
+  const { data, error } = await supabase.from("peptides").insert(peptide as any).select().single();
   if (error) throw error;
   return data;
 }
 
 /** Admin: update peptide */
 export async function updatePeptide(id: string, updates: Partial<Peptide>) {
-  const { data, error } = await supabase.from("peptides").update(updates).eq("id", id).select().single();
+  const { data, error } = await supabase.from("peptides").update(updates as any).eq("id", id).select().single();
   if (error) throw error;
   return data;
 }

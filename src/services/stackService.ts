@@ -24,15 +24,15 @@ export async function fetchStackCount(): Promise<number> {
 export async function createStack(stack: Partial<Stack> & { name: string; category: string }) {
   const { data, error } = await supabase.from("stacks").insert({
     ...stack,
-    peptides: stack.peptides ?? [],
-  }).select().single();
+    peptides: (stack.peptides ?? []) as any,
+  } as any).select().single();
   if (error) throw error;
   return data;
 }
 
 /** Admin: update stack */
 export async function updateStack(id: string, updates: Partial<Stack>) {
-  const { data, error } = await supabase.from("stacks").update(updates).eq("id", id).select().single();
+  const { data, error } = await supabase.from("stacks").update(updates as any).eq("id", id).select().single();
   if (error) throw error;
   return data;
 }

@@ -37,7 +37,7 @@ export async function createProtocol(protocol: {
 export async function updateProtocol(id: string, updates: Partial<Protocol>) {
   const { data, error } = await supabase
     .from("protocols")
-    .update(updates)
+    .update(updates as any)
     .eq("id", id)
     .select()
     .single();
