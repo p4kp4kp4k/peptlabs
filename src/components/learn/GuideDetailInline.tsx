@@ -232,8 +232,8 @@ export default function GuideDetailInline({ slug }: Props) {
 
   return (
     <div className="max-w-3xl mx-auto">
-      {/* Back button */}
-      <Button variant="ghost" size="sm" className="mb-5 text-xs text-muted-foreground hover:text-foreground transition-colors" onClick={() => navigate("/app/learn")}>
+      {/* Back button - mobile only */}
+      <Button variant="ghost" size="sm" className="mb-5 text-xs text-muted-foreground hover:text-foreground transition-colors md:hidden" onClick={() => navigate("/app/learn")}>
         <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Voltar aos guias
       </Button>
 
