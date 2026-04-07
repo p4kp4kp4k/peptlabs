@@ -435,3 +435,4 @@ function SyncPanel() {
       </Card>
     </div>
   );
+}
