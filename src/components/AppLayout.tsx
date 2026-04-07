@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Syringe, Search, ArrowLeftRight,
   Calculator, Layers, MapPin, History, Settings, CreditCard,
-  Shield, Menu, X, LogOut, ChevronDown, FlaskConical, Zap
+  Shield, Menu, X, LogOut, ChevronDown, FlaskConical, Zap, BookOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ const mainNav = [
   { label: "Stacks", icon: Layers, path: "/app/stacks" },
   { label: "Mapa Corporal", icon: MapPin, path: "/app/body-map" },
   { label: "Interações", icon: Zap, path: "/app/interactions" },
+  { label: "Aprender", icon: BookOpen, path: "/app/learn" },
 ];
 
 const bottomNav = [
