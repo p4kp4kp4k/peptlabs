@@ -525,6 +525,9 @@ export default function CalculatorPage() {
                   </tbody>
                 </table>
               </div>
+              <p className="text-[10px] text-muted-foreground mt-3 px-4 flex items-center gap-1.5">
+                💡 Toque em uma linha para carregar na calculadora.
+              </p>
             </CardContent>
           </Card>
 
