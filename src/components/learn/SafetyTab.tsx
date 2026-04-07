@@ -78,14 +78,14 @@ const sideEffectsData: SideEffect[] = [
 ];
 
 const examsData = [
-  { name: "Hemograma completo", frequency: "A cada 8 semanas", relevance: "Todos os peptídeos" },
-  { name: "Glicose em jejum + HbA1c", frequency: "A cada 12 semanas", relevance: "MK-677, Tirzepatida, Semaglutida" },
-  { name: "IGF-1", frequency: "A cada 8-12 semanas", relevance: "GH Secretagogos, CJC-1295, Ipamorelin" },
-  { name: "Função hepática (TGO/TGP)", frequency: "A cada 12 semanas", relevance: "Todos os peptídeos injetáveis" },
-  { name: "Função renal (Creatinina/Ureia)", frequency: "A cada 12 semanas", relevance: "Todos os peptídeos" },
-  { name: "TSH / T4 Livre", frequency: "A cada 16 semanas", relevance: "MK-677, Tesamorelin" },
-  { name: "Lipidograma", frequency: "A cada 12 semanas", relevance: "Tirzepatida, Semaglutida" },
-  { name: "Insulina em jejum", frequency: "A cada 12 semanas", relevance: "MK-677" },
+  { name: "IGF-1", why: "Mede a eficácia do eixo GH", peptides: "CJC, Ipamorelin, MK-677", frequency: "1x a cada 3 meses" },
+  { name: "Glicemia em Jejum", why: "Risco de hiperglicemia", peptides: "MK-677, HGH, Tirzepatida", frequency: "Mensal" },
+  { name: "HbA1c", why: "Média de glicose (3 meses)", peptides: "MK-677, Tirzepatida", frequency: "1x a cada 3 meses" },
+  { name: "ALT / AST", why: "Função hepática", peptides: "Todos (especialmente orais)", frequency: "1x a cada 6 meses" },
+  { name: "Creatinina / Ureia", why: "Função renal", peptides: "Todos", frequency: "1x a cada 6 meses" },
+  { name: "Proteína C-Reativa", why: "Inflamação sistêmica", peptides: "BPC-157, TB-500", frequency: "1x a cada 3 meses" },
+  { name: "TSH / T4 Livre", why: "Função tireoidiana", peptides: "Tirzepatida, Semaglutida", frequency: "1x a cada 6 meses" },
+  { name: "Hemograma Completo", why: "Saúde geral e imunidade", peptides: "Thymosin Alpha-1, LL-37", frequency: "1x a cada 6 meses" },
 ];
 
 const absoluteContraindications = [
@@ -202,21 +202,34 @@ export default function SafetyTab() {
 
       {/* Exames */}
       {subTab === "exames" && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <p className="text-[10px] text-muted-foreground">
-            Exames recomendados para monitoramento durante protocolos de peptídeos.
+            Checklist de exames de sangue para monitoramento durante ciclos.
           </p>
-          {examsData.map(exam => (
-            <div key={exam.name} className="rounded-xl border border-border/30 bg-card p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold text-foreground">{exam.name}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{exam.relevance}</p>
-                </div>
-                <Badge className="shrink-0 border-0 bg-primary/10 text-primary text-[9px]">{exam.frequency}</Badge>
-              </div>
+
+          {/* Table header */}
+          <div className="rounded-xl border border-border/30 bg-card overflow-hidden">
+            <div className="grid grid-cols-4 gap-px bg-border/20">
+              <div className="bg-secondary/40 p-3"><p className="text-[10px] font-semibold text-muted-foreground">Marcador</p></div>
+              <div className="bg-secondary/40 p-3"><p className="text-[10px] font-semibold text-muted-foreground">Por quê?</p></div>
+              <div className="bg-secondary/40 p-3"><p className="text-[10px] font-semibold text-muted-foreground">Peptídeos</p></div>
+              <div className="bg-secondary/40 p-3"><p className="text-[10px] font-semibold text-muted-foreground">Frequência</p></div>
             </div>
-          ))}
+            {examsData.map(exam => (
+              <div key={exam.name} className="grid grid-cols-4 gap-px border-t border-border/20">
+                <div className="p-3"><p className="text-[10px] font-semibold text-foreground">{exam.name}</p></div>
+                <div className="p-3"><p className="text-[10px] text-muted-foreground">{exam.why}</p></div>
+                <div className="p-3"><p className="text-[10px] text-muted-foreground">{exam.peptides}</p></div>
+                <div className="p-3"><Badge className="shrink-0 border-0 bg-primary/10 text-primary text-[9px]">{exam.frequency}</Badge></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Progress */}
+          <div className="rounded-xl border border-border/30 bg-card p-4 flex items-center justify-between">
+            <p className="text-xs font-medium text-foreground">Progresso dos Exames</p>
+            <Badge className="border-0 bg-secondary text-muted-foreground text-[9px]">0%</Badge>
+          </div>
         </div>
       )}
 
