@@ -1,0 +1,1 @@
+ALTER TYPE public.history_kind ADD VALUE IF NOT EXISTS 'premium_gate';
