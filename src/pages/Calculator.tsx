@@ -39,14 +39,14 @@ const commonDoses = [50, 100, 200, 250, 300, 500, 750, 1000, 1500, 2000, 2500];
 
 // ── Conversion table data (from reference PDFs) ──
 const conversionTable = [
-  { peptide: "BPC-157", dose: "250mcg", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.10 mL (10 UI)" },
-  { peptide: "TB-500", dose: "2.5mg", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.10 mL (10 UI)" },
-  { peptide: "CJC/Ipam", dose: "100/200mcg", vial: "5mg/5mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.04/0.08 mL" },
-  { peptide: "Tirzepatida", dose: "2.5mg", vial: "10 mg", water: "2 mL", conc: "5000 mcg/mL", volume: "0.50 mL (50 UI)" },
-  { peptide: "Semaglutida", dose: "0.25mg", vial: "5 mg", water: "1 mL", conc: "5000 mcg/mL", volume: "0.05 mL (5 UI)" },
-  { peptide: "GHK-Cu", dose: "200mcg", vial: "5 mg", water: "5 mL", conc: "1000 mcg/mL", volume: "0.20 mL (20 UI)" },
-  { peptide: "Selank", dose: "200mcg", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.08 mL (8 UI)" },
-  { peptide: "Epitalon", dose: "5mg", vial: "10 mg", water: "2 mL", conc: "5000 mcg/mL", volume: "0.10 mL (10 UI)" },
+  { peptide: "BPC-157", dose: "250mcg", vial: "5mg", water: "2ml", ui: "10 UI" },
+  { peptide: "TB-500", dose: "2.5mg", vial: "5mg", water: "2ml", ui: "100 UI (cheia)" },
+  { peptide: "CJC/Ipam", dose: "100/200mcg", vial: "5mg/5mg", water: "2ml", ui: "4 UI" },
+  { peptide: "Tirzepatida", dose: "2.5mg", vial: "10mg", water: "2ml", ui: "50 UI" },
+  { peptide: "Semaglutida", dose: "0.25mg", vial: "5mg", water: "1ml", ui: "5 UI" },
+  { peptide: "GHK-Cu", dose: "200mcg", vial: "50mg", water: "5ml", ui: "4 UI" },
+  { peptide: "Selank", dose: "200mcg", vial: "5mg", water: "2ml", ui: "8 UI" },
+  { peptide: "Epitalon", dose: "5mg", vial: "10mg", water: "2ml", ui: "100 UI (cheia)" },
 ];
 
 // ── Diluent concentration reference ──
@@ -493,11 +493,11 @@ export default function CalculatorPage() {
         <TabsContent value="tables" className="space-y-4">
           <Card className="border-border/40 bg-card/80">
             <CardHeader className="pb-3 pt-4 px-4">
-              <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Tabela Mestre de Conversão
+              <CardTitle className="text-sm flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                <Table2 className="h-4 w-4 text-primary" /> Tabela de Conversão Mestre
               </CardTitle>
               <CardDescription className="text-[11px]">
-                Referência rápida para os peptídeos mais utilizados com volumes pré-calculados
+                Referência rápida: doses comuns com seringa de 1ml (100 UI).
               </CardDescription>
             </CardHeader>
             <CardContent className="px-0 pb-4">
@@ -509,8 +509,7 @@ export default function CalculatorPage() {
                       <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Dose</th>
                       <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Frasco</th>
                       <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Diluente</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Conc.</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Volume</th>
+                      <th className="text-right px-4 py-2 font-semibold text-primary">UI</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -520,13 +519,15 @@ export default function CalculatorPage() {
                         <td className="text-center px-2 py-2 text-muted-foreground">{row.dose}</td>
                         <td className="text-center px-2 py-2 text-muted-foreground">{row.vial}</td>
                         <td className="text-center px-2 py-2 text-muted-foreground">{row.water}</td>
-                        <td className="text-center px-2 py-2 text-primary font-medium">{row.conc}</td>
-                        <td className="text-center px-2 py-2 text-muted-foreground">{row.volume}</td>
+                        <td className="text-right px-4 py-2 text-primary font-semibold">{row.ui}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+              <p className="text-[10px] text-muted-foreground mt-3 px-4 flex items-center gap-1.5">
+                💡 Toque em uma linha para carregar na calculadora.
+              </p>
             </CardContent>
           </Card>
 
