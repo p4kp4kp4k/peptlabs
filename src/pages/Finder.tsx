@@ -3,6 +3,9 @@ import {
   Crosshair, ArrowRight, ArrowLeft, Check, Sparkles, Zap,
   AlertTriangle, Star, Timer, Save, RotateCcw, ChevronRight,
   Shield, Activity, FlaskConical, Target, Loader2,
+  Bone, Scale, BrainCircuit, Hourglass, Moon, ShieldPlus,
+  HeartPulse, TrendingUp, Palette, Heart,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
