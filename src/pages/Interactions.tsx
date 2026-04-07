@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, Triangle, ArrowRight, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
-import { getCategoryColor } from "@/components/peptide/peptideUtils";
 import type { Json } from "@/integrations/supabase/types";
 
 interface NormalizedInteraction {
@@ -244,7 +243,6 @@ export default function Interactions() {
 
       {/* Interaction cards */}
       {!isLoading && filtered.map((peptide) => {
-        const catColor = getCategoryColor(peptide.category);
         return (
           <div key={peptide.slug} className="rounded-xl border border-border/25 bg-card/70 overflow-hidden">
             {/* Peptide header */}
@@ -256,7 +254,7 @@ export default function Interactions() {
                 >
                   {peptide.name}
                 </Link>
-                <Badge className={`text-[9px] bg-gradient-to-r ${catColor} border-0 font-medium px-2 shrink-0`}>
+                <Badge variant="outline" className="text-[9px] bg-primary/15 text-primary border-primary/25 font-semibold px-2 shrink-0">
                   {peptide.category}
                 </Badge>
               </div>
