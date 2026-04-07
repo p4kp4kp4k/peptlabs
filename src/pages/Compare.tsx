@@ -93,13 +93,18 @@ export default function Compare() {
       {showPicker && (
         <Card className="mb-4 border-primary/20">
           <CardContent className="p-3">
-            <input
-              autoFocus
-              placeholder="Buscar peptídeo..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-transparent border-b border-border/50 pb-2 text-sm text-foreground placeholder:text-muted-foreground outline-none mb-2"
-            />
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                autoFocus
+                placeholder="Buscar peptídeo..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex-1 bg-transparent border-b border-border/50 pb-2 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+              />
+              <button onClick={() => { setShowPicker(false); setSearch(""); }} className="p-1 rounded-md hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
             <div className="max-h-48 overflow-y-auto space-y-0.5">
               {filteredPeptides.map((p) => (
                 <button
