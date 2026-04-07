@@ -196,6 +196,7 @@ export default function CalculatorPage() {
         </CollapsibleContent>
       </Collapsible>
 
+      <Tabs defaultValue="calculator" className="space-y-4">
         <TabsList className="h-9 bg-secondary/60 p-0.5">
           <TabsTrigger value="calculator" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Syringe className="h-3.5 w-3.5" /> Calculadora
