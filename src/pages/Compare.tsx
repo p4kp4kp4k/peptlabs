@@ -159,9 +159,28 @@ export default function Compare() {
           </table>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <ArrowLeftRight className="h-10 w-10 text-muted-foreground/20 mb-3" />
-          <p className="text-sm text-muted-foreground">Selecione pelo menos 2 peptídeos para comparar</p>
+        <div>
+          {/* Popular comparisons */}
+          <h2 className="text-base font-semibold text-foreground mb-4">Comparações Populares</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {POPULAR_COMPARISONS.map((comp) => (
+              <button
+                key={comp.title}
+                onClick={() => loadPopularComparison(comp.slugs)}
+                className="text-left rounded-xl border border-border/50 bg-card p-4 hover:border-primary/30 transition-colors"
+              >
+                <h3 className="text-sm font-semibold text-foreground">{comp.title}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5 mb-3">{comp.desc}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {comp.slugs.map((s) => (
+                    <span key={s} className="rounded-md bg-secondary px-2 py-0.5 text-[11px] text-foreground">
+                      {getPeptideNameBySlug(s)}
+                    </span>
+                  ))}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
