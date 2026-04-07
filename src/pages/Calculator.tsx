@@ -6,9 +6,27 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Calculator as CalcIcon, Droplets, FlaskConical, Syringe, Info, RotateCcw,
-  Table2, Beaker, AlertTriangle, CheckCircle2, Clock, Snowflake, ThermometerSun
+  Table2, Beaker, AlertTriangle, CheckCircle2, Clock, Snowflake, ThermometerSun,
+  ClipboardList, ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger
+} from "@/components/ui/collapsible";
+
+// ── Preset protocols for quick fill ──
+const presetProtocols = [
+  { name: "BPC-157 Recuperação", vial: "5", water: "2", dose: "250" },
+  { name: "TB-500 Carga", vial: "5", water: "2", dose: "2500" },
+  { name: "MGF Reparo Muscular", vial: "5", water: "2", dose: "200" },
+  { name: "KLOW Recuperação", vial: "5", water: "2", dose: "250" },
+  { name: "Semaglutida 0.25mg", vial: "5", water: "1", dose: "250" },
+  { name: "Tirzepatida 2.5mg", vial: "10", water: "2", dose: "2500" },
+  { name: "CJC-1295 / Ipamorelin", vial: "5", water: "2", dose: "100" },
+  { name: "GHK-Cu Rejuvenescimento", vial: "5", water: "5", dose: "200" },
+  { name: "Selank Ansiolítico", vial: "5", water: "2", dose: "200" },
+  { name: "Epitalon Anti-aging", vial: "10", water: "2", dose: "5000" },
+];
 
 // ── Syringe sizes chips ──
 const syringeSizes = [
