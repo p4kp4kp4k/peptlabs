@@ -83,8 +83,10 @@ export default function OverviewTab({ name, mechanism, mechanism_points, benefit
       {/* Efeitos Colaterais */}
       {side_effects && (
         <SectionCard>
-          <SectionTitle icon={AlertTriangle} iconColor="text-amber-400" iconBg="bg-amber-400/10">Efeitos Colaterais</SectionTitle>
-          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{side_effects}</p>
+          <SectionTitle icon={AlertTriangle} iconColor="text-amber-400" iconBg="bg-amber-400/10">Efeitos Colaterais e Precauções</SectionTitle>
+          <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{side_effects}</p>
+          </div>
         </SectionCard>
       )}
 
