@@ -380,71 +380,126 @@ function BodySilhouette({
   onSiteClick: (site: InjectionSite) => void;
 }) {
   return (
-    <div className="relative mx-auto" style={{ width: "200px", height: "400px" }}>
-      {/* Body shape SVG - improved anatomical silhouette */}
-      <svg viewBox="0 0 200 400" className="w-full h-full">
+    <div className="relative mx-auto" style={{ width: "220px", height: "440px" }}>
+      <svg viewBox="0 0 220 440" className="w-full h-full">
         <defs>
-          <linearGradient id={`bodyGrad-${side}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="hsl(var(--muted))" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="hsl(var(--muted))" stopOpacity="0.2" />
+          <linearGradient id={`bodyFill-${side}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--muted))" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="hsl(var(--muted))" stopOpacity="0.15" />
           </linearGradient>
-          <filter id="bodyShadow">
-            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="hsl(var(--primary))" floodOpacity="0.08" />
+          <linearGradient id={`bodyStroke-${side}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.08" />
+          </linearGradient>
+          <filter id={`glow-${side}`}>
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
           </filter>
+          {/* Radial glow for injection points */}
+          <radialGradient id="dotGlow">
+            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+          </radialGradient>
         </defs>
 
-        {/* Head */}
-        <ellipse cx="100" cy="32" rx="22" ry="26" fill={`url(#bodyGrad-${side})`} stroke="hsl(var(--border))" strokeWidth="0.8" strokeOpacity="0.4" />
+        {/* Full body silhouette - single clean path */}
+        <path
+          d={`
+            M110 8
+            C96 8, 86 18, 86 32
+            C86 46, 96 56, 110 56
+            C124 56, 134 46, 134 32
+            C134 18, 124 8, 110 8
+            Z
+          `}
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="1"
+        />
         {/* Neck */}
-        <rect x="90" y="56" width="20" height="14" rx="6" fill={`url(#bodyGrad-${side})`} stroke="hsl(var(--border))" strokeWidth="0.6" strokeOpacity="0.3" />
-
-        {/* Torso */}
         <path
-          d="M62 70 C58 75, 52 95, 50 120 L48 175 C48 178, 50 182, 55 184 L70 186 L70 180 L100 182 L130 180 L130 186 L145 184 C150 182, 152 178, 152 175 L150 120 C148 95, 142 75, 138 70 L120 68 C110 66, 90 66, 80 68 Z"
-          fill={`url(#bodyGrad-${side})`}
-          stroke="hsl(var(--border))"
+          d="M102 54 L102 68 L118 68 L118 54"
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
           strokeWidth="0.8"
-          strokeOpacity="0.35"
-          filter="url(#bodyShadow)"
         />
-
-        {/* Left shoulder + arm */}
+        {/* Torso + shoulders */}
         <path
-          d="M62 70 C55 72, 42 80, 36 95 L28 130 C26 138, 24 150, 23 165 L22 175 C22 178, 24 180, 28 180 L32 180 C35 180, 37 178, 37 175 L40 140 L46 110 L52 85"
-          fill={`url(#bodyGrad-${side})`}
-          stroke="hsl(var(--border))"
-          strokeWidth="0.7"
-          strokeOpacity="0.3"
-        />
-        {/* Right shoulder + arm */}
-        <path
-          d="M138 70 C145 72, 158 80, 164 95 L172 130 C174 138, 176 150, 177 165 L178 175 C178 178, 176 180, 172 180 L168 180 C165 180, 163 178, 163 175 L160 140 L154 110 L148 85"
-          fill={`url(#bodyGrad-${side})`}
-          stroke="hsl(var(--border))"
-          strokeWidth="0.7"
-          strokeOpacity="0.3"
-        />
-
-        {/* Left leg */}
-        <path
-          d="M70 184 C68 195, 64 220, 60 250 L56 300 C55 310, 54 325, 53 340 L52 360 C52 363, 54 366, 58 366 L66 366 C69 366, 71 363, 70 360 L72 330 L76 280 L80 230 L82 186"
-          fill={`url(#bodyGrad-${side})`}
-          stroke="hsl(var(--border))"
-          strokeWidth="0.7"
-          strokeOpacity="0.3"
-        />
-        {/* Right leg */}
-        <path
-          d="M130 184 C132 195, 136 220, 140 250 L144 300 C145 310, 146 325, 147 340 L148 360 C148 363, 146 366, 142 366 L134 366 C131 366, 129 363, 130 360 L128 330 L124 280 L120 230 L118 186"
-          fill={`url(#bodyGrad-${side})`}
-          stroke="hsl(var(--border))"
-          strokeWidth="0.7"
-          strokeOpacity="0.3"
+          d={`
+            M102 68
+            L80 72
+            C68 76, 56 86, 50 100
+            L44 120
+            L38 140
+            L34 165
+            L32 180
+            C32 184, 34 186, 38 186
+            L44 186
+            C47 186, 49 184, 49 180
+            L52 155
+            L56 130
+            L60 110
+            L65 96
+            L68 92
+            L68 190
+            L64 220
+            L60 260
+            L56 300
+            L54 340
+            L52 370
+            L50 390
+            C50 395, 53 398, 58 398
+            L72 398
+            C76 398, 78 395, 78 390
+            L80 360
+            L84 320
+            L88 280
+            L92 240
+            L96 210
+            L110 200
+            L124 210
+            L128 240
+            L132 280
+            L136 320
+            L140 360
+            L142 390
+            C142 395, 144 398, 148 398
+            L162 398
+            C167 398, 170 395, 170 390
+            L168 370
+            L166 340
+            L164 300
+            L160 260
+            L156 220
+            L152 190
+            L152 92
+            L155 96
+            L160 110
+            L164 130
+            L168 155
+            L171 180
+            C171 184, 173 186, 176 186
+            L182 186
+            C186 186, 188 184, 188 180
+            L186 165
+            L182 140
+            L176 120
+            L170 100
+            C164 86, 152 76, 140 72
+            L118 68
+          `}
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="1"
+          strokeLinejoin="round"
         />
 
         {/* Center line for dorsal */}
         {side === "dorsal" && (
-          <line x1="100" y1="70" x2="100" y2="180" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="110" y1="70" x2="110" y2="195" stroke="hsl(var(--primary))" strokeWidth="0.6" strokeDasharray="3 5" opacity="0.2" />
         )}
       </svg>
 
@@ -460,47 +515,57 @@ function BodySilhouette({
             style={{ left: `${site.x}%`, top: `${site.y}%` }}
             title={site.name}
           >
-            {/* Outer glow ring */}
+            {/* Slow outer pulse */}
             <span
-              className={`absolute rounded-full transition-all duration-300 ${
+              className={`absolute rounded-full transition-all duration-500 ${
                 isSelected
-                  ? "bg-primary/40 scale-100"
-                  : "bg-primary/15 scale-100 animate-ping"
+                  ? "bg-primary/30 scale-110"
+                  : "bg-primary/10"
               }`}
-              style={{ width: "24px", height: "24px", left: "-6px", top: "-6px" }}
+              style={{
+                width: "28px", height: "28px", left: "-8px", top: "-8px",
+                animation: isSelected ? "none" : "slowPulse 3s ease-in-out infinite",
+              }}
             />
             {/* Middle ring */}
             <span
-              className={`absolute rounded-full border-2 transition-all duration-300 ${
+              className={`absolute rounded-full border transition-all duration-300 ${
                 isSelected
-                  ? "border-primary bg-primary/30 scale-110"
+                  ? "border-primary bg-primary/25 scale-110"
                   : isCompleted
-                    ? "border-primary/60 bg-primary/20"
-                    : "border-primary/40 bg-primary/10"
+                    ? "border-primary/50 bg-primary/15"
+                    : "border-primary/30 bg-primary/8"
               }`}
-              style={{ width: "18px", height: "18px", left: "-3px", top: "-3px" }}
+              style={{ width: "20px", height: "20px", left: "-4px", top: "-4px" }}
             />
             {/* Center dot */}
             <span
-              className={`relative block h-3 w-3 rounded-full shadow-lg transition-all duration-200 group-hover:scale-125 ${
+              className={`relative block h-3 w-3 rounded-full transition-all duration-200 group-hover:scale-125 ${
                 isSelected
-                  ? "bg-primary shadow-primary/50 scale-125"
+                  ? "bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.6)] scale-125"
                   : isCompleted
-                    ? "bg-primary shadow-primary/30"
-                    : "bg-primary/70 shadow-primary/20"
+                    ? "bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.3)]"
+                    : "bg-primary/70 shadow-[0_0_4px_hsl(var(--primary)/0.2)]"
               }`}
             />
-            {/* Label on hover */}
-            <span className="absolute left-1/2 -translate-x-1/2 -top-5 whitespace-nowrap rounded bg-card/95 border border-border/40 px-1.5 py-0.5 text-[7px] font-medium text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg backdrop-blur-sm">
+            {/* Hover label */}
+            <span className="absolute left-1/2 -translate-x-1/2 -top-6 whitespace-nowrap rounded-md bg-card border border-border/50 px-2 py-1 text-[8px] font-medium text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl backdrop-blur-md">
               {site.name.replace("Abdômen ", "Abd. ").replace("Superior ", "Sup. ").replace("Inferior ", "Inf. ").replace("Direito", "Dir.").replace("Direita", "Dir.").replace("Esquerdo", "Esq.").replace("Esquerda", "Esq.").replace("Externa ", "Ext. ").replace("Lateral ", "Lat. ")}
             </span>
           </button>
         );
       })}
+
+      {/* Inject slow pulse keyframes */}
+      <style>{`
+        @keyframes slowPulse {
+          0%, 100% { transform: scale(1); opacity: 0.6; }
+          50% { transform: scale(1.4); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }
-
 // ── Site Detail Modal ──
 function SiteDetailModal({ site, onClose }: { site: InjectionSite; onClose: () => void }) {
   return (
