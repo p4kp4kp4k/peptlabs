@@ -405,96 +405,219 @@ function BodySilhouette({
           </radialGradient>
         </defs>
 
-        {/* Full body silhouette - single clean path */}
+        {/* Head */}
+        <ellipse cx="110" cy="32" rx="20" ry="24"
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="1"
+        />
+        {/* Ears */}
+        <ellipse cx="89" cy="32" rx="4" ry="7"
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.6"
+        />
+        <ellipse cx="131" cy="32" rx="4" ry="7"
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.6"
+        />
+        {/* Neck */}
+        <path
+          d="M103 54 C103 60, 103 66, 100 70 L120 70 C117 66, 117 60, 117 54"
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.8"
+        />
+
+        {/* Torso */}
         <path
           d={`
-            M110 8
-            C96 8, 86 18, 86 32
-            C86 46, 96 56, 110 56
-            C124 56, 134 46, 134 32
-            C134 18, 124 8, 110 8
+            M100 70
+            C82 72, 68 78, 62 88
+            L58 100 L58 130 L60 160 L62 185
+            L68 190 L68 195
+            L152 195 L152 190
+            L158 185 L160 160 L162 130 L162 100
+            L158 88
+            C152 78, 138 72, 120 70
             Z
           `}
           fill={`url(#bodyFill-${side})`}
           stroke={`url(#bodyStroke-${side})`}
           strokeWidth="1"
+          strokeLinejoin="round"
         />
-        {/* Neck */}
+
+        {/* Left shoulder + upper arm */}
         <path
-          d="M102 54 L102 68 L118 68 L118 54"
+          d={`
+            M62 88
+            C54 82, 46 84, 40 92
+            L34 110 L30 135 L28 160 L26 180
+            C26 183, 28 185, 30 185
+            L36 186 L38 185
+            L40 165 L42 140 L46 118 L52 100
+          `}
           fill={`url(#bodyFill-${side})`}
           stroke={`url(#bodyStroke-${side})`}
           strokeWidth="0.8"
         />
-        {/* Torso + shoulders */}
+        {/* Left hand */}
         <path
           d={`
-            M102 68
-            L80 72
-            C68 76, 56 86, 50 100
-            L44 120
-            L38 140
-            L34 165
-            L32 180
-            C32 184, 34 186, 38 186
-            L44 186
-            C47 186, 49 184, 49 180
-            L52 155
-            L56 130
-            L60 110
-            L65 96
-            L68 92
-            L68 190
-            L64 220
-            L60 260
-            L56 300
-            L54 340
-            L52 370
-            L50 390
-            C50 395, 53 398, 58 398
-            L72 398
-            C76 398, 78 395, 78 390
-            L80 360
-            L84 320
-            L88 280
-            L92 240
-            L96 210
-            L110 200
-            L124 210
-            L128 240
-            L132 280
-            L136 320
-            L140 360
-            L142 390
-            C142 395, 144 398, 148 398
-            L162 398
-            C167 398, 170 395, 170 390
-            L168 370
-            L166 340
-            L164 300
-            L160 260
-            L156 220
-            L152 190
-            L152 92
-            L155 96
-            L160 110
-            L164 130
-            L168 155
-            L171 180
-            C171 184, 173 186, 176 186
-            L182 186
-            C186 186, 188 184, 188 180
-            L186 165
-            L182 140
-            L176 120
-            L170 100
-            C164 86, 152 76, 140 72
-            L118 68
+            M26 180
+            L24 188 L22 194
+            C21 196, 21 198, 22 199
+            L24 199 L25 196
+            L24 194 L25 192 L26 196
+            C26 198, 27 199, 28 199
+            L29 198 L28 194
+            L27 190 L28 192 L29 197
+            C29 199, 30 200, 31 200
+            L32 199 L31 195
+            L30 190 L31 192 L32 196
+            C32 198, 33 199, 34 198
+            L34 196 L33 192
+            L32 188 L34 186
           `}
           fill={`url(#bodyFill-${side})`}
           stroke={`url(#bodyStroke-${side})`}
-          strokeWidth="1"
+          strokeWidth="0.5"
           strokeLinejoin="round"
+        />
+
+        {/* Right shoulder + upper arm */}
+        <path
+          d={`
+            M158 88
+            C166 82, 174 84, 180 92
+            L186 110 L190 135 L192 160 L194 180
+            C194 183, 192 185, 190 185
+            L184 186 L182 185
+            L180 165 L178 140 L174 118 L168 100
+          `}
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.8"
+        />
+        {/* Right hand */}
+        <path
+          d={`
+            M194 180
+            L196 188 L198 194
+            C199 196, 199 198, 198 199
+            L196 199 L195 196
+            L196 194 L195 192 L194 196
+            C194 198, 193 199, 192 199
+            L191 198 L192 194
+            L193 190 L192 192 L191 197
+            C191 199, 190 200, 189 200
+            L188 199 L189 195
+            L190 190 L189 192 L188 196
+            C188 198, 187 199, 186 198
+            L186 196 L187 192
+            L188 188 L186 186
+          `}
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.5"
+          strokeLinejoin="round"
+        />
+
+        {/* Left leg */}
+        <path
+          d={`
+            M68 195
+            L66 210 L64 240 L62 270 L60 300
+            L58 330 L56 355 L54 375
+            L52 390
+            C52 392, 53 394, 55 394
+            L58 394
+          `}
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.8"
+        />
+        <path
+          d={`
+            M96 195
+            L94 210 L92 240 L88 270 L84 300
+            L80 330 L78 355 L76 375
+            L74 390
+            C74 392, 73 394, 71 394
+            L68 394
+          `}
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.8"
+        />
+        {/* Left foot */}
+        <path
+          d={`
+            M55 394
+            L50 396 L44 398
+            C42 399, 41 401, 42 403
+            L44 404 L50 403 L56 401
+            L62 400 L68 400 L71 400
+            C73 399, 74 397, 73 395
+            L71 394 L68 394
+          `}
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.6"
+          strokeLinejoin="round"
+        />
+
+        {/* Right leg */}
+        <path
+          d={`
+            M124 195
+            L126 210 L128 240 L132 270 L136 300
+            L140 330 L142 355 L144 375
+            L146 390
+            C146 392, 147 394, 149 394
+            L152 394
+          `}
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.8"
+        />
+        <path
+          d={`
+            M152 195
+            L154 210 L156 240 L158 270 L160 300
+            L162 330 L164 355 L166 375
+            L168 390
+            C168 392, 167 394, 165 394
+            L162 394
+          `}
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.8"
+        />
+        {/* Right foot */}
+        <path
+          d={`
+            M165 394
+            L170 396 L176 398
+            C178 399, 179 401, 178 403
+            L176 404 L170 403 L164 401
+            L158 400 L152 400 L149 400
+            C147 399, 146 397, 147 395
+            L149 394 L152 394
+          `}
+          fill={`url(#bodyFill-${side})`}
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.6"
+          strokeLinejoin="round"
+        />
+
+        {/* Crotch divider */}
+        <line x1="110" y1="190" x2="110" y2="210"
+          stroke={`url(#bodyStroke-${side})`}
+          strokeWidth="0.6"
+          opacity="0.4"
         />
 
         {/* Center line for dorsal */}
