@@ -34,8 +34,11 @@ function SectionTitle({ icon: Icon, children }: { icon: React.ElementType; child
 
 function StatusBadge({ status }: { status: string }) {
   const upper = status.toUpperCase();
-  if (upper.includes("SINÉR") || upper.includes("SINERG") || upper.includes("COMPATÍV")) {
+  if (upper.includes("SINÉR") || upper.includes("SINERG")) {
     return <Badge className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 font-bold px-2">SINÉRGICO</Badge>;
+  }
+  if (upper.includes("COMPATÍV") || upper.includes("COMPAT")) {
+    return <Badge className="text-[10px] bg-orange-500/15 text-orange-400 border border-orange-500/25 font-bold px-2">COMPATÍVEL</Badge>;
   }
   if (upper.includes("COMPLEMENTAR")) {
     return <Badge className="text-[10px] bg-sky-500/15 text-sky-400 border border-sky-500/25 font-bold px-2">COMPLEMENTAR</Badge>;
