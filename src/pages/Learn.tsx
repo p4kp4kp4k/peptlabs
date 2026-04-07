@@ -177,7 +177,7 @@ export default function Learn() {
                     <span className="text-[10px]">{guide.date}</span>
                   </div>
                   <span className="text-[11px] font-medium text-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                    {guide.isPro ? "Desbloquear →" : "Ler →"}
+                    {guide.isPro && !hasFullAccess ? "Desbloquear →" : "Ler →"}
                   </span>
                 </div>
               </div>
