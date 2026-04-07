@@ -55,6 +55,7 @@ export function generateProtocol(
     const template = DOSAGE_TEMPLATES[sp.slug] ?? DEFAULT_DOSAGE;
     return {
       name: sp.name,
+      slug: sp.slug,
       dose: template.dose,
       frequency: template.frequency,
       duration: template.duration,

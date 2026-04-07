@@ -13,6 +13,7 @@ export interface Protocol {
 
 export interface ProtocolPeptide {
   name: string;
+  slug?: string;
   dose: string;
   frequency: string;
   duration: string;
