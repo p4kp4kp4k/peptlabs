@@ -222,26 +222,81 @@ export default function SafetyTab() {
 
       {/* Riscos */}
       {subTab === "riscos" && (
-        <div className="space-y-2">
+        <div className="space-y-4">
           <p className="text-[10px] text-muted-foreground">
-            Contraindicações absolutas e relativas para uso de peptídeos.
+            Condições que impedem o uso de determinados peptídeos.
           </p>
-          {risksData.map(risk => (
-            <div key={risk.condition} className="rounded-xl border border-border/30 bg-card p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold text-foreground">{risk.condition}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{risk.peptides}</p>
-                </div>
-                <Badge className={cn(
-                  "shrink-0 border-0 text-[9px]",
-                  risk.severity === "Absoluta" ? "bg-red-500/15 text-red-400" : "bg-amber-500/15 text-amber-400"
-                )}>
-                  {risk.severity}
-                </Badge>
-              </div>
+
+          {/* Contraindicações Absolutas */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Ban className="h-4 w-4 text-red-400" />
+              <h3 className="text-xs font-semibold text-foreground">Contraindicações Absolutas</h3>
             </div>
-          ))}
+            <div className="space-y-2">
+              {absoluteContraindications.map(c => (
+                <div key={c.condition} className="rounded-xl border border-red-500/20 bg-card p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">{c.condition}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{c.description}</p>
+                    </div>
+                    <Badge className="shrink-0 border-0 bg-red-500/15 text-red-400 text-[9px]">Absoluta</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Contraindicações Relativas */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertOctagon className="h-4 w-4 text-amber-400" />
+              <h3 className="text-xs font-semibold text-foreground">Contraindicações Relativas</h3>
+            </div>
+            <div className="space-y-2">
+              {relativeContraindications.map(c => (
+                <div key={c.condition} className="rounded-xl border border-amber-500/20 bg-card p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">{c.condition}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{c.description}</p>
+                    </div>
+                    <Badge className="shrink-0 border-0 bg-amber-500/15 text-amber-400 text-[9px]">Relativa</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Combinações Perigosas */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="h-4 w-4 text-red-400" />
+              <h3 className="text-xs font-semibold text-foreground">Combinações Perigosas</h3>
+            </div>
+            <div className="rounded-xl border border-border/30 bg-card overflow-hidden">
+              <div className="grid grid-cols-3 gap-px bg-border/20">
+                <div className="bg-secondary/40 p-3"><p className="text-[10px] font-semibold text-muted-foreground">Combinação</p></div>
+                <div className="bg-secondary/40 p-3"><p className="text-[10px] font-semibold text-muted-foreground">Risco</p></div>
+                <div className="bg-secondary/40 p-3"><p className="text-[10px] font-semibold text-muted-foreground">Motivo</p></div>
+              </div>
+              {dangerousCombinations.map(c => (
+                <div key={c.combination} className="grid grid-cols-3 gap-px bg-border/10 border-t border-border/20">
+                  <div className="p-3"><p className="text-[10px] font-semibold text-foreground">{c.combination}</p></div>
+                  <div className="p-3"><Badge className="border-0 bg-red-500/15 text-red-400 text-[9px]">{c.risk}</Badge></div>
+                  <div className="p-3"><p className="text-[10px] text-muted-foreground">{c.reason}</p></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Disclaimer */}
+          <div className="rounded-xl border border-border/20 bg-muted/30 p-4">
+            <p className="text-[10px] text-muted-foreground leading-relaxed text-center italic">
+              ⚠️ Este conteúdo é educacional e baseado em pesquisa. Consulte sempre um profissional de saúde antes de iniciar qualquer protocolo com peptídeos.
+            </p>
+          </div>
         </div>
       )}
     </div>
