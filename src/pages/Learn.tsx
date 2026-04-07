@@ -296,6 +296,8 @@ export default function Learn() {
           </div>
         </div>
       </div>
+          )}
+        </>
       )}
     </div>
   );
