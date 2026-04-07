@@ -20,7 +20,7 @@ const navItems = [
   { label: "Calculadora", icon: Calculator, path: "/calculator" },
   { label: "Biblioteca de Stacks", icon: Layers, path: "/stacks" },
   { label: "Interações", icon: Triangle, path: "/interactions" },
-  { label: "Mapa de Aplicação", icon: MapPin, path: "#" },
+  { label: "Mapa de Aplicação", icon: MapPin, path: "/body-map" },
   { label: "Cronograma", icon: CalendarDays, path: "#" },
 ];
 
