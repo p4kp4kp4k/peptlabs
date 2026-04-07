@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,11 +11,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import {
   Users, Layers, BookOpen, Shield, TrendingUp, Search, Trash2, Edit,
-  FlaskConical, Plus, Loader2
+  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock
 } from "lucide-react";
 import { fetchAllProfiles, fetchProfileCount } from "@/services/userService";
 import { fetchPeptides, fetchPeptideCount, deletePeptide } from "@/services/peptideService";
 import { fetchStacks, fetchStackCount, deleteStack } from "@/services/stackService";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Admin() {
