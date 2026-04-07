@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { BookOpen, FlaskConical, Shield, Lock, Clock, Check, ArrowRight, Sparkles, GraduationCap, FileText, Microscope, AlertTriangle } from "lucide-react";
+import { BookOpen, FlaskConical, Shield, Lock, Clock, Check, ArrowRight, Sparkles, GraduationCap, FileText, Microscope, AlertTriangle, Unlock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { guides, categoryGradients } from "@/data/peptides";
 import { cn } from "@/lib/utils";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 const tabs = [
   { key: "guias", label: "Guias Práticos", icon: GraduationCap, count: 0 },
@@ -25,6 +26,8 @@ const categoryIcons: Record<string, typeof BookOpen> = {
 
 export default function Learn() {
   const [activeTab, setActiveTab] = useState<"guias" | "estudos" | "seguranca">("guias");
+  const { isPremium, isAdmin } = useEntitlements();
+  const hasFullAccess = isPremium || isAdmin;
 
   const filtered = guides.filter((g) => g.tab === activeTab);
 
@@ -143,10 +146,15 @@ export default function Learn() {
                       {guide.category}
                     </Badge>
                   </div>
-                  {guide.isPro ? (
+                  {guide.isPro && !hasFullAccess ? (
                     <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5">
                       <Lock className="h-2.5 w-2.5 text-amber-400" />
                       <span className="text-[9px] font-semibold text-amber-400">PRO</span>
+                    </div>
+                  ) : guide.isPro && hasFullAccess ? (
+                    <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5">
+                      <Unlock className="h-2.5 w-2.5 text-emerald-400" />
+                      <span className="text-[9px] font-semibold text-emerald-400">DESBLOQUEADO</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5">
@@ -169,7 +177,7 @@ export default function Learn() {
                     <span className="text-[10px]">{guide.date}</span>
                   </div>
                   <span className="text-[11px] font-medium text-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                    {guide.isPro ? "Desbloquear →" : "Ler →"}
+                    {guide.isPro && !hasFullAccess ? "Desbloquear →" : "Ler →"}
                   </span>
                 </div>
               </div>
