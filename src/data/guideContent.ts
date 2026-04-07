@@ -129,109 +129,104 @@ export const guideContents: Record<string, GuideContent> = {
   },
 
   "reconstituicao-peptideos": {
-    intro: "Passo a passo técnico para reconstituir peptídeos liofilizados com segurança: diluentes, volumes, erros comuns e armazenamento correto.",
+    intro: "A reconstituição é o processo de transformar o peptídeo liofilizado (pó) em uma solução líquida estável para aplicação. Erros nesta fase podem degradar o composto ou causar infecções. A qualidade do processo determina diretamente a eficácia e a segurança do peptídeo.",
     sections: [
       {
-        title: "Diluentes Aprovados",
+        title: "Escolha do Diluente por Tipo de Peptídeo",
         icon: "beaker",
-        items: [
-          "Água Bacteriostática (BAC) — padrão para a maioria dos peptídeos",
-          "Solução Salina 0.9% (NaCl) — alternativa para peptídeos nasais",
-          "Água Estéril para Injeção — uso único, sem conservante",
+        table: [
+          { label: "Gerais (BPC, TB, GH)", value: "Água Bacteriostática — 28-30 dias de estabilidade" },
+          { label: "Dose Única", value: "Água Estéril / Salina — < 24 horas, sem conservantes, uso imediato" },
+          { label: "Peptídeos Ácidos (GHK-Cu)", value: "Solução Salina 0.9% — 15-20 dias, tampona pH e reduz ardência" },
+        ],
+      },
+      {
+        title: "Volume de Diluente por Concentração",
+        icon: "calculator",
+        table: [
+          { label: "Frasco 2mg", value: "1ml BAC → 200mcg por 10 UI (0.1ml)" },
+          { label: "Frasco 5mg", value: "2ml BAC → 250mcg por 10 UI (0.1ml)" },
+          { label: "Frasco 10mg", value: "2ml BAC → 500mcg por 10 UI (0.1ml)" },
+          { label: "Frasco 15mg", value: "3ml BAC → 500mcg por 10 UI (0.1ml)" },
+          { label: "Frasco 30mg", value: "6ml BAC → 500mcg por 10 UI (0.1ml)" },
         ],
       },
     ],
     steps: [
       {
-        title: "Etapa 1: Verificar o Peptídeo",
+        title: "Etapa 1: Sanitização",
         content: [
-          "Confirme o nome, dosagem e data de validade do frasco.",
-          "Verifique se o pó liofilizado está intacto (sem líquido ou deterioração).",
-          "Confira a temperatura de armazenamento pré-reconstituição.",
+          "Limpe a bancada com álcool 70%.",
         ],
       },
       {
-        title: "Etapa 2: Calcular o Volume",
+        title: "Etapa 2: Separação",
         content: [
-          "Determine a concentração desejada (ex: 5mg em 2mL = 2.5mg/mL).",
-          "Use a Calculadora de Peptídeos para precisão.",
-          "Volumes comuns: 1mL, 2mL ou 3mL de diluente por frasco.",
-        ],
-        tip: "Volumes menores resultam em concentrações maiores, exigindo menos volume por dose.",
-      },
-      {
-        title: "Etapa 3: Preparação Asséptica",
-        content: [
-          "Lave as mãos com sabão antibacteriano.",
-          "Limpe a bancada com álcool isopropílico.",
-          "Higienize os topos dos frascos com swabs de álcool 70%.",
-          "Aguarde secar completamente antes de prosseguir.",
+          "Limpe os frascos e borrachas com um novo swab de álcool.",
         ],
       },
       {
-        title: "Etapa 4: Aspirar o Diluente",
+        title: "Etapa 3: Aspiração do Ar",
         content: [
-          "Use seringa de 3mL com agulha 21G ou 23G.",
-          "Aspire a quantidade exata calculada de diluente.",
-          "Remova bolhas de ar da seringa.",
+          "Puxe o êmbolo da seringa de reconstituição até a marca do volume desejado (ex: 2ml).",
         ],
       },
       {
-        title: "Etapa 5: Injetar no Frasco",
+        title: "Etapa 4: Equalização de Pressão",
         content: [
-          "Direcione a agulha para a parede lateral do frasco.",
-          "Injete o diluente LENTAMENTE, gota a gota.",
-          "Nunca jateie diretamente no pó liofilizado.",
-        ],
-        warning: "Jatear líquido diretamente no pó pode desnaturar o peptídeo, reduzindo drasticamente sua eficácia.",
-      },
-      {
-        title: "Etapa 6: Dissolver",
-        content: [
-          "Gire o frasco suavemente entre os dedos por 30-60 segundos.",
-          "NUNCA agite vigorosamente.",
-          "Aguarde até a solução ficar completamente límpida.",
-          "Se houver partículas, continue girando suavemente.",
+          "Insira a agulha no frasco de água BAC, injete o ar e aspire o líquido.",
         ],
       },
       {
-        title: "Etapa 7: Verificar a Solução",
+        title: "Etapa 5: Injeção Lenta",
         content: [
-          "A solução deve estar límpida e transparente.",
-          "Presença de partículas ou turbidez indica contaminação.",
-          "Descarte qualquer solução com aparência anormal.",
+          "Insira a agulha no frasco do peptídeo.",
+          "Incline o frasco para que a água escorra lentamente pela parede de vidro.",
+          "Nunca injete diretamente sobre o pó.",
+        ],
+        warning: "A etapa mais crítica: a água deve escorrer pela parede de vidro. Injetar diretamente sobre o pó pode desnaturar o peptídeo.",
+      },
+      {
+        title: "Etapa 6: Remoção de Vácuo",
+        content: [
+          "Se o frasco tiver vácuo forte, deixe a agulha sugar o líquido sozinha, controlando o fluxo com o dedo.",
         ],
       },
       {
-        title: "Etapa 8: Armazenar Corretamente",
+        title: "Etapa 7: Dissolução",
         content: [
-          "Refrigerar a 2-8°C imediatamente após reconstituição.",
-          "Proteger da luz direta.",
-          "Identificar o frasco com data, nome e concentração.",
-          "Validade: até 30 dias refrigerado (BAC) ou 24h (água estéril).",
+          "Retire a agulha. Deixe o frasco descansar por 5 minutos.",
         ],
       },
       {
-        title: "Etapa 9: Erros Comuns a Evitar",
+        title: "Etapa 8: Homogeneização",
         content: [
-          "Não usar água da torneira ou destilada comum.",
-          "Não aquecer o frasco para acelerar a dissolução.",
-          "Não tocar na borracha do frasco com os dedos.",
-          "Não reutilizar seringas ou agulhas.",
-          "Não congelar após reconstituição.",
+          "Gire o frasco suavemente entre as palmas das mãos.",
+          "NUNCA AGITE o frasco.",
         ],
       },
       {
-        title: "Etapa 10: Registro e Controle",
+        title: "Etapa 9: Inspeção",
         content: [
-          "Anote a data de reconstituição em cada frasco.",
-          "Registre o volume de diluente utilizado.",
-          "Calcule e anote a concentração final (mg/mL).",
-          "Acompanhe as doses retiradas para evitar exceder 30 dias.",
+          "Verifique se a solução está límpida.",
+          "Se estiver turva (cloudy), pode estar degradada.",
+          "Exceção: Tesamorelin pode ter leve opacidade.",
+        ],
+      },
+      {
+        title: "Etapa 10: Rotulagem e Armazenamento",
+        content: [
+          "Anote a data de reconstituição no frasco.",
+          "Coloque imediatamente na geladeira (porta não recomendada pela vibração).",
         ],
       },
     ],
-    disclaimer: "Este conteúdo é exclusivamente educacional. Consulte um profissional de saúde antes de manipular ou utilizar peptídeos.",
+    precautions: [
+      { label: "\"O Agitador\"", value: "Agitar o frasco destrói as ligações de aminoácidos de peptídeos frágeis como HGH e IGF-1. Sempre gire suavemente entre as palmas." },
+      { label: "\"O Esquecido\"", value: "Deixar o peptídeo reconstituído fora da geladeira por mais de 2 horas reduz a potência em até 30%." },
+      { label: "\"Água Errada\"", value: "Usar água da torneira ou mineral causa infecções graves (abscessos). Use exclusivamente água bacteriostática ou estéril." },
+    ],
+    disclaimer: "Água da torneira, mineral ou filtrada NUNCA devem ser usadas para reconstituir peptídeos injetáveis. Este conteúdo é exclusivamente educacional — consulte um profissional de saúde.",
   },
 
   "injecao-subcutanea-rotacao": {
