@@ -54,17 +54,17 @@ const injectionSites: InjectionSite[] = [
   },
   {
     id: "coxa-dir", name: "Coxa Externa Direita", region: "Coxa", side: "frontal",
-    x: 38, y: 72, angle: "90° ou 45°",
-    technique: "Terço médio da face lateral da coxa. Pinçar, inserir 31G, injeção lenta.",
-    tips: ["Boa área para auto-aplicação", "Evitar a face interna da coxa"],
-    idealFor: ["GH", "IGF-1", "BPC-157"],
+    x: 38, y: 72, angle: "90° (recomendado) ou 45°",
+    technique: "Vasto lateral (terço médio externo da coxa). Sentar com perna relaxada. Pinçar e inserir.",
+    tips: ["Boa opção quando abdômen está sensível", "Menos absorção que abdômen", "Evitar face interna da coxa"],
+    idealFor: ["TB-500", "GH peptides", "BPC-157"],
   },
   {
     id: "coxa-esq", name: "Coxa Externa Esquerda", region: "Coxa", side: "frontal",
     x: 62, y: 72, angle: "90° ou 45°",
-    technique: "Mesmo procedimento da coxa direita, lado oposto.",
-    tips: ["Alternar com coxa direita semanalmente", "Manter distância do joelho"],
-    idealFor: ["GH", "IGF-1", "BPC-157"],
+    technique: "Mesmo procedimento no vasto lateral esquerdo.",
+    tips: ["Alternar com direita semanalmente", "Marcar os pontos para consistência"],
+    idealFor: ["TB-500", "GH peptides"],
   },
   // Dorsal
   {
