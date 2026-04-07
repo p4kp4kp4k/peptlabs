@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { runEngine, getAvailableGoals, type GeneratedProtocol } from "@/engine";
 import { createProtocol } from "@/services/protocolService";
 import { saveRecommendation } from "@/services/userService";
+import { useEntitlements, checkEntitlement } from "@/hooks/useEntitlements";
+import PremiumGateModal from "@/components/PremiumGateModal";
 
 type Step = "goals" | "details" | "result";
 
@@ -20,7 +22,10 @@ export default function Finder() {
   const [experience, setExperience] = useState<"beginner" | "intermediate" | "advanced">("intermediate");
   const [result, setResult] = useState<GeneratedProtocol | null>(null);
   const [saving, setSaving] = useState(false);
+  const [gateOpen, setGateOpen] = useState(false);
+  const [gateReason, setGateReason] = useState("");
   const { user } = useAuth();
+  const { canCreate } = useEntitlements();
   const { toast } = useToast();
 
   const goals = getAvailableGoals();
@@ -47,8 +52,24 @@ export default function Finder() {
 
   const handleSave = async () => {
     if (!user || !result) return;
+
+    // Quick client check
+    if (!canCreate("protocol")) {
+      setGateReason("Limite de 3 protocolos atingido no plano gratuito.");
+      setGateOpen(true);
+      return;
+    }
+
     setSaving(true);
     try {
+      // Backend enforcement
+      const check = await checkEntitlement("protocol");
+      if (!check.allowed) {
+        setGateReason(check.reason || "Limite atingido.");
+        setGateOpen(true);
+        return;
+      }
+
       await createProtocol({
         user_id: user.id,
         name: result.name,
@@ -270,6 +291,7 @@ export default function Finder() {
           </>
         )}
       </div>
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason={gateReason} />
     </div>
   );
 }
