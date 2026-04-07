@@ -1,51 +1,18 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useState, useMemo } from "react";
 import { Layers, Search, Clock } from "lucide-react";
 import { getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
-
-interface StackPeptide {
-  name: string;
-  dose: string;
-}
-
-interface StackRow {
-  id: string;
-  name: string;
-  subtitle: string | null;
-  category: string;
-  description: string | null;
-  peptides: StackPeptide[];
-  duration: string | null;
-  timing: string | null;
-  benefits: string[] | null;
-  warnings: string[] | null;
-  icon: string | null;
-}
-
-const CATEGORY_FILTERS = [
-  "Todos", "Recuperação", "Emagrecimento", "Cognição",
-  "Longevidade", "Performance", "Imunidade", "Estética"
-];
+import { useStacks } from "@/hooks/useStacks";
+import type { Stack } from "@/types";
+import { STACK_CATEGORIES } from "@/types";
 
 export default function Stacks() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
-  const [selectedStack, setSelectedStack] = useState<StackRow | null>(null);
+  const [selectedStack, setSelectedStack] = useState<Stack | null>(null);
 
-  const { data: stacks, isLoading } = useQuery({
-    queryKey: ["stacks"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stacks")
-        .select("*")
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return (data as unknown as StackRow[]) ?? [];
-    },
-  });
+  const { data: stacks, isLoading } = useStacks();
 
   const filtered = useMemo(() => {
     if (!stacks) return [];
@@ -89,7 +56,7 @@ export default function Stacks() {
 
       {/* Category filters - pill style like reference */}
       <div className="flex flex-wrap gap-2">
-        {CATEGORY_FILTERS.map((cat) => {
+        {STACK_CATEGORIES.map((cat) => {
           const isActive = selectedCategory === cat;
           const config = cat !== "Todos" ? getCatConfig(cat) : null;
           return (
