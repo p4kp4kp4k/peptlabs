@@ -62,14 +62,7 @@ export default function Interactions() {
     }
 
     if (statusFilter !== "all") {
-      const filterMap: Record<StatusFilter, string> = {
-        all: "",
-        synergic: "SINÉRGICO",
-        complementary: "COMPLEMENTAR",
-        caution: "MONITORAR",
-        avoid: "EVITAR",
-      };
-      const target = filterMap[statusFilter];
+      const target = STATUS_FILTER_MAP[statusFilter];
       result = result
         .map((p) => ({
           ...p,
