@@ -676,54 +676,36 @@ export const guideContents: Record<string, GuideContent> = {
   },
 
   "o-que-sao-peptideos": {
-    intro: "Entenda o que são peptídeos, como funcionam no corpo, a história desde a insulina até os neuropeptídeos modernos e por que são diferentes de esteroides e suplementos convencionais.",
+    intro: "No seu núcleo, peptídeos são pequenas cadeias de aminoácidos ligadas por ligações peptídicas — como contas em um colar. Para uma molécula ser classificada como peptídeo, deve conter entre 2 e 50 aminoácidos. Passe de 50 e eles são classificados como polipeptídeos. Cruze a marca de 100 e você tem uma proteína. Peptídeos são a linguagem da função celular — mensagens passadas entre sistemas, dizendo ao corpo quando construir, o que decompor, quando se recuperar, quando proteger, quando descansar.",
+    sections: [
+      {
+        title: "Classificação dos Peptídeos",
+        icon: "table",
+        table: [
+          { label: "Cicatrização", value: "BPC-157, TB-500, GHK-Cu, KPV — Recuperação de tecidos e anti-inflamação" },
+          { label: "Sistema Imunológico", value: "Glutationa, Timosina Alfa-1, LL-37 — Modulação e fortalecimento imune" },
+          { label: "Longevidade", value: "Ipamorelin, Tesamorelina, Epithalon, FOXO4-DRI — Anti-aging e secretagogos de GH" },
+          { label: "Mitocondriais", value: "MOTS-c, SS-31, NAD+, L-Carnitina — Energia celular e função mitocondrial" },
+          { label: "Perda de Peso", value: "Semaglutida, Tirzepatida, Retatrutida — Regulação do apetite e metabolismo" },
+          { label: "Libido", value: "PT-141, Kisspeptina, Oxitocina — Função sexual e hormonal" },
+          { label: "Neuropeptídeos", value: "Selank, Semax, Cerebrolysin, Dihexa — Cognição, memória e neuroproteção" },
+        ],
+      },
+    ],
     steps: [
       {
-        title: "O que são Peptídeos?",
+        title: "Breve História dos Peptídeos",
         content: [
-          "Peptídeos são cadeias curtas de aminoácidos (2-50 aminoácidos).",
-          "Diferentes de proteínas, que possuem mais de 50 aminoácidos.",
-          "Funcionam como mensageiros biológicos, sinalizando células específicas.",
-          "O corpo produz milhares de peptídeos naturalmente.",
+          "O primeiro peptídeo comercialmente disponível foi a Insulina, isolada de pâncreas animais na década de 1920.",
+          "Em 1982, veio o grande avanço: a criação da primeira insulina humana recombinante, sinteticamente sequenciada com 51 aminoácidos.",
+          "Agora temos peptídeos que melhoram a cognição, aceleram cicatrização, modulam o sistema imunológico, promovem perda de gordura, aumentam a libido, regeneram cartilagem e retreinam o comportamento mitocondrial.",
         ],
       },
       {
-        title: "Como Funcionam?",
+        title: "Peptídeos NÃO São Drogas Milagrosas",
         content: [
-          "Ligam-se a receptores específicos nas células-alvo.",
-          "Ativam cascatas de sinalização intracelular.",
-          "Efeitos altamente específicos com menos efeitos colaterais que fármacos tradicionais.",
-          "Meia-vida curta — ação precisa e controlável.",
-        ],
-      },
-      {
-        title: "História dos Peptídeos",
-        content: [
-          "1921: Descoberta da Insulina (primeiro peptídeo terapêutico).",
-          "1950s: Síntese de Oxitocina em laboratório.",
-          "1970s: Descoberta de GHRH e peptídeos de liberação de GH.",
-          "1990s: BPC-157, TB-500 entram em pesquisa pré-clínica.",
-          "2020s: Tirzepatida, Semaglutida aprovados para uso clínico.",
-        ],
-      },
-      {
-        title: "Peptídeos vs. Esteroides vs. Suplementos",
-        content: [
-          "Peptídeos: sinalizam processos naturais, alta especificidade, meia-vida curta.",
-          "Esteroides: substituem hormônios, efeitos sistêmicos amplos, suprimem eixo hormonal.",
-          "Suplementos: biodisponibilidade variável, efeitos geralmente mais sutis.",
-          "Peptídeos não suprimem a produção hormonal natural (na maioria dos casos).",
-        ],
-      },
-      {
-        title: "Categorias Principais",
-        content: [
-          "Recuperação: BPC-157, TB-500, GHK-Cu.",
-          "Emagrecimento: Tirzepatida, Semaglutida, AOD-9604.",
-          "Cognição: Selank, Semax, Dihexa.",
-          "Anti-Aging: Epithalon, GHK-Cu, FOXO4-DRI.",
-          "Performance: CJC-1295, Ipamorelin, IGF-1 LR3.",
-          "Imunidade: Thymosin Alpha-1, LL-37.",
+          "Peptídeos não são instruções externas — são sinais na linguagem nativa do corpo.",
+          "Você não está convencendo o corpo a fazer algo — está dando a ele o sinal ao qual ele já foi construído para responder.",
         ],
       },
     ],
