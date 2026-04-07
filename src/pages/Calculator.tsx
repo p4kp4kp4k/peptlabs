@@ -21,18 +21,25 @@ const vialSizes = [2, 5, 10, 15, 20, 30];
 const waterVolumes = [1, 2, 3, 4, 5, 6];
 const commonDoses = [50, 100, 200, 250, 300, 500, 750, 1000, 1500, 2000, 2500];
 
-// ── Conversion table data ──
+// ── Conversion table data (from reference PDFs) ──
 const conversionTable = [
-  { peptide: "BPC-157", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", dose100: "0.04 mL (4 UI)", dose250: "0.10 mL (10 UI)", dose500: "0.20 mL (20 UI)" },
-  { peptide: "TB-500", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", dose100: "—", dose250: "0.10 mL (10 UI)", dose500: "0.20 mL (20 UI)" },
-  { peptide: "Ipamorelin", vial: "5 mg", water: "2.5 mL", conc: "2000 mcg/mL", dose100: "0.05 mL (5 UI)", dose250: "0.125 mL (12.5 UI)", dose500: "—" },
-  { peptide: "CJC-1295", vial: "2 mg", water: "2 mL", conc: "1000 mcg/mL", dose100: "0.10 mL (10 UI)", dose250: "—", dose500: "—" },
-  { peptide: "GHK-Cu", vial: "10 mg", water: "2 mL", conc: "5000 mcg/mL", dose100: "0.02 mL (2 UI)", dose250: "0.05 mL (5 UI)", dose500: "0.10 mL (10 UI)" },
-  { peptide: "Tirzepatide", vial: "5 mg", water: "1 mL", conc: "5000 mcg/mL", dose100: "—", dose250: "0.05 mL (5 UI)", dose500: "0.10 mL (10 UI)" },
-  { peptide: "Semaglutide", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", dose100: "0.04 mL (4 UI)", dose250: "0.10 mL (10 UI)", dose500: "0.20 mL (20 UI)" },
-  { peptide: "PT-141", vial: "10 mg", water: "2 mL", conc: "5000 mcg/mL", dose100: "—", dose250: "—", dose500: "0.10 mL (10 UI)" },
-  { peptide: "DSIP", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", dose100: "0.04 mL (4 UI)", dose250: "0.10 mL (10 UI)", dose500: "—" },
-  { peptide: "Epitalon", vial: "10 mg", water: "2 mL", conc: "5000 mcg/mL", dose100: "0.02 mL (2 UI)", dose250: "0.05 mL (5 UI)", dose500: "0.10 mL (10 UI)" },
+  { peptide: "BPC-157", dose: "250mcg", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.10 mL (10 UI)" },
+  { peptide: "TB-500", dose: "2.5mg", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.10 mL (10 UI)" },
+  { peptide: "CJC/Ipam", dose: "100/200mcg", vial: "5mg/5mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.04/0.08 mL" },
+  { peptide: "Tirzepatida", dose: "2.5mg", vial: "10 mg", water: "2 mL", conc: "5000 mcg/mL", volume: "0.50 mL (50 UI)" },
+  { peptide: "Semaglutida", dose: "0.25mg", vial: "5 mg", water: "1 mL", conc: "5000 mcg/mL", volume: "0.05 mL (5 UI)" },
+  { peptide: "GHK-Cu", dose: "200mcg", vial: "5 mg", water: "5 mL", conc: "1000 mcg/mL", volume: "0.20 mL (20 UI)" },
+  { peptide: "Selank", dose: "200mcg", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.08 mL (8 UI)" },
+  { peptide: "Epitalon", dose: "5mg", vial: "10 mg", water: "2 mL", conc: "5000 mcg/mL", volume: "0.10 mL (10 UI)" },
+];
+
+// ── Diluent concentration reference ──
+const diluentConcentrationTable = [
+  { vial: "2 mg", bac: "1 mL", conc: "200mcg por 10 UI (0.1mL)" },
+  { vial: "5 mg", bac: "2 mL", conc: "250mcg por 10 UI (0.1mL)" },
+  { vial: "10 mg", bac: "2 mL", conc: "500mcg por 10 UI (0.1mL)" },
+  { vial: "15 mg", bac: "3 mL", conc: "500mcg por 10 UI (0.1mL)" },
+  { vial: "30 mg", bac: "6 mL", conc: "500mcg por 10 UI (0.1mL)" },
 ];
 
 // ── Diluent data ──
@@ -43,18 +50,20 @@ const diluents = [
     color: "text-cyan-400",
     bg: "bg-cyan-500/15",
     border: "border-cyan-500/30",
-    desc: "Água estéril com 0,9% de álcool benzílico como conservante. O tipo mais utilizado para reconstituição de peptídeos.",
-    pros: ["Conservante mantém esterilidade por até 28 dias", "Permite múltiplas aspirações do frasco", "Padrão-ouro para peptídeos em geral"],
+    shelf: "28–30 dias",
+    desc: "Padrão-ouro para reconstituição de peptídeos. Contém 0,9% de álcool benzílico como conservante, permitindo múltiplas aspirações.",
+    pros: ["Conservante mantém esterilidade por até 30 dias", "Permite múltiplas aspirações do frasco", "Padrão-ouro para peptídeos em geral"],
     cons: ["Pode causar irritação local em pacientes sensíveis ao álcool benzílico"],
-    storage: "Até 28 dias refrigerado (2–8°C)",
+    storage: "Até 28-30 dias refrigerado (2–8°C)",
     bestFor: "BPC-157, TB-500, Ipamorelin, CJC-1295, GHK-Cu, Semaglutide, Tirzepatide",
   },
   {
-    name: "Água Estéril (Sterile Water)",
+    name: "Água Estéril / Salina",
     icon: Droplets,
     color: "text-blue-400",
     bg: "bg-blue-500/15",
     border: "border-blue-500/30",
+    shelf: "Dose Única",
     desc: "Água purificada sem conservantes. Ideal para uso imediato ou única aspiração.",
     pros: ["Sem conservantes — menos risco de reação alérgica", "Ideal para pacientes sensíveis"],
     cons: ["Sem conservante: usar em até 24 horas", "Não permite múltiplas aspirações do frasco"],
@@ -62,25 +71,26 @@ const diluents = [
     bestFor: "Uso único ou emergência. Não recomendado para uso prolongado.",
   },
   {
-    name: "Soro Fisiológico (NaCl 0,9%)",
+    name: "Solução Salina 0,9%",
     icon: Droplets,
     color: "text-emerald-400",
     bg: "bg-emerald-500/15",
     border: "border-emerald-500/30",
-    desc: "Solução salina isotônica. Usada para diluição, raramente para reconstituição de peptídeos.",
-    pros: ["Isotônico — menos dor na aplicação", "Disponível em farmácias"],
-    cons: ["Não é ideal para reconstituição de peptídeos liofilizados", "Sem conservante", "Pode alterar estabilidade de alguns peptídeos"],
-    storage: "Usar em até 24 horas após aberto",
-    bestFor: "Diluição de GH e insulina. Não recomendado para peptídeos liofilizados.",
+    shelf: "15–20 dias",
+    desc: "Solução salina isotônica que tampona o pH e reduz ardência na aplicação. Ideal para peptídeos ácidos.",
+    pros: ["Tampona pH, reduz ardência", "Isotônico — menos dor na aplicação", "Disponível em farmácias"],
+    cons: ["Não é ideal para todos os peptídeos liofilizados", "Sem conservante forte"],
+    storage: "15-20 dias refrigerado (2–8°C)",
+    bestFor: "Peptídeos ácidos (GHK-Cu). Diluição de GH e insulina.",
   },
 ];
 
 const commonErrors = [
-  { text: "Agitar o frasco após adicionar o diluente", fix: "Gire suavemente o frasco até dissolver" },
-  { text: "Usar água da torneira ou destilada comum", fix: "Sempre use água bacteriostática ou estéril" },
-  { text: "Não refrigerar o peptídeo reconstituído", fix: "Armazene a 2–8°C imediatamente após reconstituição" },
-  { text: "Aspirar com a mesma agulha que perfurou o selo", fix: "Troque a agulha antes de aspirar" },
-  { text: "Reconstituar sem limpar o topo do frasco", fix: "Limpe com álcool 70% antes de perfurar" },
+  { text: "Agitar o frasco após adicionar o diluente", fix: "Gire suavemente – agitar destrói ligações de aminoácidos de peptídeos frágeis (HGH, IGF-1)" },
+  { text: "Deixar fora da geladeira por mais de 2h", fix: "Mais de 2h fora reduz potência em até 30%. Refrigere imediatamente após reconstituição" },
+  { text: "Usar água da torneira ou mineral", fix: "Causa infecções graves. Sempre use água bacteriostática ou estéril" },
+  { text: "Aspirar com a mesma agulha que perfurou o selo", fix: "Troque a agulha antes de aspirar para evitar contaminação" },
+  { text: "Reconstituir sem limpar o topo do frasco", fix: "Limpe com álcool 70% em movimentos circulares antes de perfurar" },
 ];
 
 export default function CalculatorPage() {
@@ -347,28 +357,60 @@ export default function CalculatorPage() {
             </CardHeader>
             <CardContent className="px-0 pb-4">
               <div className="overflow-x-auto">
-                <table className="w-full text-[11px]">
+              <table className="w-full text-[11px]">
                   <thead>
                     <tr className="border-b border-border/30">
                       <th className="text-left px-4 py-2 font-semibold text-muted-foreground">Peptídeo</th>
+                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Dose</th>
                       <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Frasco</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Água</th>
+                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Diluente</th>
                       <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Conc.</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">100 mcg</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">250 mcg</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">500 mcg</th>
+                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Volume</th>
                     </tr>
                   </thead>
                   <tbody>
                     {conversionTable.map((row, i) => (
                       <tr key={row.peptide} className={`border-b border-border/15 ${i % 2 === 0 ? "bg-secondary/10" : ""}`}>
                         <td className="px-4 py-2 font-semibold text-foreground">{row.peptide}</td>
+                        <td className="text-center px-2 py-2 text-muted-foreground">{row.dose}</td>
                         <td className="text-center px-2 py-2 text-muted-foreground">{row.vial}</td>
                         <td className="text-center px-2 py-2 text-muted-foreground">{row.water}</td>
                         <td className="text-center px-2 py-2 text-primary font-medium">{row.conc}</td>
-                        <td className="text-center px-2 py-2 text-muted-foreground">{row.dose100}</td>
-                        <td className="text-center px-2 py-2 text-muted-foreground">{row.dose250}</td>
-                        <td className="text-center px-2 py-2 text-muted-foreground">{row.dose500}</td>
+                        <td className="text-center px-2 py-2 text-muted-foreground">{row.volume}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Volume de Diluente por Concentração */}
+          <Card className="border-border/40 bg-card/80">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                Volume de Diluente por Concentração
+              </CardTitle>
+              <CardDescription className="text-[11px]">
+                BAC recomendado e concentração resultante por tamanho de frasco
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-0 pb-4">
+              <div className="overflow-x-auto">
+                <table className="w-full text-[11px]">
+                  <thead>
+                    <tr className="border-b border-border/30">
+                      <th className="text-left px-4 py-2 font-semibold text-muted-foreground">Frasco</th>
+                      <th className="text-center px-3 py-2 font-semibold text-muted-foreground">BAC Recomendado</th>
+                      <th className="text-center px-3 py-2 font-semibold text-muted-foreground">Concentração Resultante</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {diluentConcentrationTable.map((row, i) => (
+                      <tr key={row.vial} className={`border-b border-border/15 ${i % 2 === 0 ? "bg-secondary/10" : ""}`}>
+                        <td className="px-4 py-2 font-semibold text-foreground">{row.vial}</td>
+                        <td className="text-center px-3 py-2 text-muted-foreground">{row.bac}</td>
+                        <td className="text-center px-3 py-2 text-primary font-medium">{row.conc}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -381,7 +423,7 @@ export default function CalculatorPage() {
             <CardContent className="flex gap-3 p-3">
               <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
               <p className="text-[10px] text-muted-foreground">
-                Valores calculados com base em seringas de insulina U-100 (1 mL = 100 UI). Ajuste conforme a seringa utilizada.
+                Valores calculados com base em seringas de insulina U-100 (1 mL = 100 UI). Toque em um peptídeo para preencher a calculadora.
               </p>
             </CardContent>
           </Card>
