@@ -307,8 +307,6 @@ export default function Finder() {
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {goals.map((goal) => {
                 const isSelected = selectedGoals.includes(goal.goal);
-                return (
-              {(() => {
                 const iconData = GOAL_ICON_MAP[goal.goal];
                 const Icon = iconData?.icon || Target;
                 const grad = iconData?.gradient || "from-primary to-primary";
@@ -338,8 +336,6 @@ export default function Finder() {
                       {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                     </div>
                   </button>
-                );
-              })()}
                 );
               })}
             </div>
