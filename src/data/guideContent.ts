@@ -415,59 +415,79 @@ export const guideContents: Record<string, GuideContent> = {
   },
 
   "ghk-cu-pele-cabelo": {
-    intro: "Protocolos detalhados de GHK-Cu tópico para rejuvenescimento facial, crescimento capilar e tratamento de dano solar severo.",
-    steps: [
+    intro: "O GHK-Cu (cobre peptídeo) pode ser utilizado topicamente em formulações com ácido hialurônico para renovação cutânea e crescimento capilar.",
+    sections: [
       {
-        title: "GHK-Cu: O que é?",
-        content: [
-          "Tripeptídeo-cobre com 50+ anos de pesquisa.",
-          "Estimula síntese de colágeno tipo I e III.",
-          "Potente antioxidante — ativa SOD e GSH.",
-          "Promove angiogênese e regeneração tecidual.",
+        title: "Ingredientes Base",
+        icon: "clipboard",
+        items: [
+          "1 ampola de 1 grama de GHK-Cu",
+          "30 mL de ácido hialurônico (Produtos recomendados: The Ordinary Buffet Serum ou Neutrogena Hydroboost Hyaluronic Acid)",
         ],
       },
       {
-        title: "Protocolo Facial Anti-Aging",
-        content: [
-          "Concentração: 0.1-1% em base aquosa ou sérum.",
-          "Aplicação: 2x ao dia (manhã e noite).",
-          "Pele limpa e seca antes da aplicação.",
-          "Aguardar 5 min antes de aplicar hidratante.",
-          "Duração: 12-16 semanas para resultados visíveis.",
-        ],
-        tip: "Combine com microagulhamento mensal para potencializar a penetração e os resultados.",
-      },
-      {
-        title: "Protocolo Capilar",
-        content: [
-          "Concentração: 1% em solução tópica.",
-          "Aplicar diretamente no couro cabeludo, 1x ao dia.",
-          "Massagear suavemente por 2-3 minutos.",
-          "Resultados em 3-6 meses de uso consistente.",
-          "Combinar com minoxidil para efeito sinérgico.",
+        title: "Proporções de Mistura",
+        icon: "table",
+        table: [
+          { label: "Rosto", value: "1 grama de GHK-Cu por 30 mL (1 oz) de sérum" },
+          { label: "Corpo", value: "2 gramas de GHK-Cu por 30 mL (1 oz) de manteiga corporal" },
+          { label: "Crescimento Capilar", value: "3 gramas de GHK-Cu por 30 mL (1 oz) de ácido hialurônico" },
         ],
       },
       {
-        title: "Protocolo Dano Solar",
-        content: [
-          "Concentração: 0.5-1% em sérum reparador.",
-          "Aplicar 2x ao dia nas áreas afetadas.",
-          "Usar obrigatoriamente FPS 50+ durante o dia.",
-          "Duração: 16-24 semanas para reparação visível.",
+        title: "Incompatibilidades Importantes",
+        icon: "alert",
+        items: [
+          "Tretinoína / Retinol",
+          "Vitamina C (ácido ascórbico)",
+          "AHAs (ácido glicólico, lático, mandélico)",
+          "BHAs (ácido salicílico)",
         ],
       },
       {
-        title: "Protocolo Injetável (SubQ)",
-        content: [
-          "Dose: 1-2mg por dia via subcutânea.",
-          "Rotacionar locais de aplicação.",
-          "Duração: 4-8 semanas.",
-          "Efeito sistêmico: pele, cabelo, articulações.",
+        title: "Pasta Intensiva — Parâmetros (Dano Solar Severo)",
+        icon: "table",
+        table: [
+          { label: "Frequência", value: "Apenas ocasionalmente (não uso diário)" },
+          { label: "Reação esperada", value: "Vermelhidão, irritação, coceira; pode formar crostas em dano solar severo" },
+          { label: "Tempo de renovação", value: "A pele se renova em alguns dias" },
+          { label: "Pós-tratamento", value: "Retomar o protocolo regular com GHK-Cu manhã e noite" },
         ],
-        warning: "A via injetável requer supervisão médica. Pode causar hiperpigmentação local em doses elevadas.",
       },
     ],
-    disclaimer: "Consulte um dermatologista antes de iniciar protocolos tópicos ou injetáveis de GHK-Cu.",
+    steps: [
+      {
+        title: "Sérum Renovador de Pele",
+        content: [
+          "Aplicar na pele duas vezes ao dia (manhã e noite).",
+          "Para crescimento capilar, aplicar com dispositivo de microagulhamento (dermaroller/dermapen).",
+        ],
+      },
+      {
+        title: "Rotina Recomendada",
+        content: [
+          "Manhã: Produtos ácidos + protetor solar.",
+          "Noite: Sérum de GHK-Cu antes de dormir.",
+        ],
+        warning: "Qualquer ácido irá degradar o GHK-Cu e torná-lo ineficaz. Separe os horários de aplicação!",
+      },
+      {
+        title: "Uso Corporal",
+        content: [
+          "O GHK-Cu também pode ser usado na pele do corpo com manteiga corporal.",
+          "Certifique-se de que a manteiga não contenha ingredientes ácidos.",
+        ],
+      },
+      {
+        title: "Protocolo Especial: Dano Solar Severo",
+        content: [
+          "Para pele severamente danificada pelo sol (manchas solares), uma pasta intensiva pode ser preparada.",
+          "Use ácido hialurônico em concentração de até 7% e aplique sobre a pele danificada.",
+        ],
+        warning: "Este protocolo é baseado em relatos de pesquisa e não constitui orientação médica. Consulte um profissional de saúde antes de qualquer aplicação.",
+      },
+    ],
+    disclaimer: "Este conteúdo é exclusivamente educacional. Consulte um dermatologista antes de iniciar protocolos tópicos de GHK-Cu.",
   },
 
   "hgh-dose-guia": {
