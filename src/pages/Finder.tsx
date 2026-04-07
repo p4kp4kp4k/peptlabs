@@ -340,7 +340,7 @@ export default function Finder() {
                 {dbResults.map((p) => (
                   <button
                     key={p.slug}
-                    onClick={() => navigate(`/app/library/${p.slug}`)}
+                    onClick={() => navigate(`/peptide/${p.slug}`)}
                     className="w-full flex items-center gap-4 rounded-xl border border-border/40 bg-card p-4 text-left hover:border-primary/30 transition-all group"
                   >
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
