@@ -2,13 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import {
-  Layers, Search, Heart, Brain, Zap, Shield, Sparkles, Dumbbell,
-  Sun, Clock, Leaf, FlaskConical, Pill
-} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import type { Json } from "@/integrations/supabase/types";
+import { Layers, Search } from "lucide-react";
+import { StackCard } from "@/components/stacks/StackCard";
+import { categoryConfig, getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
 
 interface Stack {
   nome: string;
@@ -17,7 +16,7 @@ interface Stack {
   objetivo: string;
 }
 
-interface FlatStack extends Stack {
+export interface FlatStack extends Stack {
   sourcePeptide: string;
   sourceSlug: string;
   sourceCategory: string;
@@ -26,54 +25,6 @@ interface FlatStack extends Stack {
 function normalizeStacks(stacks: Json | null): Stack[] {
   if (!stacks || !Array.isArray(stacks)) return [];
   return stacks as unknown as Stack[];
-}
-
-const categoryConfig: Record<string, { color: string; bgColor: string; borderColor: string }> = {
-  "Recuperação": { color: "text-emerald-400", bgColor: "bg-emerald-500/15", borderColor: "border-emerald-500/30" },
-  "Emagrecimento": { color: "text-orange-400", bgColor: "bg-orange-500/15", borderColor: "border-orange-500/30" },
-  "Nootrópicos": { color: "text-violet-400", bgColor: "bg-violet-500/15", borderColor: "border-violet-500/30" },
-  "Cognição": { color: "text-violet-400", bgColor: "bg-violet-500/15", borderColor: "border-violet-500/30" },
-  "Longevidade": { color: "text-amber-400", bgColor: "bg-amber-500/15", borderColor: "border-amber-500/30" },
-  "Performance": { color: "text-cyan-400", bgColor: "bg-cyan-500/15", borderColor: "border-cyan-500/30" },
-  "Imunidade": { color: "text-rose-400", bgColor: "bg-rose-500/15", borderColor: "border-rose-500/30" },
-  "Estética": { color: "text-pink-400", bgColor: "bg-pink-500/15", borderColor: "border-pink-500/30" },
-  "Anti-aging": { color: "text-fuchsia-400", bgColor: "bg-fuchsia-500/15", borderColor: "border-fuchsia-500/30" },
-  "Metabolismo": { color: "text-amber-400", bgColor: "bg-amber-500/15", borderColor: "border-amber-500/30" },
-  "Hormonal": { color: "text-blue-400", bgColor: "bg-blue-500/15", borderColor: "border-blue-500/30" },
-  "GH / Secretagogos": { color: "text-teal-400", bgColor: "bg-teal-500/15", borderColor: "border-teal-500/30" },
-  "Cardiovascular": { color: "text-red-400", bgColor: "bg-red-500/15", borderColor: "border-red-500/30" },
-  "Sono / Recuperação": { color: "text-indigo-400", bgColor: "bg-indigo-500/15", borderColor: "border-indigo-500/30" },
-  "Biorregulador": { color: "text-teal-400", bgColor: "bg-teal-500/15", borderColor: "border-teal-500/30" },
-  "Sexual": { color: "text-red-400", bgColor: "bg-red-500/15", borderColor: "border-red-500/30" },
-  "Antioxidante": { color: "text-lime-400", bgColor: "bg-lime-500/15", borderColor: "border-lime-500/30" },
-  "Neuroproteção": { color: "text-violet-400", bgColor: "bg-violet-500/15", borderColor: "border-violet-500/30" },
-};
-
-function getCatConfig(cat: string) {
-  return categoryConfig[cat] || { color: "text-primary", bgColor: "bg-primary/15", borderColor: "border-primary/30" };
-}
-
-const categoryIcons: Record<string, React.ElementType> = {
-  "Recuperação": Heart,
-  "Emagrecimento": Zap,
-  "Nootrópicos": Brain,
-  "Cognição": Brain,
-  "Longevidade": Sparkles,
-  "Performance": Dumbbell,
-  "Imunidade": Shield,
-  "Estética": Sun,
-  "Anti-aging": Sparkles,
-  "Metabolismo": FlaskConical,
-  "Hormonal": Pill,
-  "GH / Secretagogos": Zap,
-  "Cardiovascular": Heart,
-  "Sono / Recuperação": Clock,
-  "Biorregulador": Leaf,
-  "Neuroproteção": Shield,
-};
-
-function getCatIcon(cat: string) {
-  return categoryIcons[cat] || Layers;
 }
 
 export default function Stacks() {
@@ -106,7 +57,6 @@ export default function Stacks() {
     return all;
   }, [peptides]);
 
-  // Unique categories from stacks for filter
   const categories = useMemo(() => {
     const cats = new Set(flatStacks.map((s) => s.sourceCategory));
     return Array.from(cats).sort();
@@ -133,13 +83,30 @@ export default function Stacks() {
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-5">
       {/* Header */}
-      <div>
-        <h1 className="text-lg sm:text-xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-          Biblioteca de Stacks
-        </h1>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Combinações sinérgicas de peptídeos com protocolos completos por objetivo.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-lg sm:text-xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <Layers className="inline h-4.5 w-4.5 mr-2 text-primary" />
+            Biblioteca de Stacks
+          </h1>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Combinações sinérgicas de peptídeos com protocolos completos por objetivo
+          </p>
+        </div>
+        <Badge variant="secondary" className="text-[10px] shrink-0">
+          {flatStacks.length} stacks
+        </Badge>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Input
+          placeholder="Buscar por nome, objetivo ou peptídeo..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9 h-9 text-xs"
+        />
       </div>
 
       {/* Category filters */}
@@ -154,19 +121,22 @@ export default function Stacks() {
         >
           Todos
         </button>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
-            className={`rounded-full px-3 py-1.5 text-[11px] font-medium transition-colors ${
-              selectedCategory === cat
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+        {categories.map((cat) => {
+          const config = getCatConfig(cat);
+          return (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+              className={`rounded-full px-3 py-1.5 text-[11px] font-medium transition-colors ${
+                selectedCategory === cat
+                  ? `${config.bgColor} ${config.color} border ${config.borderColor}`
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {cat}
+            </button>
+          );
+        })}
       </div>
 
       {/* Loading */}
@@ -190,62 +160,12 @@ export default function Stacks() {
       {!isLoading && filtered.length > 0 && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filtered.map((stack, i) => {
-              const config = getCatConfig(stack.sourceCategory);
-              const IconComp = getCatIcon(stack.sourceCategory);
-              return (
-                <Link
-                  key={`${stack.sourceSlug}-${i}`}
-                  to={`/peptide/${stack.sourceSlug}`}
-                  className="group rounded-xl border border-border/20 bg-card/60 p-4 hover:border-border/40 hover:bg-card/80 transition-all duration-200"
-                >
-                  {/* Top row: icon + category badge */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${config.bgColor}`}>
-                      <IconComp className={`h-4 w-4 ${config.color}`} />
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] ${config.bgColor} ${config.color} ${config.borderColor} font-semibold px-2 py-0.5`}
-                    >
-                      {stack.sourceCategory}
-                    </Badge>
-                  </div>
-
-                  {/* Stack name */}
-                  <h3 className="text-[13px] font-bold text-foreground group-hover:text-primary transition-colors mb-0.5">
-                    {stack.nome}
-                  </h3>
-
-                  {/* Objetivo subtitle */}
-                  <p className="text-[11px] text-muted-foreground mb-3">
-                    {stack.objetivo}
-                  </p>
-
-                  {/* Peptide list with dots */}
-                  <div className="space-y-1.5 mb-3">
-                    {stack.peptideos.map((p) => (
-                      <div key={p} className="flex items-center gap-2">
-                        <span className={`h-1.5 w-1.5 rounded-full ${config.color.replace('text-', 'bg-')}`} />
-                        <span className="text-[11px] font-medium text-foreground/90">{p}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Description if available */}
-                  {stack.descricao && (
-                    <p className="text-[10px] text-muted-foreground/70 leading-relaxed line-clamp-2">
-                      {stack.descricao}
-                    </p>
-                  )}
-                </Link>
-              );
-            })}
+            {filtered.map((stack, i) => (
+              <StackCard key={`${stack.sourceSlug}-${i}`} stack={stack} />
+            ))}
           </div>
-
-          {/* Footer count */}
-          <p className="text-xs text-muted-foreground text-center pt-2">
-            {filtered.length} stacks disponíveis
+          <p className="text-[10px] text-muted-foreground text-center pt-2">
+            {filtered.length} de {flatStacks.length} stacks
           </p>
         </>
       )}
