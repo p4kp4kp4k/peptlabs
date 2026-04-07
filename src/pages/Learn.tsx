@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { BookOpen, FlaskConical, Shield, Lock, Clock, Check, ArrowRight, Sparkles, GraduationCap, FileText, Microscope, AlertTriangle, Unlock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { guides, categoryGradients } from "@/data/peptides";
 import { cn } from "@/lib/utils";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import SafetyTab from "@/components/learn/SafetyTab";
+import GuideDetailInline from "@/components/learn/GuideDetailInline";
 
 const tabs = [
   { key: "guias", label: "Guias Práticos", icon: GraduationCap, count: 0 },
@@ -27,6 +28,7 @@ const categoryIcons: Record<string, typeof BookOpen> = {
 };
 
 export default function Learn() {
+  const { slug } = useParams<{ slug: string }>();
   const [activeTab, setActiveTab] = useState<"guias" | "estudos" | "seguranca">("guias");
   const { isPremium, isAdmin } = useEntitlements();
   const hasFullAccess = isPremium || isAdmin;
@@ -51,10 +53,10 @@ export default function Learn() {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Central de Conhecimento
+              Aprender
             </h1>
             <p className="text-xs text-muted-foreground">
-              Domine peptídeos com guias baseados em evidência científica
+              Guias, estudos científicos e segurança em um só lugar.
             </p>
           </div>
         </div>
@@ -104,8 +106,13 @@ export default function Learn() {
         })}
       </div>
 
+      {/* Guide Detail (inline) */}
+      {slug && (
+        <GuideDetailInline slug={slug} />
+      )}
+
       {/* Featured guide (first free guide) */}
-      {activeTab === "guias" && (
+      {!slug && activeTab === "guias" && (
         <div className="mb-6 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card p-6 sm:p-8">
           <div className="flex items-start gap-4">
             <div className="hidden sm:flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
@@ -128,10 +135,10 @@ export default function Learn() {
       )}
 
       {/* Segurança tab */}
-      {activeTab === "seguranca" && <SafetyTab />}
+      {!slug && activeTab === "seguranca" && <SafetyTab />}
 
       {/* Guides grid */}
-      {activeTab !== "seguranca" && (
+      {!slug && activeTab !== "seguranca" && (
         <>
           <div className="grid gap-3 sm:grid-cols-2">
             {filtered.map((guide, i) => {
@@ -212,6 +219,7 @@ export default function Learn() {
       )}
 
       {/* Bottom CTA */}
+      {!slug && (
       <div className="mt-10 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card">
         <div className="p-6 sm:p-8 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
@@ -287,6 +295,7 @@ export default function Learn() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
