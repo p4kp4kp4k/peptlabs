@@ -14,9 +14,61 @@ export type Database = {
   }
   public: {
     Tables: {
+      calculations: {
+        Row: {
+          created_at: string
+          id: string
+          input: Json
+          output: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          input?: Json
+          output?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          input?: Json
+          output?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      history: {
+        Row: {
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["history_kind"]
+          metadata: Json | null
+          ref_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["history_kind"]
+          metadata?: Json | null
+          ref_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["history_kind"]
+          metadata?: Json | null
+          ref_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       peptides: {
         Row: {
           alternative_names: string[] | null
+          application: string | null
           benefits: string[] | null
           category: string
           classification: string | null
@@ -25,6 +77,7 @@ export type Database = {
           dosage_info: string | null
           dosage_table: Json | null
           evidence_level: string | null
+          goals: string[] | null
           half_life: string | null
           id: string
           interactions: Json | null
@@ -43,6 +96,7 @@ export type Database = {
         }
         Insert: {
           alternative_names?: string[] | null
+          application?: string | null
           benefits?: string[] | null
           category: string
           classification?: string | null
@@ -51,6 +105,7 @@ export type Database = {
           dosage_info?: string | null
           dosage_table?: Json | null
           evidence_level?: string | null
+          goals?: string[] | null
           half_life?: string | null
           id?: string
           interactions?: Json | null
@@ -69,6 +124,7 @@ export type Database = {
         }
         Update: {
           alternative_names?: string[] | null
+          application?: string | null
           benefits?: string[] | null
           category?: string
           classification?: string | null
@@ -77,6 +133,7 @@ export type Database = {
           dosage_info?: string | null
           dosage_table?: Json | null
           evidence_level?: string | null
+          goals?: string[] | null
           half_life?: string | null
           id?: string
           interactions?: Json | null
@@ -265,6 +322,39 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -298,6 +388,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      history_kind: "protocol" | "stack" | "calculation" | "compare" | "ai"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -426,6 +517,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      history_kind: ["protocol", "stack", "calculation", "compare", "ai"],
     },
   },
 } as const

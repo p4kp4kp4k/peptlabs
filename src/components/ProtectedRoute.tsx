@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 
 interface Props {
   children: React.ReactNode;
@@ -12,14 +12,17 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Props
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Skeleton className="h-12 w-48" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="text-xs text-muted-foreground">Carregando...</p>
+        </div>
       </div>
     );
   }
 
   if (!user) return <Navigate to="/auth" replace />;
-  if (requireAdmin && !isAdmin) return <Navigate to="/" replace />;
+  if (requireAdmin && !isAdmin) return <Navigate to="/app/dashboard" replace />;
 
   return <>{children}</>;
 }

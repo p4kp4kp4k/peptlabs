@@ -31,8 +31,8 @@ export default function Library() {
   return (
     <div className="p-4 sm:p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-          Peptídeos Individuais
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          Biblioteca de Peptídeos
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Biblioteca completa com protocolos e referências científicas

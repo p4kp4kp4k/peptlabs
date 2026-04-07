@@ -15,9 +15,15 @@ export default function Auth() {
   const [displayName, setDisplayName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, resetPassword } = useAuth();
+  const { signIn, signUp, resetPassword, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // If already logged in, redirect
+  if (user) {
+    navigate("/app/dashboard", { replace: true });
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +32,7 @@ export default function Auth() {
       if (mode === "login") {
         const { error } = await signIn(email, password);
         if (error) throw error;
-        navigate("/");
+        navigate("/app/dashboard");
       } else if (mode === "register") {
         const { error } = await signUp(email, password, displayName);
         if (error) throw error;
@@ -47,15 +53,19 @@ export default function Auth() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute left-1/2 top-1/4 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-primary/5 blur-[150px]" />
+        <div className="absolute right-1/4 bottom-1/4 h-[400px] w-[400px] rounded-full bg-accent/5 blur-[120px]" />
+      </div>
+      <div className="relative w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 glow-primary">
             <FlaskConical className="h-6 w-6 text-primary" />
           </div>
-          <h1 className="text-xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Peptídeos<span className="text-primary">Health</span>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            Pepti<span className="text-primary">Lab</span>
           </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1.5 text-xs text-muted-foreground">
             {mode === "login" && "Entre na sua conta"}
             {mode === "register" && "Crie sua conta gratuita"}
             {mode === "forgot" && "Recupere sua senha"}
@@ -66,12 +76,12 @@ export default function Auth() {
           {mode === "register" && (
             <div className="relative">
               <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Nome" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="pl-10 bg-card border-border/50" />
+              <Input placeholder="Nome" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="pl-10 bg-card border-border/40 text-sm" />
             </div>
           )}
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input type="email" placeholder="E-mail" required value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 bg-card border-border/50" />
+            <Input type="email" placeholder="E-mail" required value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 bg-card border-border/40 text-sm" />
           </div>
           {mode !== "forgot" && (
             <div className="relative">
@@ -83,7 +93,7 @@ export default function Auth() {
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 pr-10 bg-card border-border/50"
+                className="pl-10 pr-10 bg-card border-border/40 text-sm"
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -91,7 +101,7 @@ export default function Auth() {
             </div>
           )}
 
-          <Button type="submit" className="w-full gap-2" disabled={loading}>
+          <Button type="submit" className="w-full gap-2 h-10" disabled={loading}>
             {loading ? "Carregando..." : (
               <>
                 {mode === "login" && "Entrar"}
@@ -106,7 +116,7 @@ export default function Auth() {
         <div className="mt-4 space-y-2 text-center text-xs text-muted-foreground">
           {mode === "login" && (
             <>
-              <button onClick={() => setMode("forgot")} className="hover:text-primary">Esqueceu a senha?</button>
+              <button onClick={() => setMode("forgot")} className="hover:text-primary transition-colors">Esqueceu a senha?</button>
               <p>Não tem conta? <button onClick={() => setMode("register")} className="font-medium text-primary hover:underline">Criar conta</button></p>
             </>
           )}

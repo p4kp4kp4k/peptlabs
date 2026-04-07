@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { usePeptideCount } from "@/hooks/usePeptides";
-import { useUserProtocols, useUserProtocolCount } from "@/hooks/useProtocols";
+import { useUserProtocolCount, useUserProtocols } from "@/hooks/useProtocols";
 import {
-  Layers, Search, BookOpen, Calculator, Sparkles, ArrowRight,
-  Activity, TrendingUp, Target, Clock, FlaskConical, Syringe
+  Layers, Search, Calculator, Sparkles, ArrowRight,
+  Activity, Target, Clock, FlaskConical, Syringe,
+  ArrowLeftRight, History, TrendingUp
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -17,10 +18,10 @@ export default function Dashboard() {
   const { data: protocols = [] } = useUserProtocols();
 
   const quickActions = [
-    { icon: Search, label: "Encontrar Protocolo", path: "/finder", color: "text-cyan-400" },
-    { icon: Layers, label: "Biblioteca", path: "/library", color: "text-emerald-400" },
-    { icon: BookOpen, label: "Aprender", path: "/learn", color: "text-violet-400" },
-    { icon: Calculator, label: "Calculadora", path: "/calculator", color: "text-amber-400" },
+    { icon: Search, label: "Finder", desc: "Gerar protocolo", path: "/app/finder", color: "text-primary" },
+    { icon: Layers, label: "Biblioteca", desc: `${peptideCount} peptídeos`, path: "/app/peptides", color: "text-success" },
+    { icon: ArrowLeftRight, label: "Comparador", desc: "Comparar 2+", path: "/app/compare", color: "text-accent" },
+    { icon: Calculator, label: "Calculadora", desc: "Doses e reconstituição", path: "/app/calculator", color: "text-warning" },
   ];
 
   const daysSinceJoined = user?.created_at
@@ -28,44 +29,35 @@ export default function Dashboard() {
     : 1;
 
   const stats = [
-    { icon: Layers, label: "Protocolos Salvos", value: String(protocolCount), change: protocolCount > 0 ? "Veja seus protocolos" : "Use o Finder" },
-    { icon: FlaskConical, label: "Peptídeos no DB", value: String(peptideCount), change: "Biblioteca completa" },
-    { icon: Target, label: "Recomendações", value: "0", change: "Use o Finder" },
-    { icon: Clock, label: "Dias na Plataforma", value: String(daysSinceJoined), change: daysSinceJoined === 1 ? "Bem-vindo!" : `${daysSinceJoined} dias ativos` },
+    { icon: FlaskConical, label: "Peptídeos", value: String(peptideCount), sub: "no banco de dados" },
+    { icon: Layers, label: "Protocolos", value: String(protocolCount), sub: protocolCount > 0 ? "salvos" : "crie o primeiro" },
+    { icon: Target, label: "Recomendações", value: "0", sub: "use o Finder" },
+    { icon: Clock, label: "Dias Ativos", value: String(daysSinceJoined), sub: daysSinceJoined === 1 ? "bem-vindo!" : "na plataforma" },
   ];
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
       {/* Welcome */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-foreground sm:text-2xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Olá, {profile?.display_name || user?.email?.split("@")[0] || "Usuário"} 👋
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1">Seu painel de peptídeos personalizado</p>
-        </div>
-        <div className="flex gap-2">
-          {isAdmin && (
-            <Button variant="outline" size="sm" onClick={() => navigate("/admin")} className="text-xs gap-1">
-              <Sparkles className="h-3 w-3" /> Admin
-            </Button>
-          )}
-        </div>
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          Olá, {profile?.display_name || user?.email?.split("@")[0] || "Usuário"} 👋
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">Seu painel de peptídeos personalizado</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((s) => (
-          <Card key={s.label} className="border-border/40 bg-card/80">
+          <Card key={s.label} className="border-border/30 bg-card/80 hover:border-border/50 transition-colors">
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                   <s.icon className="h-4 w-4 text-primary" />
                 </div>
               </div>
-              <p className="text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
-              <p className="text-[10px] text-muted-foreground">{s.label}</p>
-              <p className="text-[9px] text-primary/70 mt-0.5">{s.change}</p>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{s.value}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{s.label}</p>
+              <p className="text-[10px] text-muted-foreground/60 mt-0.5">{s.sub}</p>
             </CardContent>
           </Card>
         ))}
@@ -73,17 +65,18 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-sm font-semibold text-foreground mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Acesso Rápido</h2>
+        <h2 className="text-sm font-semibold text-foreground mb-3">Acesso Rápido</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {quickActions.map((a) => (
             <Card
               key={a.label}
-              className="cursor-pointer border-border/40 bg-card/80 transition-all hover:border-primary/30 hover:bg-card"
+              className="group cursor-pointer border-border/30 bg-card/80 transition-all hover:border-primary/30 hover:bg-card"
               onClick={() => navigate(a.path)}
             >
-              <CardContent className="flex flex-col items-center gap-2 p-4">
-                <a.icon className={`h-6 w-6 ${a.color}`} />
+              <CardContent className="flex flex-col items-center gap-1.5 p-4">
+                <a.icon className={`h-5 w-5 ${a.color} transition-transform group-hover:scale-110`} />
                 <span className="text-xs font-medium text-foreground">{a.label}</span>
+                <span className="text-[10px] text-muted-foreground">{a.desc}</span>
               </CardContent>
             </Card>
           ))}
@@ -91,33 +84,42 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Protocols */}
-      <Card className="border-border/40 bg-card/80">
+      <Card className="border-border/30 bg-card/80">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Protocolos Recentes</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm">Protocolos Recentes</CardTitle>
+            {protocols.length > 0 && (
+              <Button variant="ghost" size="sm" className="text-[10px] text-primary gap-1 h-6" onClick={() => navigate("/app/history")}>
+                Ver todos <ArrowRight className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {protocols.length > 0 ? (
             <div className="space-y-2">
               {protocols.slice(0, 5).map((p) => (
-                <div key={p.id} className="flex items-center justify-between rounded-lg bg-secondary/20 p-3">
-                  <div className="flex items-center gap-2">
+                <div key={p.id} className="flex items-center justify-between rounded-lg bg-secondary/20 p-3 hover:bg-secondary/30 transition-colors">
+                  <div className="flex items-center gap-2.5">
                     <Syringe className="h-3.5 w-3.5 text-primary" />
                     <div>
                       <p className="text-xs font-medium text-foreground">{p.name}</p>
-                      <p className="text-[9px] text-muted-foreground">{new Date(p.created_at).toLocaleDateString("pt-BR")}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(p.created_at).toLocaleDateString("pt-BR")}
+                      </p>
                     </div>
                   </div>
-                  <span className="text-[9px] text-muted-foreground capitalize">{p.status}</span>
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] text-primary capitalize">{p.status}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center py-8 text-center">
-              <Activity className="h-8 w-8 text-muted-foreground/30 mb-2" />
+            <div className="flex flex-col items-center py-10 text-center">
+              <Activity className="h-8 w-8 text-muted-foreground/20 mb-3" />
               <p className="text-xs text-muted-foreground">Nenhum protocolo salvo</p>
-              <p className="text-[10px] text-muted-foreground/70 mt-1">Use o Finder para gerar seu primeiro protocolo</p>
-              <Button size="sm" className="mt-3 gap-1 text-xs" onClick={() => navigate("/finder")}>
-                Gerar Protocolo <ArrowRight className="h-3 w-3" />
+              <p className="text-[10px] text-muted-foreground/60 mt-1">Use o Finder para gerar seu primeiro protocolo</p>
+              <Button size="sm" className="mt-3 gap-1.5 text-xs" onClick={() => navigate("/app/finder")}>
+                <Sparkles className="h-3 w-3" /> Gerar Protocolo
               </Button>
             </div>
           )}
