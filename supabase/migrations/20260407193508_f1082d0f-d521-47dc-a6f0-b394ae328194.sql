@@ -1,0 +1,24 @@
+
+UPDATE public.peptides SET dosage_info = '300-1000 μg/dia via subcutânea, 1x ao dia. Ciclos de 4-12 semanas.' WHERE slug = 'adamax';
+UPDATE public.peptides SET dosage_info = '1-10 UI/dia via subcutânea, dose dividida conforme objetivo. Ciclos de 3-12 meses.' WHERE slug = 'hgh-191aa';
+UPDATE public.peptides SET dosage_info = '20-80 mcg/dia via intramuscular bilateral, pós-treino. Ciclos de 4-6 semanas.' WHERE slug = 'igf-1-lr3';
+UPDATE public.peptides SET dosage_info = '200-500 mcg/dia via subcutânea ou oral, 1-2x ao dia. Ciclos de 4-12 semanas.' WHERE slug = 'kpv';
+UPDATE public.peptides SET dosage_info = '500-3000 mg/dia via oral ou 200-600 mg/dia injetável. Uso contínuo ou cíclico.' WHERE slug = 'l-carnitine';
+UPDATE public.peptides SET dosage_info = '10-20 mg/dia via oral ou sublingual. Ciclos de 10-30 dias.' WHERE slug = 'livagen';
+UPDATE public.peptides SET dosage_info = '3-9 mg/semana via subcutânea, escalonamento gradual. Ciclos de 24-48 semanas.' WHERE slug = 'mazdutide';
+UPDATE public.peptides SET dosage_info = '100-200 mcg/dia via intramuscular bilateral pós-treino. Ciclos de 2-6 semanas.' WHERE slug = 'mgf';
+UPDATE public.peptides SET dosage_info = '10-20 mg/dia via oral ou sublingual. Ciclos de 10-30 dias.' WHERE slug = 'ovagen';
+UPDATE public.peptides SET dosage_info = '20-40 UI/dia via spray nasal, 1-2x ao dia. Uso conforme necessidade ou ciclos de 2-8 semanas.' WHERE slug = 'oxytocin';
+UPDATE public.peptides SET dosage_info = '50-100 mcg/kg/dia via subcutânea. Ciclos de 2-4 semanas. Pesquisa pré-clínica.' WHERE slug = 'p21';
+UPDATE public.peptides SET dosage_info = '50-100 mcg/dia via subcutânea, 1x ao dia. Ciclos de 4-8 semanas.' WHERE slug = 'pe-22-28';
+UPDATE public.peptides SET dosage_info = '10-20 mg/dia via oral ou sublingual. Ciclos de 10-30 dias.' WHERE slug = 'pinealon';
+UPDATE public.peptides SET dosage_info = '50-100 mcg/kg a cada 1-3 dias via subcutânea. Ciclos de 4-8 semanas. Fase experimental.' WHERE slug = 'pnc-27';
+UPDATE public.peptides SET dosage_info = '10-20 mg/dia via oral ou sublingual. Ciclos de 10-20 dias.' WHERE slug = 'prostamax';
+UPDATE public.peptides SET dosage_info = '0.5-2 mg via subcutânea conforme necessidade, 2-4h antes da atividade. Máximo 1x/dia.' WHERE slug = 'pt-141';
+UPDATE public.peptides SET dosage_info = '1-12 mg/semana via subcutânea, escalonamento gradual. Ciclos longos de 24-48 semanas.' WHERE slug = 'retatrutide';
+UPDATE public.peptides SET dosage_info = '100-300 mcg/dia via subcutânea, antes de dormir. Ciclos de 3-6 meses.' WHERE slug = 'sermorelin';
+UPDATE public.peptides SET dosage_info = '10-50 mg/dia via oral. Ciclos de 4-8 semanas. Pesquisa pré-clínica.' WHERE slug = 'slu-pp-332';
+UPDATE public.peptides SET dosage_info = '3-10% tópico, 1-2x ao dia. Ciclos de 4-12 semanas.' WHERE slug = 'snap-8';
+UPDATE public.peptides SET dosage_info = '5-40 mg/dia via subcutânea ou intravenosa. Ciclos de 4-12 semanas.' WHERE slug = 'ss-31';
+UPDATE public.peptides SET dosage_info = '2-5 mg 2x/semana via subcutânea, com fase de carregamento. Ciclos de 4-8 semanas.' WHERE slug = 'tb-500';
+UPDATE public.peptides SET dosage_info = '1-2 mg/dia via subcutânea, antes de dormir. Ciclos de 3-6 meses.' WHERE slug = 'tesamorelin';
