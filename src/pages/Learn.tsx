@@ -53,10 +53,10 @@ export default function Learn() {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Central de Conhecimento
+              Aprender
             </h1>
             <p className="text-xs text-muted-foreground">
-              Domine peptídeos com guias baseados em evidência científica
+              Guias, estudos científicos e segurança em um só lugar.
             </p>
           </div>
         </div>
