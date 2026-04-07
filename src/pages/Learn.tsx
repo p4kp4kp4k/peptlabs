@@ -84,7 +84,10 @@ export default function Learn() {
           return (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                setActiveTab(tab.key);
+                if (slug) navigate("/app/learn");
+              }}
               className={cn(
                 "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-medium transition-all duration-200",
                 isActive
