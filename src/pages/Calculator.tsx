@@ -509,8 +509,7 @@ export default function CalculatorPage() {
                       <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Dose</th>
                       <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Frasco</th>
                       <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Diluente</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Conc.</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Volume</th>
+                      <th className="text-right px-4 py-2 font-semibold text-primary">UI</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -520,8 +519,7 @@ export default function CalculatorPage() {
                         <td className="text-center px-2 py-2 text-muted-foreground">{row.dose}</td>
                         <td className="text-center px-2 py-2 text-muted-foreground">{row.vial}</td>
                         <td className="text-center px-2 py-2 text-muted-foreground">{row.water}</td>
-                        <td className="text-center px-2 py-2 text-primary font-medium">{row.conc}</td>
-                        <td className="text-center px-2 py-2 text-muted-foreground">{row.volume}</td>
+                        <td className="text-right px-4 py-2 text-primary font-semibold">{row.ui}</td>
                       </tr>
                     ))}
                   </tbody>
