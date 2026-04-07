@@ -354,28 +354,60 @@ export default function CalculatorPage() {
             </CardHeader>
             <CardContent className="px-0 pb-4">
               <div className="overflow-x-auto">
-                <table className="w-full text-[11px]">
+              <table className="w-full text-[11px]">
                   <thead>
                     <tr className="border-b border-border/30">
                       <th className="text-left px-4 py-2 font-semibold text-muted-foreground">Peptídeo</th>
+                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Dose</th>
                       <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Frasco</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Água</th>
+                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Diluente</th>
                       <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Conc.</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">100 mcg</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">250 mcg</th>
-                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">500 mcg</th>
+                      <th className="text-center px-2 py-2 font-semibold text-muted-foreground">Volume</th>
                     </tr>
                   </thead>
                   <tbody>
                     {conversionTable.map((row, i) => (
                       <tr key={row.peptide} className={`border-b border-border/15 ${i % 2 === 0 ? "bg-secondary/10" : ""}`}>
                         <td className="px-4 py-2 font-semibold text-foreground">{row.peptide}</td>
+                        <td className="text-center px-2 py-2 text-muted-foreground">{row.dose}</td>
                         <td className="text-center px-2 py-2 text-muted-foreground">{row.vial}</td>
                         <td className="text-center px-2 py-2 text-muted-foreground">{row.water}</td>
                         <td className="text-center px-2 py-2 text-primary font-medium">{row.conc}</td>
-                        <td className="text-center px-2 py-2 text-muted-foreground">{row.dose100}</td>
-                        <td className="text-center px-2 py-2 text-muted-foreground">{row.dose250}</td>
-                        <td className="text-center px-2 py-2 text-muted-foreground">{row.dose500}</td>
+                        <td className="text-center px-2 py-2 text-muted-foreground">{row.volume}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Volume de Diluente por Concentração */}
+          <Card className="border-border/40 bg-card/80">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                Volume de Diluente por Concentração
+              </CardTitle>
+              <CardDescription className="text-[11px]">
+                BAC recomendado e concentração resultante por tamanho de frasco
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-0 pb-4">
+              <div className="overflow-x-auto">
+                <table className="w-full text-[11px]">
+                  <thead>
+                    <tr className="border-b border-border/30">
+                      <th className="text-left px-4 py-2 font-semibold text-muted-foreground">Frasco</th>
+                      <th className="text-center px-3 py-2 font-semibold text-muted-foreground">BAC Recomendado</th>
+                      <th className="text-center px-3 py-2 font-semibold text-muted-foreground">Concentração Resultante</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {diluentConcentrationTable.map((row, i) => (
+                      <tr key={row.vial} className={`border-b border-border/15 ${i % 2 === 0 ? "bg-secondary/10" : ""}`}>
+                        <td className="px-4 py-2 font-semibold text-foreground">{row.vial}</td>
+                        <td className="text-center px-3 py-2 text-muted-foreground">{row.bac}</td>
+                        <td className="text-center px-3 py-2 text-primary font-medium">{row.conc}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -388,7 +420,7 @@ export default function CalculatorPage() {
             <CardContent className="flex gap-3 p-3">
               <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
               <p className="text-[10px] text-muted-foreground">
-                Valores calculados com base em seringas de insulina U-100 (1 mL = 100 UI). Ajuste conforme a seringa utilizada.
+                Valores calculados com base em seringas de insulina U-100 (1 mL = 100 UI). Toque em um peptídeo para preencher a calculadora.
               </p>
             </CardContent>
           </Card>
