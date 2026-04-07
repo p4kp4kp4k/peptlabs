@@ -134,6 +134,9 @@ export default function Admin() {
           <TabsTrigger value="stacks" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Layers className="h-3.5 w-3.5" /> Stacks
           </TabsTrigger>
+          <TabsTrigger value="sync" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Database className="h-3.5 w-3.5" /> Sincronização
+          </TabsTrigger>
         </TabsList>
 
         {/* Users Tab */}
@@ -275,7 +278,160 @@ export default function Admin() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Sync Tab */}
+        <TabsContent value="sync">
+          <SyncPanel />
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
+
+// ── Sync Panel Component ──
+
+function SyncPanel() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: logs = [], isLoading: loadingLogs, refetch: refetchLogs } = useQuery({
+    queryKey: ["sync-logs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sync_log")
+        .select("*")
+        .order("started_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  const syncMutation = useMutation({
+    mutationFn: async (params: { fn: string; body: any }) => {
+      const { data, error } = await supabase.functions.invoke(params.fn, {
+        body: params.body,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data, vars) => {
+      toast({
+        title: "Sincronização concluída",
+        description: `${vars.body.source || "all"}: ${data.processed || 0} processados, ${data.added || 0} adicionados, ${data.updated || 0} atualizados`,
+      });
+      refetchLogs();
+      queryClient.invalidateQueries({ queryKey: ["admin-peptides"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro na sincronização", description: err.message, variant: "destructive" });
+      refetchLogs();
+    },
+  });
+
+  const sources = [
+    { label: "PubMed + NCBI Protein", fn: "sync-peptides", body: { source: "all" }, icon: BookOpen, color: "text-blue-400" },
+    { label: "Apenas PubMed", fn: "sync-peptides", body: { source: "pubmed" }, icon: BookOpen, color: "text-emerald-400" },
+    { label: "DRAMP", fn: "ingest-datasets", body: { source: "dramp" }, icon: Database, color: "text-amber-400" },
+    { label: "APD", fn: "ingest-datasets", body: { source: "apd" }, icon: Database, color: "text-purple-400" },
+    { label: "Peptipedia", fn: "ingest-datasets", body: { source: "peptipedia" }, icon: Database, color: "text-pink-400" },
+    { label: "Todos os Datasets", fn: "ingest-datasets", body: { source: "all" }, icon: RefreshCw, color: "text-primary" },
+  ];
+
+  const statusIcon = (status: string) => {
+    if (status === "success") return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />;
+    if (status === "error") return <AlertTriangle className="h-3.5 w-3.5 text-destructive" />;
+    if (status === "running") return <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />;
+    return <Clock className="h-3.5 w-3.5 text-amber-400" />;
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Sync Actions */}
+      <Card className="border-border/40 bg-card/80">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <Database className="inline h-4 w-4 mr-2 text-primary" />
+            Sincronização de Fontes Científicas
+          </CardTitle>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Atualize a biblioteca com dados do PubMed, NCBI Protein, DRAMP, APD e Peptipedia
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {sources.map((src) => (
+              <Button
+                key={src.label}
+                variant="outline"
+                size="sm"
+                className="h-auto py-3 px-3 flex flex-col items-start gap-1.5 text-left border-border/30 hover:border-primary/40 hover:bg-primary/5"
+                disabled={syncMutation.isPending}
+                onClick={() => syncMutation.mutate({ fn: src.fn, body: src.body })}
+              >
+                <div className="flex items-center gap-2">
+                  <src.icon className={`h-3.5 w-3.5 ${src.color}`} />
+                  <span className="text-[11px] font-semibold">{src.label}</span>
+                </div>
+                {syncMutation.isPending && syncMutation.variables?.body.source === src.body.source && (
+                  <span className="text-[9px] text-primary flex items-center gap-1">
+                    <Loader2 className="h-2.5 w-2.5 animate-spin" /> Sincronizando...
+                  </span>
+                )}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sync Logs */}
+      <Card className="border-border/40 bg-card/80">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              Histórico de Sincronizações
+            </CardTitle>
+            <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => refetchLogs()}>
+              <RefreshCw className="h-3 w-3 mr-1" /> Atualizar
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loadingLogs ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          ) : logs.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4">Nenhuma sincronização realizada ainda.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Fonte</TableHead>
+                  <TableHead className="text-xs">Processados</TableHead>
+                  <TableHead className="text-xs">Adicionados</TableHead>
+                  <TableHead className="text-xs">Atualizados</TableHead>
+                  <TableHead className="text-xs">Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {logs.map((log: any) => (
+                  <TableRow key={log.id}>
+                    <TableCell>{statusIcon(log.status)}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[9px]">{log.source}</Badge>
+                    </TableCell>
+                    <TableCell className="text-xs">{log.records_processed || 0}</TableCell>
+                    <TableCell className="text-xs text-emerald-400">{log.records_added || 0}</TableCell>
+                    <TableCell className="text-xs text-blue-400">{log.records_updated || 0}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {new Date(log.started_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
