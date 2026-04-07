@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { BookOpen, FlaskConical, Shield, Lock, Clock, Check, ArrowRight, Sparkles, GraduationCap, FileText, Microscope, AlertTriangle } from "lucide-react";
+import { BookOpen, FlaskConical, Shield, Lock, Clock, Check, ArrowRight, Sparkles, GraduationCap, FileText, Microscope, AlertTriangle, Unlock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { guides, categoryGradients } from "@/data/peptides";
 import { cn } from "@/lib/utils";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 const tabs = [
   { key: "guias", label: "Guias Práticos", icon: GraduationCap, count: 0 },
