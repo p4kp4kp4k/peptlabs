@@ -91,25 +91,25 @@ export default function SynergyTab({ interactions, stacks }: SynergyTabProps) {
       {allInteractions.length > 0 && (
         <SectionCard>
           <SectionTitle icon={GitMerge}>Interações com Outros Peptídeos</SectionTitle>
-          <div className="overflow-x-auto -mx-2">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border/30">
-                  {["Peptídeo", "Status", "Descrição"].map(h => (
-                    <th key={h} className="text-left py-2.5 px-3 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {allInteractions.map((item, i) => (
-                  <tr key={i} className="border-b border-border/15 last:border-0 align-top hover:bg-secondary/30 transition-colors">
-                    <td className="py-3 px-3 text-foreground font-semibold whitespace-nowrap">{item.nome}</td>
-                    <td className="py-3 px-3"><StatusBadge status={item.status} /></td>
-                    <td className="py-3 px-3 text-muted-foreground leading-relaxed">{item.descricao}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+          {/* Header */}
+          <div className="grid grid-cols-[minmax(160px,1fr)_110px_minmax(180px,1.5fr)] gap-x-5 border-b border-border/30 pb-2.5 mb-1 px-2">
+            {["PEPTÍDEO", "STATUS", "DESCRIÇÃO"].map(h => (
+              <span key={h} className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</span>
+            ))}
+          </div>
+
+          {/* Rows */}
+          <div className="divide-y divide-border/15">
+            {allInteractions.map((item, i) => (
+              <div key={i} className="grid grid-cols-[minmax(160px,1fr)_110px_minmax(180px,1.5fr)] gap-x-5 items-start py-4 px-2 hover:bg-secondary/20 transition-colors">
+                <span className="text-[13px] font-semibold text-foreground leading-snug">{item.nome}</span>
+                <div className="flex justify-start pt-0.5">
+                  <StatusBadge status={item.status} />
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{item.descricao}</p>
+              </div>
+            ))}
           </div>
         </SectionCard>
       )}
