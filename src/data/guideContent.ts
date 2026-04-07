@@ -25,7 +25,7 @@ export interface GuideContent {
 export const guideContents: Record<string, GuideContent> = {
   "caneta-peptideos": {
     intro: "Este guia ensina como reconstituir peptídeos liofilizados, carregar um cartucho corretamente e administrar a dose usando uma caneta reutilizável.",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WcXcQ",
+    // videoUrl: undefined — adicione a URL real do vídeo quando disponível
     sections: [
       {
         title: "Checklist de Materiais",
