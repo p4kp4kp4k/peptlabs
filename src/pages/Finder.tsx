@@ -308,16 +308,23 @@ export default function Finder() {
               {goals.map((goal) => {
                 const isSelected = selectedGoals.includes(goal.goal);
                 return (
+              {(() => {
+                const iconData = GOAL_ICON_MAP[goal.goal];
+                const Icon = iconData?.icon || Target;
+                const grad = iconData?.gradient || "from-primary to-primary";
+                return (
                   <button
                     key={goal.goal}
                     onClick={() => toggleGoal(goal.goal)}
-                    className={`group relative flex items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-all ${
+                    className={`group relative flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-all duration-200 ${
                       isSelected
                         ? "border-primary/50 bg-primary/8 ring-1 ring-primary/20"
                         : "border-border/30 bg-card/60 hover:border-border/60 hover:bg-card"
                     }`}
                   >
-                    <span className="text-lg leading-none">{goal.emoji}</span>
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${grad} shadow-lg shadow-black/20`}>
+                      <Icon className="h-4 w-4 text-white" />
+                    </div>
                     <span className={`flex-1 text-[13px] font-medium ${isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>
                       {goal.goal}
                     </span>
@@ -331,6 +338,8 @@ export default function Finder() {
                       {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                     </div>
                   </button>
+                );
+              })()}
                 );
               })}
             </div>
