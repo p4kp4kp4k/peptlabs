@@ -613,16 +613,174 @@ function BodySilhouette({
           strokeLinejoin="round"
         />
 
+        {/* ── Anatomical details ── */}
+        {/* Clavicles */}
+        <path
+          d="M100 74 C95 72, 85 76, 72 82"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="0.6"
+          opacity="0.18"
+        />
+        <path
+          d="M120 74 C125 72, 135 76, 148 82"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="0.6"
+          opacity="0.18"
+        />
+
+        {/* Pectoral lines (frontal only) */}
+        {side === "frontal" && (
+          <>
+            <path
+              d="M78 88 C85 96, 95 100, 110 98"
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="0.5"
+              opacity="0.12"
+            />
+            <path
+              d="M142 88 C135 96, 125 100, 110 98"
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="0.5"
+              opacity="0.12"
+            />
+          </>
+        )}
+
+        {/* Abdominal center line (frontal) */}
+        {side === "frontal" && (
+          <>
+            <line x1="110" y1="100" x2="110" y2="185"
+              stroke="hsl(var(--primary))" strokeWidth="0.4" opacity="0.1"
+            />
+            {/* Ab horizontal lines */}
+            <line x1="100" y1="110" x2="120" y2="110"
+              stroke="hsl(var(--primary))" strokeWidth="0.4" opacity="0.08"
+            />
+            <line x1="98" y1="125" x2="122" y2="125"
+              stroke="hsl(var(--primary))" strokeWidth="0.4" opacity="0.08"
+            />
+            <line x1="97" y1="140" x2="123" y2="140"
+              stroke="hsl(var(--primary))" strokeWidth="0.4" opacity="0.08"
+            />
+            <line x1="98" y1="155" x2="122" y2="155"
+              stroke="hsl(var(--primary))" strokeWidth="0.4" opacity="0.08"
+            />
+          </>
+        )}
+
+        {/* Scapula lines (dorsal only) */}
+        {side === "dorsal" && (
+          <>
+            <path
+              d="M78 86 C82 95, 90 100, 100 100"
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="0.5"
+              opacity="0.12"
+            />
+            <path
+              d="M142 86 C138 95, 130 100, 120 100"
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="0.5"
+              opacity="0.12"
+            />
+            {/* Spine line */}
+            <line x1="110" y1="70" x2="110" y2="195"
+              stroke="hsl(var(--primary))" strokeWidth="0.6" strokeDasharray="3 5" opacity="0.15"
+            />
+            {/* Lower back dimples */}
+            <circle cx="102" cy="178" r="2"
+              fill="none" stroke="hsl(var(--primary))" strokeWidth="0.4" opacity="0.1"
+            />
+            <circle cx="118" cy="178" r="2"
+              fill="none" stroke="hsl(var(--primary))" strokeWidth="0.4" opacity="0.1"
+            />
+          </>
+        )}
+
+        {/* Bicep lines on arms */}
+        <path
+          d="M42 120 C40 130, 38 140, 36 150"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="0.4"
+          opacity="0.1"
+        />
+        <path
+          d="M178 120 C180 130, 182 140, 184 150"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="0.4"
+          opacity="0.1"
+        />
+
+        {/* Knee definition - left */}
+        <ellipse cx="76" cy="310" rx="8" ry="5"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="0.5"
+          opacity="0.12"
+        />
+        {/* Kneecap highlight left */}
+        <ellipse cx="76" cy="308" rx="4" ry="3"
+          fill="hsl(var(--primary))"
+          opacity="0.04"
+        />
+
+        {/* Knee definition - right */}
+        <ellipse cx="144" cy="310" rx="8" ry="5"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="0.5"
+          opacity="0.12"
+        />
+        {/* Kneecap highlight right */}
+        <ellipse cx="144" cy="308" rx="4" ry="3"
+          fill="hsl(var(--primary))"
+          opacity="0.04"
+        />
+
+        {/* Quadriceps muscle lines (frontal) */}
+        {side === "frontal" && (
+          <>
+            <path d="M72 220 C74 250, 74 270, 76 295" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.35" opacity="0.08" />
+            <path d="M86 220 C84 250, 82 270, 78 295" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.35" opacity="0.08" />
+            <path d="M140 220 C138 250, 138 270, 136 295" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.35" opacity="0.08" />
+            <path d="M148 220 C150 250, 150 270, 148 295" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.35" opacity="0.08" />
+          </>
+        )}
+
+        {/* Calf muscle lines (dorsal) */}
+        {side === "dorsal" && (
+          <>
+            <path d="M70 320 C72 335, 74 345, 72 360" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.35" opacity="0.08" />
+            <path d="M82 320 C80 335, 78 345, 80 360" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.35" opacity="0.08" />
+            <path d="M138 320 C140 335, 142 345, 140 360" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.35" opacity="0.08" />
+            <path d="M150 320 C148 335, 146 345, 148 360" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.35" opacity="0.08" />
+          </>
+        )}
+
+        {/* Navel (frontal) */}
+        {side === "frontal" && (
+          <ellipse cx="110" cy="160" rx="2.5" ry="3"
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="0.5"
+            opacity="0.15"
+          />
+        )}
+
         {/* Crotch divider */}
         <line x1="110" y1="190" x2="110" y2="210"
           stroke={`url(#bodyStroke-${side})`}
           strokeWidth="0.6"
           opacity="0.4"
         />
-
-        {/* Center line for dorsal */}
-        {side === "dorsal" && (
-          <line x1="110" y1="70" x2="110" y2="195" stroke="hsl(var(--primary))" strokeWidth="0.6" strokeDasharray="3 5" opacity="0.2" />
         )}
       </svg>
 
