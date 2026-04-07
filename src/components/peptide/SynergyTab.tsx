@@ -55,7 +55,7 @@ function normalizeInteractions(data: Json | null | undefined): Array<{ nome: str
   
   // New format: flat array with {tipo, peptideo, descricao}
   if (Array.isArray(data)) {
-    return (data as NewInteraction[]).map(item => ({
+    return (data as unknown as NewInteraction[]).map(item => ({
       nome: item.peptideo || '',
       status: item.tipo || '',
       descricao: item.descricao || '',
