@@ -612,102 +612,100 @@ export const guideContents: Record<string, GuideContent> = {
   },
 
   "seguranca-efeitos-monitoramento": {
-    intro: "Efeitos colaterais por peptídeo, exames de sangue essenciais, contraindicações absolutas e como monitorar seu ciclo com segurança.",
+    intro: "Embora a maioria dos peptídeos tenha um perfil de segurança superior a esteroides anabolizantes, eles não são isentos de riscos. O monitoramento deve ser feito em três fases: Baseline (antes), Mid-Cycle (durante) e Post-Cycle (depois).",
     sections: [
       {
-        title: "Efeitos Colaterais Comuns por Peptídeo",
+        title: "Efeitos Colaterais por Peptídeo",
         icon: "alert",
-        items: [
-          "BPC-157: Fadiga, Náusea leve | Raros: Anedonia, Alergia local",
-          "TB-500: Letargia, Cefaleia | Raros: Nódulos de injeção",
-          "CJC-1295/Ipamorelin: Flushing, Fome aumentada | Raros: Parestesia",
-          "Tirzepatida: Náusea, Constipação | Raros: Pancreatite, Refluxo biliar",
-          "MK-677: Fome extrema, Retenção hídrica | Raros: Resistência à insulina",
-          "Melanotan II: Náusea, Ereções espontâneas | Raros: Escurecimento de pintas",
-          "Semaglutida: Náusea, Diarreia | Raros: Pancreatite, Gastroparesia",
-          "GHK-Cu: Irritação local | Raros: Hiperpigmentação local",
+        table: [
+          { label: "BPC-157", value: "Fadiga, náusea leve | Como minimizar: Dividir dose; testar dose menor" },
+          { label: "TB-500", value: "Letargia, cefaleia | Como minimizar: Aplicar em temperatura ambiente" },
+          { label: "CJC/Ipam", value: "Flushing, fome | Como minimizar: Injetar antes de dormir; 5on/2off" },
+          { label: "Tirzepatida", value: "Náusea, constipação | Como minimizar: Titulação lenta; beber 3L+ água" },
+          { label: "MK-677", value: "Fome extrema, retenção | Como minimizar: Berberina; monitorar HbA1c" },
+          { label: "Melanotan", value: "Náusea, ereções espontâneas | Como minimizar: Microdosagem (100mcg); uso noturno" },
         ],
       },
       {
-        title: "Exames de Monitoramento",
+        title: "Marcadores Críticos para Monitoramento",
         icon: "clipboard",
-        items: [
-          "Hemograma completo — a cada 8 semanas (todos os peptídeos)",
-          "Glicose + HbA1c — a cada 12 semanas (MK-677, Tirzepatida, Semaglutida)",
-          "IGF-1 — a cada 8-12 semanas (GH Secretagogos)",
-          "Função hepática (TGO/TGP) — a cada 12 semanas (injetáveis)",
-          "Função renal (Creatinina/Ureia) — a cada 12 semanas (todos)",
-          "TSH / T4 Livre — a cada 16 semanas (MK-677, Tesamorelin)",
-          "Lipidograma — a cada 12 semanas (Tirzepatida, Semaglutida)",
-          "Insulina em jejum — a cada 12 semanas (MK-677)",
+        table: [
+          { label: "IGF-1", value: "Eficácia do eixo GH — CJC, Ipamorelin, MK-677 — 1x a cada 3 meses" },
+          { label: "Glicemia em Jejum", value: "Risco de hiperglicemia — MK-677, HGH, Tirzepatida — Mensal" },
+          { label: "HbA1c", value: "Média de glicose (3 meses) — MK-677, Tirzepatida — 1x a cada 3 meses" },
+          { label: "ALT/AST", value: "Função hepática — Todos (especialmente orais) — 1x a cada 6 meses" },
+          { label: "Creatinina/Ureia", value: "Função renal — Todos — 1x a cada 6 meses" },
+          { label: "Proteína C-Reativa", value: "Inflamação sistêmica — BPC-157, TB-500 — 1x a cada 3 meses" },
+          { label: "TSH / T4 Livre", value: "Função tireoidiana — Tirzepatida, Semaglutida — 1x a cada 6 meses" },
         ],
       },
       {
         title: "Contraindicações Absolutas",
         icon: "shield",
         items: [
-          "Câncer ativo — todos os secretagogos de GH",
-          "Gravidez / Amamentação — todos os peptídeos",
-          "Pancreatite ativa ou histórica — Tirzepatida, Semaglutida",
-          "Diabetes tipo 1 descompensado — MK-677",
-          "Insuficiência renal severa — todos os injetáveis (contraindicação relativa)",
-          "Melanoma ou histórico familiar — Melanotan II",
-          "Menores de 18 anos — todos os peptídeos",
+          "Câncer Ativo: Peptídeos que estimulam angiogênese (BPC-157, TB-500) ou divisão celular (GHRPs) podem acelerar crescimento tumoral.",
+          "Retinopatia Diabética: Peptídeos de GH podem agravar a condição.",
+          "Pancreatite: Contraindicação absoluta para GLP-1s (Tirzepatida/Semaglutida).",
         ],
+      },
+    ],
+    steps: [
+      {
+        title: "Como Ler um Certificado de Análise (COA)",
+        content: [
+          "HPLC (Cromatografia Líquida): Mede a pureza. Deve ser >98% (idealmente >99%). O gráfico deve mostrar um pico único e limpo.",
+          "Mass Spec (Espectrometria de Massa): Confirma a identidade. O peso molecular deve bater com o teórico do peptídeo (ex: BPC-157 = 1419.5 g/mol).",
+          "Teste de Endotoxinas e Esterilidade: Nível de endotoxinas deve ser <0.5 EU/mg. Crucial para segurança injetável.",
+        ],
+        tip: "A pureza de 99% é o padrão, mas a verificação de endotoxinas é o que realmente define a segurança para uso injetável.",
+      },
+      {
+        title: "Red Flags de Fornecedores",
+        content: [
+          "Preços muito abaixo do mercado.",
+          "Falta de laudos de terceiros (Third-Party Testing).",
+          "Laudos com data de mais de 1 ano.",
+          "Ocultam o nome do laboratório (ex: Janoshik, MZ Biolabs).",
+          "Pagamento apenas via métodos não rastreáveis.",
+          "Falta de informações de armazenamento e transporte.",
+        ],
+        warning: "Sempre solicite e verifique os laudos ANTES de iniciar qualquer protocolo com peptídeos.",
       },
     ],
     disclaimer: "Este conteúdo é educacional. Sempre consulte um médico antes de iniciar ou modificar protocolos de peptídeos.",
   },
 
   "o-que-sao-peptideos": {
-    intro: "Entenda o que são peptídeos, como funcionam no corpo, a história desde a insulina até os neuropeptídeos modernos e por que são diferentes de esteroides e suplementos convencionais.",
+    intro: "No seu núcleo, peptídeos são pequenas cadeias de aminoácidos ligadas por ligações peptídicas — como contas em um colar. Para uma molécula ser classificada como peptídeo, deve conter entre 2 e 50 aminoácidos. Passe de 50 e eles são classificados como polipeptídeos. Cruze a marca de 100 e você tem uma proteína. Peptídeos são a linguagem da função celular — mensagens passadas entre sistemas, dizendo ao corpo quando construir, o que decompor, quando se recuperar, quando proteger, quando descansar.",
+    sections: [
+      {
+        title: "Classificação dos Peptídeos",
+        icon: "table",
+        table: [
+          { label: "Cicatrização", value: "BPC-157, TB-500, GHK-Cu, KPV — Recuperação de tecidos e anti-inflamação" },
+          { label: "Sistema Imunológico", value: "Glutationa, Timosina Alfa-1, LL-37 — Modulação e fortalecimento imune" },
+          { label: "Longevidade", value: "Ipamorelin, Tesamorelina, Epithalon, FOXO4-DRI — Anti-aging e secretagogos de GH" },
+          { label: "Mitocondriais", value: "MOTS-c, SS-31, NAD+, L-Carnitina — Energia celular e função mitocondrial" },
+          { label: "Perda de Peso", value: "Semaglutida, Tirzepatida, Retatrutida — Regulação do apetite e metabolismo" },
+          { label: "Libido", value: "PT-141, Kisspeptina, Oxitocina — Função sexual e hormonal" },
+          { label: "Neuropeptídeos", value: "Selank, Semax, Cerebrolysin, Dihexa — Cognição, memória e neuroproteção" },
+        ],
+      },
+    ],
     steps: [
       {
-        title: "O que são Peptídeos?",
+        title: "Breve História dos Peptídeos",
         content: [
-          "Peptídeos são cadeias curtas de aminoácidos (2-50 aminoácidos).",
-          "Diferentes de proteínas, que possuem mais de 50 aminoácidos.",
-          "Funcionam como mensageiros biológicos, sinalizando células específicas.",
-          "O corpo produz milhares de peptídeos naturalmente.",
+          "O primeiro peptídeo comercialmente disponível foi a Insulina, isolada de pâncreas animais na década de 1920.",
+          "Em 1982, veio o grande avanço: a criação da primeira insulina humana recombinante, sinteticamente sequenciada com 51 aminoácidos.",
+          "Agora temos peptídeos que melhoram a cognição, aceleram cicatrização, modulam o sistema imunológico, promovem perda de gordura, aumentam a libido, regeneram cartilagem e retreinam o comportamento mitocondrial.",
         ],
       },
       {
-        title: "Como Funcionam?",
+        title: "Peptídeos NÃO São Drogas Milagrosas",
         content: [
-          "Ligam-se a receptores específicos nas células-alvo.",
-          "Ativam cascatas de sinalização intracelular.",
-          "Efeitos altamente específicos com menos efeitos colaterais que fármacos tradicionais.",
-          "Meia-vida curta — ação precisa e controlável.",
-        ],
-      },
-      {
-        title: "História dos Peptídeos",
-        content: [
-          "1921: Descoberta da Insulina (primeiro peptídeo terapêutico).",
-          "1950s: Síntese de Oxitocina em laboratório.",
-          "1970s: Descoberta de GHRH e peptídeos de liberação de GH.",
-          "1990s: BPC-157, TB-500 entram em pesquisa pré-clínica.",
-          "2020s: Tirzepatida, Semaglutida aprovados para uso clínico.",
-        ],
-      },
-      {
-        title: "Peptídeos vs. Esteroides vs. Suplementos",
-        content: [
-          "Peptídeos: sinalizam processos naturais, alta especificidade, meia-vida curta.",
-          "Esteroides: substituem hormônios, efeitos sistêmicos amplos, suprimem eixo hormonal.",
-          "Suplementos: biodisponibilidade variável, efeitos geralmente mais sutis.",
-          "Peptídeos não suprimem a produção hormonal natural (na maioria dos casos).",
-        ],
-      },
-      {
-        title: "Categorias Principais",
-        content: [
-          "Recuperação: BPC-157, TB-500, GHK-Cu.",
-          "Emagrecimento: Tirzepatida, Semaglutida, AOD-9604.",
-          "Cognição: Selank, Semax, Dihexa.",
-          "Anti-Aging: Epithalon, GHK-Cu, FOXO4-DRI.",
-          "Performance: CJC-1295, Ipamorelin, IGF-1 LR3.",
-          "Imunidade: Thymosin Alpha-1, LL-37.",
+          "Peptídeos não são instruções externas — são sinais na linguagem nativa do corpo.",
+          "Você não está convencendo o corpo a fazer algo — está dando a ele o sinal ao qual ele já foi construído para responder.",
         ],
       },
     ],
@@ -787,57 +785,56 @@ export const guideContents: Record<string, GuideContent> = {
   },
 
   "equilibrio-redox-101": {
-    intro: "Entenda o equilíbrio redox, como a glicose vira ATP, e por que isso é fundamental antes de usar peptídeos mitocondriais como MOTS-c, SS-31 e NAD+.",
-    steps: [
+    intro: "Redox significa redução e oxidação — reações químicas envolvendo a transferência de elétrons. No nível celular, esse processo controla como geramos energia e como regulamos os danos. Oxidação: perda de elétrons, libera energia mas produz espécies reativas de oxigênio (EROs). Redução: ganho de elétrons, é a forma do corpo neutralizar EROs e restaurar o equilíbrio.",
+    sections: [
       {
-        title: "O que é Equilíbrio Redox?",
-        content: [
-          "Redox = Redução + Oxidação — transferência de elétrons entre moléculas.",
-          "Oxidação: perda de elétrons (produz radicais livres).",
-          "Redução: ganho de elétrons (neutraliza radicais livres).",
-          "Equilíbrio redox = balanço entre produção e neutralização de radicais.",
+        title: "Peptídeos Mitocondriais e o Redox",
+        icon: "table",
+        table: [
+          { label: "MOTS-c", value: "Via AMPK — Ativa sensor de energia celular, melhora captação de glicose" },
+          { label: "SS-31", value: "Via Cardiolipina — Estabiliza membrana mitocondrial, reduz vazamento de elétrons" },
+          { label: "NAD+", value: "Via Sirtuínas / PARPs — Combustível para enzimas de longevidade e reparo de DNA" },
+          { label: "L-Carnitina", value: "Via Beta-oxidação — Transporta ácidos graxos para as mitocôndrias" },
+          { label: "Azul de Metileno", value: "Via Citocromo c oxidase — Doador/receptor de elétrons alternativo" },
+          { label: "SLU-PP-332", value: "Via PPARδ / ERRγ — Mimetiza exercício a nível molecular" },
         ],
-      },
-      {
-        title: "Da Glicose ao ATP",
-        content: [
-          "Glicólise: Glicose → 2 Piruvato (citoplasma, 2 ATP).",
-          "Ciclo de Krebs: Piruvato → CO2 + NADH + FADH2 (mitocôndria).",
-          "Cadeia de Transporte de Elétrons: NADH/FADH2 → 34 ATP.",
-          "Total: ~36 ATP por molécula de glicose.",
-          "A mitocôndria é a 'usina' — 95% do ATP é produzido lá.",
-        ],
-      },
-      {
-        title: "Por que a Mitocôndria Envelhece",
-        content: [
-          "Com a idade, a eficiência da cadeia de elétrons diminui.",
-          "Mais elétrons 'vazam' e formam radicais livres (ROS).",
-          "DNA mitocondrial é 10x mais vulnerável que DNA nuclear.",
-          "Resultado: menos energia, mais inflamação, envelhecimento celular.",
-        ],
-      },
-      {
-        title: "Peptídeos Mitocondriais",
-        content: [
-          "MOTS-c: Ativa AMPK, melhora metabolismo de glicose.",
-          "SS-31 (Elamipretide): Protege a cardiolipina na membrana mitocondrial interna.",
-          "NAD+ (precursores): Restaura os níveis de NAD+ necessários para a cadeia de elétrons.",
-          "Humanin: Peptídeo mitocondrial que protege contra estresse oxidativo.",
-        ],
-      },
-      {
-        title: "Base Antes dos Peptídeos",
-        content: [
-          "Otimizar dieta: antioxidantes naturais (vitamina C, E, CoQ10).",
-          "Exercício regular: estimula biogênese mitocondrial.",
-          "Sono adequado: período de reparo mitocondrial.",
-          "Reduzir estressores: tabaco, álcool, ultra-processados.",
-          "Só então adicionar peptídeos mitocondriais para potencializar.",
-        ],
-        tip: "Peptídeos mitocondriais funcionam melhor quando a base (dieta, exercício, sono) está otimizada. Não são substitutos de um estilo de vida saudável.",
       },
     ],
-    disclaimer: "Este conteúdo é educacional. Consulte um profissional de saúde antes de utilizar peptídeos mitocondriais.",
+    steps: [
+      {
+        title: "Como a Glicose se Torna ATP",
+        content: [
+          "Carboidratos são decompostos em glicose, que entra nas células e passa pela glicólise (10 etapas), produzindo ATP e piruvato.",
+          "O piruvato entra nas mitocôndrias e é convertido em acetil-CoA, alimentando o ciclo de Krebs.",
+          "O ciclo gera NADH e FADH2, que atuam como transportadores de elétrons para a cadeia de transporte de elétrons (CTE).",
+          "Na CTE, esses elétrons impulsionam a produção de grandes quantidades de ATP.",
+        ],
+      },
+      {
+        title: "Sinais de Equilíbrio Redox Desregulado",
+        content: [
+          "Fadiga crônica que só melhora com sono.",
+          "Névoa cerebral, falta de foco.",
+          "Dor nas articulações ou inflamação sistêmica.",
+          "Recuperação lenta do treinamento.",
+          "Instabilidade de humor ou baixa resiliência ao estresse.",
+          "PCR elevada, marcadores inflamatórios elevados em exames.",
+        ],
+        warning: "Esses são sinais de que seu corpo está criando mais estresse do que pode limpar. Quase todos os peptídeos mitocondriais influenciam vias sensíveis ao redox: AMPK, mTOR, NAD+/NADH, SIRT1/SIRT3, PGC-1α.",
+      },
+      {
+        title: "Terapia de Luz Vermelha + Peptídeos",
+        content: [
+          "A luz vermelha e infravermelha próxima (630-850nm) penetra no tecido e visa as mitocôndrias diretamente, melhorando fluxo sanguíneo, oxigenação e produção de ATP.",
+          "Vermelho (630-660nm) para cicatrização superficial.",
+          "Infravermelho próximo (810-850nm) para penetração mais profunda.",
+          "Exposição: 5 a 20 minutos por sessão.",
+          "Frequência: 3-7x por semana durante fases ativas; 1-3x semanalmente para manutenção.",
+          "Distância: 15-30 cm para a maioria dos dispositivos de painel.",
+        ],
+        tip: "Aplique após injeção de BPC-157 ou TB-500 para melhorar absorção e circulação local. Para longevidade: combine com MOTS-c, SS-31 e NAD+.",
+      },
+    ],
+    disclaimer: "Peptídeos mitocondriais podem ser uma faca de dois gumes — embora possam levar as mitocôndrias a níveis suprafisiológicos, isso gera maiores quantidades de subprodutos EROs. Uma base sólida de redox é fundamental.",
   },
 };
