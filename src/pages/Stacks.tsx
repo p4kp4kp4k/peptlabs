@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Layers, Users, Target, ArrowRight, Sparkles, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
-import { getCategoryColor } from "@/components/peptide/peptideUtils";
 import type { Json } from "@/integrations/supabase/types";
 
 interface Stack {
@@ -227,33 +226,31 @@ export default function Stacks() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {stacks.map((stack, i) => {
-              const catColor = getCategoryColor(stack.sourceCategory);
-              return (
+            {stacks.map((stack, i) => (
                 <Link
                   key={`${stack.sourceSlug}-${i}`}
                   to={`/peptide/${stack.sourceSlug}`}
-                  className="group rounded-xl border border-border/25 bg-card/70 p-4 hover:border-primary/30 hover:bg-card transition-all duration-200"
+                  className="group rounded-xl border border-border/25 bg-card/70 p-3.5 hover:border-primary/30 hover:bg-card transition-all duration-200"
                 >
-                  {/* Stack name + category */}
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="space-y-1 min-w-0">
-                      <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                        {stack.nome}
-                      </h3>
-                      <Badge className={`text-[9px] bg-gradient-to-r ${catColor} border-0 font-medium px-2`}>
-                        {stack.sourceCategory}
-                      </Badge>
-                    </div>
-                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary shrink-0 mt-1 transition-colors" />
+                  {/* Stack name + arrow */}
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <h3 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                      {stack.nome}
+                    </h3>
+                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 group-hover:text-primary shrink-0 transition-colors" />
                   </div>
 
+                  {/* Category badge */}
+                  <Badge variant="outline" className="text-[9px] bg-primary/15 text-primary border-primary/25 font-semibold px-2 mb-2.5">
+                    {stack.sourceCategory}
+                  </Badge>
+
                   {/* Peptides in stack */}
-                  <div className="flex flex-wrap gap-1.5 mb-3">
+                  <div className="flex flex-wrap gap-1.5 mb-2.5">
                     {stack.peptideos.map((p) => (
                       <span
                         key={p}
-                        className="inline-flex items-center rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-medium text-foreground/80"
+                        className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-[10px] font-medium text-foreground/80 border border-border/20"
                       >
                         {p}
                       </span>
@@ -262,24 +259,23 @@ export default function Stacks() {
 
                   {/* Description */}
                   {stack.descricao && (
-                    <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
+                    <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2 mb-2.5">
                       {stack.descricao}
                     </p>
                   )}
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-border/15">
+                  <div className="flex items-center justify-between pt-2 border-t border-border/15">
                     <span className="text-[10px] text-muted-foreground/60">
                       Fonte: {stack.sourcePeptide}
                     </span>
                     <div className="flex items-center gap-1 text-[10px] text-primary/60 group-hover:text-primary transition-colors">
-                      <Sparkles className="h-3 w-3" />
+                      <Sparkles className="h-2.5 w-2.5" />
                       <span>{stack.peptideos.length} peptídeos</span>
                     </div>
                   </div>
                 </Link>
-              );
-            })}
+            ))}
           </div>
         </div>
       ))}
