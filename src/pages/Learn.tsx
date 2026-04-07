@@ -1,6 +1,20 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { BookOpen, FlaskConical, Shield, Lock, Clock, Check, ArrowRight, Sparkles, GraduationCap, FileText, Microscope, AlertTriangle, Unlock } from "lucide-react";
+import {
+  BookOpen,
+  FlaskConical,
+  Shield,
+  Lock,
+  Clock,
+  Check,
+  ArrowRight,
+  Sparkles,
+  GraduationCap,
+  FileText,
+  Microscope,
+  AlertTriangle,
+  Unlock,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { guides, categoryGradients } from "@/data/peptides";
@@ -9,13 +23,15 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 import SafetyTab from "@/components/learn/SafetyTab";
 import GuideDetailInline from "@/components/learn/GuideDetailInline";
 
-const tabs = [
-  { key: "guias", label: "Guias Práticos", icon: GraduationCap, count: 0 },
-  { key: "estudos", label: "Estudos & Ciência", icon: Microscope, count: 0 },
-  { key: "seguranca", label: "Segurança", icon: AlertTriangle, count: 0 },
-] as const;
+type TabKey = "todos" | "guias" | "estudos" | "seguranca";
 
-// Category icon mapping for visual distinction
+const tabs: { key: TabKey; label: string; icon: typeof BookOpen }[] = [
+  { key: "todos", label: "Todos", icon: BookOpen },
+  { key: "guias", label: "Guias Práticos", icon: GraduationCap },
+  { key: "estudos", label: "Estudos & Ciência", icon: Microscope },
+  { key: "seguranca", label: "Segurança", icon: AlertTriangle },
+];
+
 const categoryIcons: Record<string, typeof BookOpen> = {
   "Recuperação": FileText,
   "Nootrópicos": FlaskConical,
@@ -29,23 +45,23 @@ const categoryIcons: Record<string, typeof BookOpen> = {
 
 export default function Learn() {
   const { slug } = useParams<{ slug: string }>();
-  const [activeTab, setActiveTab] = useState<"guias" | "estudos" | "seguranca">("guias");
+  const [activeTab, setActiveTab] = useState<TabKey>("todos");
   const { isPremium, isAdmin } = useEntitlements();
   const hasFullAccess = isPremium || isAdmin;
   const navigate = useNavigate();
 
-  const filtered = guides.filter((g) => g.tab === activeTab);
+  const filtered = activeTab === "todos" ? guides : guides.filter((g) => g.tab === activeTab);
+  const showFeaturedGuide = activeTab === "todos" || activeTab === "guias";
 
-  // Count guides per tab
-  const tabCounts = {
-    guias: guides.filter(g => g.tab === "guias").length,
-    estudos: guides.filter(g => g.tab === "estudos").length,
-    seguranca: guides.filter(g => g.tab === "seguranca").length,
+  const tabCounts: Record<TabKey, number> = {
+    todos: guides.length,
+    guias: guides.filter((g) => g.tab === "guias").length,
+    estudos: guides.filter((g) => g.tab === "estudos").length,
+    seguranca: guides.filter((g) => g.tab === "seguranca").length,
   };
 
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto">
-      {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -62,23 +78,23 @@ export default function Learn() {
         </div>
       </div>
 
-      {/* Stats bar */}
       <div className="mb-6 grid grid-cols-3 gap-3">
         {[
           { label: "Guias Disponíveis", value: guides.length, icon: FileText },
-          { label: "Conteúdo PRO", value: guides.filter(g => g.isPro).length, icon: Lock },
-          { label: "Gratuitos", value: guides.filter(g => !g.isPro).length, icon: Check },
+          { label: "Conteúdo PRO", value: guides.filter((g) => g.isPro).length, icon: Lock },
+          { label: "Gratuitos", value: guides.filter((g) => !g.isPro).length, icon: Check },
         ].map((stat) => (
           <div key={stat.label} className="rounded-xl border border-border/30 bg-card/60 p-3 text-center">
             <stat.icon className="mx-auto mb-1 h-4 w-4 text-primary/70" />
-            <p className="text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{stat.value}</p>
+            <p className="text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              {stat.value}
+            </p>
             <p className="text-[10px] text-muted-foreground">{stat.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6 flex gap-2">
+      <div className="mb-6 flex flex-wrap gap-2">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           return (
@@ -96,12 +112,13 @@ export default function Learn() {
               )}
             >
               <tab.icon className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{tab.label}</span>
-              <span className="sm:hidden">{tab.key === "guias" ? "Guias" : tab.key === "estudos" ? "Estudos" : "Segurança"}</span>
-              <span className={cn(
-                "ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold",
-                isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-secondary text-muted-foreground"
-              )}>
+              <span>{tab.label}</span>
+              <span
+                className={cn(
+                  "ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold",
+                  isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-secondary text-muted-foreground"
+                )}
+              >
                 {tabCounts[tab.key]}
               </span>
             </button>
@@ -109,13 +126,11 @@ export default function Learn() {
         })}
       </div>
 
-      {/* Guide Detail (inline) */}
       {slug ? (
         <GuideDetailInline slug={slug} />
       ) : (
         <>
-          {/* Featured guide (first free guide) */}
-          {activeTab === "guias" && (
+          {showFeaturedGuide && (
             <div className="mb-6 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card p-6 sm:p-8">
               <div className="flex items-start gap-4">
                 <div className="hidden sm:flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
@@ -137,13 +152,10 @@ export default function Learn() {
             </div>
           )}
 
-          {/* Segurança tab */}
           {activeTab === "seguranca" && <SafetyTab />}
 
-          {/* Guides grid */}
-        <>
           <div className="grid gap-3 sm:grid-cols-2">
-            {filtered.map((guide, i) => {
+            {filtered.map((guide) => {
               const CatIcon = categoryIcons[guide.category] || FileText;
               return (
                 <div
@@ -157,31 +169,31 @@ export default function Learn() {
                     guide.isPro && !hasFullAccess ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
                   )}
                 >
-                  {/* Top accent line */}
                   <div className={cn("h-0.5 w-full bg-gradient-to-r", categoryGradients[guide.category] || "from-primary to-primary")} />
-                  
+
                   <div className="p-5">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary/60">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary/60 shrink-0">
                           <CatIcon className="h-3.5 w-3.5 text-muted-foreground" />
                         </div>
                         <Badge className={cn("border-0 bg-gradient-to-r text-[9px] text-white", categoryGradients[guide.category] || "from-primary to-primary")}>
                           {guide.category}
                         </Badge>
                       </div>
+
                       {guide.isPro && !hasFullAccess ? (
-                        <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5">
+                        <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 shrink-0">
                           <Lock className="h-2.5 w-2.5 text-amber-400" />
                           <span className="text-[9px] font-semibold text-amber-400">PRO</span>
                         </div>
                       ) : guide.isPro && hasFullAccess ? (
-                        <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5">
+                        <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 shrink-0">
                           <Unlock className="h-2.5 w-2.5 text-emerald-400" />
                           <span className="text-[9px] font-semibold text-emerald-400">DESBLOQUEADO</span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5">
+                        <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 shrink-0">
                           <Check className="h-2.5 w-2.5 text-emerald-400" />
                           <span className="text-[9px] font-semibold text-emerald-400">GRÁTIS</span>
                         </div>
@@ -217,85 +229,80 @@ export default function Learn() {
               <p className="mt-1 text-xs text-muted-foreground/60">Novos artigos são publicados semanalmente.</p>
             </div>
           )}
-        </>
 
-          {/* Bottom CTA */}
           {!hasFullAccess && (
-      <div className="mt-10 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card">
-        <div className="p-6 sm:p-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
-            <Sparkles className="h-6 w-6 text-primary" />
-          </div>
-          <h2 className="mb-2 text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Acesso completo à Central de Conhecimento
-          </h2>
-          <p className="mx-auto mb-8 max-w-md text-xs text-muted-foreground">
-            Desbloqueie todos os guias, estudos científicos e protocolos de segurança com evidência real.
-          </p>
+            <div className="mt-10 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card">
+              <div className="p-6 sm:p-8 text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+                  <Sparkles className="h-6 w-6 text-primary" />
+                </div>
+                <h2 className="mb-2 text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  Acesso completo à Central de Conhecimento
+                </h2>
+                <p className="mx-auto mb-8 max-w-md text-xs text-muted-foreground">
+                  Desbloqueie todos os guias, estudos científicos e protocolos de segurança com evidência real.
+                </p>
 
-          <div className="grid gap-4 sm:grid-cols-3 max-w-3xl mx-auto">
-            {/* PRO Mensal */}
-            <div className="rounded-xl border border-border/30 bg-background p-5 text-left">
-              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 mb-1">Mensal</p>
-              <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                R$147<span className="text-xs font-normal text-muted-foreground">/mês</span>
-              </p>
-              <p className="mb-4 text-[10px] text-muted-foreground">Cancele quando quiser</p>
-              <ul className="mb-4 space-y-2">
-                {["Biblioteca completa", "Calculadora avançada", "Guias atualizados", "Suporte e-mail"].map(f => (
-                  <li key={f} className="flex items-start gap-2 text-[10px] text-muted-foreground">
-                    <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {f}
-                  </li>
-                ))}
-              </ul>
-              <Button variant="outline" size="sm" className="w-full text-xs">Começar</Button>
-            </div>
+                <div className="grid gap-4 sm:grid-cols-3 max-w-3xl mx-auto">
+                  <div className="rounded-xl border border-border/30 bg-background p-5 text-left">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 mb-1">Mensal</p>
+                    <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                      R$147<span className="text-xs font-normal text-muted-foreground">/mês</span>
+                    </p>
+                    <p className="mb-4 text-[10px] text-muted-foreground">Cancele quando quiser</p>
+                    <ul className="mb-4 space-y-2">
+                      {["Biblioteca completa", "Calculadora avançada", "Guias atualizados", "Suporte e-mail"].map((feature) => (
+                        <li key={feature} className="flex items-start gap-2 text-[10px] text-muted-foreground">
+                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button variant="outline" size="sm" className="w-full text-xs">Começar</Button>
+                  </div>
 
-            {/* PRO Vitalício */}
-            <div className="relative rounded-xl border-2 border-primary bg-background p-5 text-left shadow-lg shadow-primary/10">
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                <Badge className="border-0 bg-primary text-primary-foreground text-[9px] shadow-lg">
-                  Mais Popular
-                </Badge>
-              </div>
-              <p className="text-[10px] font-medium uppercase tracking-wider text-primary mb-1">Vitalício</p>
-              <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>R$397</p>
-                <span className="text-[10px] text-muted-foreground line-through">R$794</span>
-              </div>
-              <p className="mb-4 text-[10px] text-muted-foreground">Pagamento único · <span className="text-primary font-semibold">-50%</span></p>
-              <ul className="mb-4 space-y-2">
-                {["Tudo do Mensal", "Acesso antecipado", "Lives exclusivas", "Consultoria em grupo"].map(f => (
-                  <li key={f} className="flex items-start gap-2 text-[10px] text-muted-foreground">
-                    <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {f}
-                  </li>
-                ))}
-              </ul>
-              <Button size="sm" className="w-full text-xs">Garantir Acesso</Button>
-            </div>
+                  <div className="relative rounded-xl border-2 border-primary bg-background p-5 text-left shadow-lg shadow-primary/10">
+                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                      <Badge className="border-0 bg-primary text-primary-foreground text-[9px] shadow-lg">
+                        Mais Popular
+                      </Badge>
+                    </div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-primary mb-1">Vitalício</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>R$397</p>
+                      <span className="text-[10px] text-muted-foreground line-through">R$794</span>
+                    </div>
+                    <p className="mb-4 text-[10px] text-muted-foreground">Pagamento único · <span className="text-primary font-semibold">-50%</span></p>
+                    <ul className="mb-4 space-y-2">
+                      {["Tudo do Mensal", "Acesso antecipado", "Lives exclusivas", "Consultoria em grupo"].map((feature) => (
+                        <li key={feature} className="flex items-start gap-2 text-[10px] text-muted-foreground">
+                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button size="sm" className="w-full text-xs">Garantir Acesso</Button>
+                  </div>
 
-            {/* Premium */}
-            <div className="rounded-xl border border-border/30 bg-background p-5 text-left">
-              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 mb-1">Premium</p>
-              <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>R$997</p>
-                <span className="text-[10px] text-muted-foreground line-through">R$1.997</span>
+                  <div className="rounded-xl border border-border/30 bg-background p-5 text-left">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 mb-1">Premium</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>R$997</p>
+                      <span className="text-[10px] text-muted-foreground line-through">R$1.997</span>
+                    </div>
+                    <p className="mb-4 text-[10px] text-muted-foreground">Vitalício + comunidade · <span className="text-primary font-semibold">-50%</span></p>
+                    <ul className="mb-4 space-y-2">
+                      {["Tudo do Vitalício", "Fornecedores confiáveis", "Comunidade +700", "Suporte WhatsApp"].map((feature) => (
+                        <li key={feature} className="flex items-start gap-2 text-[10px] text-muted-foreground">
+                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button variant="outline" size="sm" className="w-full border-primary text-primary text-xs hover:bg-primary hover:text-primary-foreground">
+                      Pagar Uma Vez
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <p className="mb-4 text-[10px] text-muted-foreground">Vitalício + comunidade · <span className="text-primary font-semibold">-50%</span></p>
-              <ul className="mb-4 space-y-2">
-                {["Tudo do Vitalício", "Fornecedores confiáveis", "Comunidade +700", "Suporte WhatsApp"].map(f => (
-                  <li key={f} className="flex items-start gap-2 text-[10px] text-muted-foreground">
-                    <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {f}
-                  </li>
-                ))}
-              </ul>
-              <Button variant="outline" size="sm" className="w-full border-primary text-primary text-xs hover:bg-primary hover:text-primary-foreground">
-                Pagar Uma Vez
-              </Button>
             </div>
-          </div>
-        </div>
-      </div>
           )}
         </>
       )}
