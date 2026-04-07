@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { BookOpen, FlaskConical, Shield, Lock, Clock, Check, ArrowRight, Sparkles, GraduationCap, FileText, Microscope, AlertTriangle, Unlock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { guides, categoryGradients } from "@/data/peptides";
 import { cn } from "@/lib/utils";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import SafetyTab from "@/components/learn/SafetyTab";
+import GuideDetailInline from "@/components/learn/GuideDetailInline";
 
 const tabs = [
   { key: "guias", label: "Guias Práticos", icon: GraduationCap, count: 0 },
