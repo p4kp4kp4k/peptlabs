@@ -139,7 +139,7 @@ export default function CalculatorPage() {
   const hasInput = vial > 0 && diluent > 0 && dose > 0;
   const syringeFillPercent = hasInput ? Math.min((volumeToInjectMl / selectedSyringe.value) * 100, 100) : 0;
 
-  const reset = () => { setVialMg(""); setDiluentMl(""); setDesiredDoseMcg(""); };
+  const reset = () => { setVialMg(""); setDiluentMl(""); setDesiredDoseMcg(""); setSelectedProtocol(null); };
 
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
