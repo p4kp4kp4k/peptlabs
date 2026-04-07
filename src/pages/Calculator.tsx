@@ -170,6 +170,11 @@ export default function CalculatorPage() {
   const [selectedSyringe, setSelectedSyringe] = useState(syringeSizes[2]);
   const [protocolOpen, setProtocolOpen] = useState(false);
   const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
+  const [protocolSearch, setProtocolSearch] = useState("");
+
+  const filteredProtocols = protocolPresets.filter((p) =>
+    p.label.toLowerCase().includes(protocolSearch.toLowerCase())
+  );
 
   const applyProtocol = (p: { label: string; vial: string; water: string; dose: string }) => {
     setVialMg(p.vial);
