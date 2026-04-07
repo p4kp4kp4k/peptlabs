@@ -6,9 +6,27 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Calculator as CalcIcon, Droplets, FlaskConical, Syringe, Info, RotateCcw,
-  Table2, Beaker, AlertTriangle, CheckCircle2, Clock, Snowflake, ThermometerSun
+  Table2, Beaker, AlertTriangle, CheckCircle2, Clock, Snowflake, ThermometerSun,
+  ClipboardList, ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger
+} from "@/components/ui/collapsible";
+
+// ── Preset protocols for quick fill ──
+const presetProtocols = [
+  { name: "BPC-157 Recuperação", vial: "5", water: "2", dose: "250" },
+  { name: "TB-500 Carga", vial: "5", water: "2", dose: "2500" },
+  { name: "MGF Reparo Muscular", vial: "5", water: "2", dose: "200" },
+  { name: "KLOW Recuperação", vial: "5", water: "2", dose: "250" },
+  { name: "Semaglutida 0.25mg", vial: "5", water: "1", dose: "250" },
+  { name: "Tirzepatida 2.5mg", vial: "10", water: "2", dose: "2500" },
+  { name: "CJC-1295 / Ipamorelin", vial: "5", water: "2", dose: "100" },
+  { name: "GHK-Cu Rejuvenescimento", vial: "5", water: "5", dose: "200" },
+  { name: "Selank Ansiolítico", vial: "5", water: "2", dose: "200" },
+  { name: "Epitalon Anti-aging", vial: "10", water: "2", dose: "5000" },
+];
 
 // ── Syringe sizes chips ──
 const syringeSizes = [
@@ -97,7 +115,17 @@ export default function CalculatorPage() {
   const [vialMg, setVialMg] = useState("");
   const [diluentMl, setDiluentMl] = useState("");
   const [desiredDoseMcg, setDesiredDoseMcg] = useState("");
-  const [selectedSyringe, setSelectedSyringe] = useState(syringeSizes[2]); // 1.0mL default
+  const [selectedSyringe, setSelectedSyringe] = useState(syringeSizes[2]);
+  const [protocolOpen, setProtocolOpen] = useState(false);
+  const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
+
+  const applyProtocol = (p: typeof presetProtocols[0]) => {
+    setVialMg(p.vial);
+    setDiluentMl(p.water);
+    setDesiredDoseMcg(p.dose);
+    setSelectedProtocol(p.name);
+    setProtocolOpen(false);
+  };
 
   const vial = parseFloat(vialMg) || 0;
   const diluent = parseFloat(diluentMl) || 0;
@@ -111,7 +139,7 @@ export default function CalculatorPage() {
   const hasInput = vial > 0 && diluent > 0 && dose > 0;
   const syringeFillPercent = hasInput ? Math.min((volumeToInjectMl / selectedSyringe.value) * 100, 100) : 0;
 
-  const reset = () => { setVialMg(""); setDiluentMl(""); setDesiredDoseMcg(""); };
+  const reset = () => { setVialMg(""); setDiluentMl(""); setDesiredDoseMcg(""); setSelectedProtocol(null); };
 
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
@@ -127,6 +155,46 @@ export default function CalculatorPage() {
           <RotateCcw className="h-3.5 w-3.5" />
         </Button>
       </div>
+
+      {/* Protocol selector */}
+      <Collapsible open={protocolOpen} onOpenChange={setProtocolOpen}>
+        <CollapsibleTrigger className="w-full">
+          <div className="flex items-center justify-between rounded-xl border border-border/40 bg-card/80 px-4 py-3 hover:border-border/60 transition-colors">
+            <div className="flex items-center gap-2.5">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              <div className="text-left">
+                <p className="text-[11px] font-semibold text-foreground">
+                  Selecionar protocolo <span className="text-muted-foreground font-normal">(opcional)</span>
+                </p>
+                {selectedProtocol ? (
+                  <p className="text-[10px] text-primary">{selectedProtocol}</p>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground">Escolha um protocolo para pré-preencher...</p>
+                )}
+              </div>
+            </div>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${protocolOpen ? "rotate-180" : ""}`} />
+          </div>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="mt-1 rounded-xl border border-border/40 bg-card/80 overflow-hidden divide-y divide-border/20">
+            {presetProtocols.map((p) => (
+              <button
+                key={p.name}
+                onClick={() => applyProtocol(p)}
+                className={`w-full text-left px-4 py-3 hover:bg-primary/5 transition-colors ${
+                  selectedProtocol === p.name ? "bg-primary/10" : ""
+                }`}
+              >
+                <p className="text-[12px] font-semibold text-foreground">{p.name}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {p.vial}mg · {p.water}ml · {p.dose}mcg
+                </p>
+              </button>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <Tabs defaultValue="calculator" className="space-y-4">
         <TabsList className="h-9 bg-secondary/60 p-0.5">
