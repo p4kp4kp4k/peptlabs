@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, Triangle, ArrowRight, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
-import { getCategoryColor } from "@/components/peptide/peptideUtils";
+import type { Json } from "@/integrations/supabase/types";
 import type { Json } from "@/integrations/supabase/types";
 
 interface NormalizedInteraction {
