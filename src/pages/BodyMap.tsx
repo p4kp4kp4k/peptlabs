@@ -248,6 +248,7 @@ export default function BodyMap() {
                         .filter((_, i) => completedDays.has(i))
                         .map((s) => s.site)
                     )}
+                    selectedSiteId={selectedSite?.id || null}
                     onSiteClick={setSelectedSite}
                   />
                 </div>
