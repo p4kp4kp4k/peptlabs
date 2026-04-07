@@ -39,14 +39,14 @@ const commonDoses = [50, 100, 200, 250, 300, 500, 750, 1000, 1500, 2000, 2500];
 
 // ── Conversion table data (from reference PDFs) ──
 const conversionTable = [
-  { peptide: "BPC-157", dose: "250mcg", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.10 mL (10 UI)" },
-  { peptide: "TB-500", dose: "2.5mg", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.10 mL (10 UI)" },
-  { peptide: "CJC/Ipam", dose: "100/200mcg", vial: "5mg/5mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.04/0.08 mL" },
-  { peptide: "Tirzepatida", dose: "2.5mg", vial: "10 mg", water: "2 mL", conc: "5000 mcg/mL", volume: "0.50 mL (50 UI)" },
-  { peptide: "Semaglutida", dose: "0.25mg", vial: "5 mg", water: "1 mL", conc: "5000 mcg/mL", volume: "0.05 mL (5 UI)" },
-  { peptide: "GHK-Cu", dose: "200mcg", vial: "5 mg", water: "5 mL", conc: "1000 mcg/mL", volume: "0.20 mL (20 UI)" },
-  { peptide: "Selank", dose: "200mcg", vial: "5 mg", water: "2 mL", conc: "2500 mcg/mL", volume: "0.08 mL (8 UI)" },
-  { peptide: "Epitalon", dose: "5mg", vial: "10 mg", water: "2 mL", conc: "5000 mcg/mL", volume: "0.10 mL (10 UI)" },
+  { peptide: "BPC-157", dose: "250mcg", vial: "5mg", water: "2ml", ui: "10 UI" },
+  { peptide: "TB-500", dose: "2.5mg", vial: "5mg", water: "2ml", ui: "100 UI (cheia)" },
+  { peptide: "CJC/Ipam", dose: "100/200mcg", vial: "5mg/5mg", water: "2ml", ui: "4 UI" },
+  { peptide: "Tirzepatida", dose: "2.5mg", vial: "10mg", water: "2ml", ui: "50 UI" },
+  { peptide: "Semaglutida", dose: "0.25mg", vial: "5mg", water: "1ml", ui: "5 UI" },
+  { peptide: "GHK-Cu", dose: "200mcg", vial: "50mg", water: "5ml", ui: "4 UI" },
+  { peptide: "Selank", dose: "200mcg", vial: "5mg", water: "2ml", ui: "8 UI" },
+  { peptide: "Epitalon", dose: "5mg", vial: "10mg", water: "2ml", ui: "100 UI (cheia)" },
 ];
 
 // ── Diluent concentration reference ──
