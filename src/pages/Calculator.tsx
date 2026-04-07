@@ -276,13 +276,15 @@ export default function CalculatorPage() {
                           {filteredProtocols.length === 0 && (
                             <p className="text-[11px] text-muted-foreground p-4 text-center">Nenhum protocolo encontrado</p>
                           )}
-                          <button
-                            onClick={() => { setSelectedProtocol(null); setProtocolOpen(false); }}
-                            className="w-full text-left px-4 py-3 text-[11px] text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-colors border-t border-border/20"
-                          >
-                            Limpar seleção
-                          </button>
-                        )}
+                          {selectedProtocol && (
+                            <button
+                              onClick={() => { setSelectedProtocol(null); setProtocolOpen(false); setProtocolSearch(""); }}
+                              className="w-full text-left px-4 py-3 text-[11px] text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-colors border-t border-border/20"
+                            >
+                              Limpar seleção
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
