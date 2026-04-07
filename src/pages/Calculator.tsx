@@ -156,7 +156,46 @@ export default function CalculatorPage() {
         </Button>
       </div>
 
-      <Tabs defaultValue="calculator" className="space-y-4">
+      {/* Protocol selector */}
+      <Collapsible open={protocolOpen} onOpenChange={setProtocolOpen}>
+        <CollapsibleTrigger className="w-full">
+          <div className="flex items-center justify-between rounded-xl border border-border/40 bg-card/80 px-4 py-3 hover:border-border/60 transition-colors">
+            <div className="flex items-center gap-2.5">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              <div className="text-left">
+                <p className="text-[11px] font-semibold text-foreground">
+                  Selecionar protocolo <span className="text-muted-foreground font-normal">(opcional)</span>
+                </p>
+                {selectedProtocol ? (
+                  <p className="text-[10px] text-primary">{selectedProtocol}</p>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground">Escolha um protocolo para pré-preencher...</p>
+                )}
+              </div>
+            </div>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${protocolOpen ? "rotate-180" : ""}`} />
+          </div>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="mt-1 rounded-xl border border-border/40 bg-card/80 overflow-hidden divide-y divide-border/20">
+            {presetProtocols.map((p) => (
+              <button
+                key={p.name}
+                onClick={() => applyProtocol(p)}
+                className={`w-full text-left px-4 py-3 hover:bg-primary/5 transition-colors ${
+                  selectedProtocol === p.name ? "bg-primary/10" : ""
+                }`}
+              >
+                <p className="text-[12px] font-semibold text-foreground">{p.name}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {p.vial}mg · {p.water}ml · {p.dose}mcg
+                </p>
+              </button>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
         <TabsList className="h-9 bg-secondary/60 p-0.5">
           <TabsTrigger value="calculator" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Syringe className="h-3.5 w-3.5" /> Calculadora
