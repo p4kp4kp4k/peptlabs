@@ -151,6 +151,35 @@ export default function CalculatorPage() {
     setProtocolOpen(false);
   };
 
+  const vial = parseFloat(vialMg) || 0;
+  const diluent = parseFloat(diluentMl) || 0;
+  const dose = parseFloat(desiredDoseMcg) || 0;
+
+  const concentrationMcgPerMl = vial > 0 && diluent > 0 ? (vial * 1000) / diluent : 0;
+  const volumeToInjectMl = concentrationMcgPerMl > 0 && dose > 0 ? dose / concentrationMcgPerMl : 0;
+  const volumeToInjectUnits = volumeToInjectMl * selectedSyringe.units / selectedSyringe.value;
+  const dosesPerVial = dose > 0 && vial > 0 ? (vial * 1000) / dose : 0;
+
+  const hasInput = vial > 0 && diluent > 0 && dose > 0;
+  const syringeFillPercent = hasInput ? Math.min((volumeToInjectMl / selectedSyringe.value) * 100, 100) : 0;
+
+  const reset = () => { setVialMg(""); setDiluentMl(""); setDesiredDoseMcg(""); setSelectedProtocol(null); };
+
+  return (
+    <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-foreground sm:text-xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <CalcIcon className="inline h-4.5 w-4.5 mr-2 text-primary" />
+            Calculadora de Doses
+          </h1>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Ferramenta profissional para reconstituição e dosagem de peptídeos</p>
+        </div>
+        <Button variant="ghost" size="icon" onClick={reset} title="Limpar" className="h-8 w-8">
+          <RotateCcw className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
       <Tabs defaultValue="calculator" className="space-y-4">
         <TabsList className="h-9 bg-secondary/60 p-0.5">
           <TabsTrigger value="calculator" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
@@ -169,6 +198,46 @@ export default function CalculatorPage() {
           <div className="grid gap-4 lg:grid-cols-[1fr,280px]">
             {/* Left: Inputs */}
             <div className="space-y-4">
+              {/* Protocol selector - FIRST */}
+              <Card className="border-border/40 bg-card/80">
+                <CardContent className="p-4 space-y-3">
+                  <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <ClipboardList className="h-3 w-3 text-primary" /> Selecionar protocolo <span className="font-normal lowercase">(opcional)</span>
+                  </Label>
+                  <Collapsible open={protocolOpen} onOpenChange={setProtocolOpen}>
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between rounded-lg border border-border/40 bg-secondary/30 px-3 py-2.5 hover:border-border/60 transition-colors">
+                        <span className={`text-[12px] ${selectedProtocol ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                          {selectedProtocol || "Escolha um protocolo para pré-preencher..."}
+                        </span>
+                        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${protocolOpen ? "rotate-180" : ""}`} />
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="mt-1 rounded-lg border border-border/40 bg-card overflow-hidden divide-y divide-border/20 max-h-60 overflow-y-auto">
+                        {protocols.map((p) => (
+                          <button
+                            key={p.label}
+                            onClick={() => applyProtocol(p)}
+                            className={`w-full text-left px-4 py-3 hover:bg-primary/5 transition-colors ${
+                              selectedProtocol === p.label ? "bg-primary/10" : ""
+                            }`}
+                          >
+                            <p className="text-[12px] font-semibold text-foreground">{p.peptide} {p.stack}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {p.vial}mg · {p.water}ml · {p.dose}mcg
+                            </p>
+                          </button>
+                        ))}
+                        {protocols.length === 0 && (
+                          <p className="text-[11px] text-muted-foreground p-4 text-center">Carregando protocolos...</p>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </CardContent>
+              </Card>
+
               {/* Syringe selector chips */}
               <Card className="border-border/40 bg-card/80">
                 <CardContent className="p-4 space-y-3">
