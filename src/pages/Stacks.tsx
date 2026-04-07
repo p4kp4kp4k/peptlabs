@@ -182,7 +182,7 @@ import {
   X, Syringe, AlertTriangle, Lightbulb, CheckCircle2, Timer
 } from "lucide-react";
 
-function StackDetailModal({ stack, onClose }: { stack: StackRow; onClose: () => void }) {
+function StackDetailModal({ stack, onClose }: { stack: Stack; onClose: () => void }) {
   const config = getCatConfig(stack.category);
   const IconComp = getCatIcon(stack.category);
 
