@@ -15,6 +15,7 @@ import Calculator from "./pages/Calculator";
 import PeptideDetail from "./pages/PeptideDetail";
 import Stacks from "./pages/Stacks";
 import Interactions from "./pages/Interactions";
+import BodyMap from "./pages/BodyMap";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/calculator" element={<AppLayout><Calculator /></AppLayout>} />
             <Route path="/stacks" element={<AppLayout><Stacks /></AppLayout>} />
             <Route path="/interactions" element={<AppLayout><Interactions /></AppLayout>} />
+            <Route path="/body-map" element={<AppLayout><BodyMap /></AppLayout>} />
             <Route path="/admin" element={<AppLayout><Admin /></AppLayout>} />
             <Route path="/peptide/:slug" element={<AppLayout><PeptideDetail /></AppLayout>} />
 
