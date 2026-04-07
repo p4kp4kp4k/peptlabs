@@ -16,10 +16,16 @@ import {
   Collapsible, CollapsibleContent, CollapsibleTrigger
 } from "@/components/ui/collapsible";
 
-interface StackProtocol {
-  name: string;
-  peptides: { name: string; dose: string }[];
+// Parse dose strings like "250 mcg/dia", "2.5 mg/dia", "5mg" to mcg number
+function parseDoseToMcg(doseStr: string): number {
+  const clean = doseStr.toLowerCase().replace(/[^\d.,a-z]/g, " ");
+  const match = clean.match(/([\d.,]+)\s*(mg|mcg|ug)/);
+  if (!match) return 250; // fallback
+  const num = parseFloat(match[1].replace(",", "."));
+  if (match[2] === "mg") return num * 1000;
+  return num;
 }
+
 
 
 // ── Syringe sizes chips ──
