@@ -110,38 +110,37 @@ export default function Learn() {
       </div>
 
       {/* Guide Detail (inline) */}
-      {slug && (
+      {slug ? (
         <GuideDetailInline slug={slug} />
-      )}
-
-      {/* Featured guide (first free guide) */}
-      {!slug && activeTab === "guias" && (
-        <div className="mb-6 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card p-6 sm:p-8">
-          <div className="flex items-start gap-4">
-            <div className="hidden sm:flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-              <BookOpen className="h-7 w-7 text-primary" />
+      ) : (
+        <>
+          {/* Featured guide (first free guide) */}
+          {activeTab === "guias" && (
+            <div className="mb-6 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card p-6 sm:p-8">
+              <div className="flex items-start gap-4">
+                <div className="hidden sm:flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                  <BookOpen className="h-7 w-7 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <Badge className="mb-2 border-0 bg-emerald-500/15 text-emerald-400 text-[9px]">GRATUITO · RECOMENDADO</Badge>
+                  <h2 className="mb-2 text-base sm:text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                    O Que São Peptídeos? Guia para Iniciantes
+                  </h2>
+                  <p className="mb-4 text-xs text-muted-foreground leading-relaxed max-w-xl">
+                    Entenda o que são peptídeos, como funcionam no corpo, a história desde a insulina até os neuropeptídeos modernos e por que são diferentes de esteroides.
+                  </p>
+                  <Button size="sm" className="text-xs gap-1.5" onClick={() => navigate("/app/learn/o-que-sao-peptideos")}>
+                    Ler Agora <ArrowRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
             </div>
-            <div className="flex-1">
-              <Badge className="mb-2 border-0 bg-emerald-500/15 text-emerald-400 text-[9px]">GRATUITO · RECOMENDADO</Badge>
-              <h2 className="mb-2 text-base sm:text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                O Que São Peptídeos? Guia para Iniciantes
-              </h2>
-              <p className="mb-4 text-xs text-muted-foreground leading-relaxed max-w-xl">
-                Entenda o que são peptídeos, como funcionam no corpo, a história desde a insulina até os neuropeptídeos modernos e por que são diferentes de esteroides.
-              </p>
-              <Button size="sm" className="text-xs gap-1.5">
-                Ler Agora <ArrowRight className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Segurança tab */}
-      {!slug && activeTab === "seguranca" && <SafetyTab />}
+          {/* Segurança tab */}
+          {activeTab === "seguranca" && <SafetyTab />}
 
-      {/* Guides grid */}
-      {!slug && (
+          {/* Guides grid */}
         <>
           <div className="grid gap-3 sm:grid-cols-2">
             {filtered.map((guide, i) => {
