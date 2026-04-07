@@ -781,7 +781,6 @@ function BodySilhouette({
           strokeWidth="0.6"
           opacity="0.4"
         />
-        )}
       </svg>
 
       {/* Injection point dots */}
