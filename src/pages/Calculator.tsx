@@ -493,11 +493,11 @@ export default function CalculatorPage() {
         <TabsContent value="tables" className="space-y-4">
           <Card className="border-border/40 bg-card/80">
             <CardHeader className="pb-3 pt-4 px-4">
-              <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Tabela Mestre de Conversão
+              <CardTitle className="text-sm flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                <Table2 className="h-4 w-4 text-primary" /> Tabela de Conversão Mestre
               </CardTitle>
               <CardDescription className="text-[11px]">
-                Referência rápida para os peptídeos mais utilizados com volumes pré-calculados
+                Referência rápida: doses comuns com seringa de 1ml (100 UI).
               </CardDescription>
             </CardHeader>
             <CardContent className="px-0 pb-4">
