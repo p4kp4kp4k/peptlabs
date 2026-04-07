@@ -1,8 +1,12 @@
-import { useState, useMemo } from "react";
-import { Search, ArrowRight, ArrowLeft, Check, Sparkles, Syringe, AlertTriangle, Star, Timer, Save, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import {
+  Crosshair, ArrowRight, ArrowLeft, Check, Sparkles, Zap,
+  AlertTriangle, Star, Timer, Save, RotateCcw, ChevronRight,
+  Shield, Activity, FlaskConical, Target, Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { runEngine, getAvailableGoals, type GeneratedProtocol } from "@/engine";
@@ -13,8 +17,7 @@ import PremiumGateModal from "@/components/PremiumGateModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
-type Step = "goals" | "experience" | "administration" | "result";
-
+type Step = "goals" | "profile" | "preferences" | "analyzing" | "result";
 type Experience = "beginner" | "intermediate" | "advanced";
 type Administration = "injectable" | "nasal" | "topical" | "any";
 
@@ -26,20 +29,64 @@ interface MatchedPeptide {
   goals: string[];
   application: string | null;
   score: number;
+  matchReason: string;
 }
 
-const EXPERIENCE_OPTIONS = [
-  { key: "beginner" as Experience, label: "Iniciante", desc: "Nunca usei peptídeos" },
-  { key: "intermediate" as Experience, label: "Intermediário", desc: "Já usei 1-3 peptídeos" },
-  { key: "advanced" as Experience, label: "Avançado", desc: "Experiência com múltiplos protocolos" },
+const PROFILE_OPTIONS = [
+  {
+    key: "beginner" as Experience,
+    icon: Shield,
+    label: "Primeira vez",
+    desc: "Quero começar com segurança e entender os fundamentos",
+  },
+  {
+    key: "intermediate" as Experience,
+    icon: Activity,
+    label: "Já experimentei",
+    desc: "Tenho experiência com 1-3 compostos e quero otimizar",
+  },
+  {
+    key: "advanced" as Experience,
+    icon: FlaskConical,
+    label: "Protocolo avançado",
+    desc: "Uso regular com múltiplos compostos e stacks complexos",
+  },
 ];
 
-const ADMIN_OPTIONS = [
-  { key: "injectable" as Administration, label: "Injetável (Subcutâneo)", desc: "Maior biodisponibilidade" },
-  { key: "nasal" as Administration, label: "Spray Nasal", desc: "Mais fácil de usar" },
-  { key: "topical" as Administration, label: "Tópico (Creme/Gel)", desc: "Uso externo" },
-  { key: "any" as Administration, label: "Sem preferência", desc: "Aberto a qualquer via" },
+const ROUTE_OPTIONS = [
+  {
+    key: "injectable" as Administration,
+    label: "Subcutâneo",
+    desc: "Absorção direta, maior precisão de dosagem",
+    tag: "Mais eficaz",
+  },
+  {
+    key: "nasal" as Administration,
+    label: "Intranasal",
+    desc: "Sem agulhas, ideal para nootrópicos e peptídeos leves",
+    tag: "Mais prático",
+  },
+  {
+    key: "topical" as Administration,
+    label: "Tópico",
+    desc: "Aplicação local em pele, articulações ou cabelo",
+    tag: "Não invasivo",
+  },
+  {
+    key: "any" as Administration,
+    label: "Qualquer via",
+    desc: "Priorizo resultados independente do método",
+    tag: "Flexível",
+  },
 ];
+
+const STEP_META: Record<Step, { num: number; title: string; sub: string }> = {
+  goals: { num: 1, title: "Defina seus alvos", sub: "O que você quer alcançar? Escolha até 4 áreas prioritárias." },
+  profile: { num: 2, title: "Seu perfil de uso", sub: "Adaptamos a complexidade e dosagens ao seu nível." },
+  preferences: { num: 3, title: "Via de aplicação", sub: "Cada método tem vantagens distintas. Qual combina com você?" },
+  analyzing: { num: 4, title: "Processando análise", sub: "Cruzando dados de compatibilidade e interações..." },
+  result: { num: 4, title: "Análise completa", sub: "" },
+};
 
 export default function Finder() {
   const [step, setStep] = useState<Step>("goals");
@@ -48,7 +95,6 @@ export default function Finder() {
   const [administration, setAdministration] = useState<Administration | null>(null);
   const [dbResults, setDbResults] = useState<MatchedPeptide[]>([]);
   const [engineResult, setEngineResult] = useState<GeneratedProtocol | null>(null);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
   const [gateReason, setGateReason] = useState("");
@@ -58,10 +104,8 @@ export default function Finder() {
   const navigate = useNavigate();
 
   const goals = getAvailableGoals();
-
-  const stepIndex = step === "goals" ? 0 : step === "experience" ? 1 : step === "administration" ? 2 : 3;
-  const totalSteps = 4;
-  const progressWidth = ((stepIndex + 1) / totalSteps) * 100;
+  const currentMeta = STEP_META[step];
+  const progressWidth = (currentMeta.num / 4) * 100;
 
   const toggleGoal = (label: string) => {
     setSelectedGoals((prev) =>
@@ -71,17 +115,40 @@ export default function Finder() {
     );
   };
 
-  const handleGenerateResults = async () => {
-    setLoading(true);
+  const buildMatchReason = (peptide: any, goals: string[]): string => {
+    const pGoals = (peptide.goals as string[]) || [];
+    const matched = goals.filter((sg) => {
+      const kw = sg.toLowerCase().split(" ")[0];
+      return pGoals.some((g: string) => g.toLowerCase().includes(kw));
+    });
+    if (matched.length > 1) return `Relevante para ${matched.length} dos seus objetivos`;
+    if (matched.length === 1) return `Indicado para ${matched[0].toLowerCase()}`;
+    return "Match por categoria";
+  };
+
+  const getExperienceLabel = () => {
+    if (!experience) return "";
+    return PROFILE_OPTIONS.find((o) => o.key === experience)?.label || "";
+  };
+
+  const getAdminLabel = () => {
+    if (!administration) return "";
+    return ROUTE_OPTIONS.find((o) => o.key === administration)?.label || "";
+  };
+
+  const handleGenerate = async () => {
+    setStep("analyzing");
+
+    // Simulate analysis delay for premium feel
+    await new Promise((r) => setTimeout(r, 1800));
+
     try {
-      // 1. Run local engine for protocol generation
       const protocol = runEngine({
         goals: selectedGoals,
         experience: experience || "intermediate",
       });
       setEngineResult(protocol);
 
-      // 2. Query DB for matching peptides by goals
       const { data: peptides } = await supabase
         .from("peptides")
         .select("name, slug, category, description, goals, application")
@@ -111,16 +178,16 @@ export default function Finder() {
             goals: p.goals || [],
             application: p.application,
             score: calculateMatchScore(p, selectedGoals),
+            matchReason: buildMatchReason(p, selectedGoals),
           }))
           .sort((a, b) => b.score - a.score)
-          .slice(0, 8);
+          .slice(0, 6);
 
         setDbResults(matched as MatchedPeptide[]);
       }
     } catch (err) {
       console.error("Error generating results:", err);
     } finally {
-      setLoading(false);
       setStep("result");
     }
   };
@@ -151,7 +218,7 @@ export default function Finder() {
         user_id: user.id,
         goals: selectedGoals as any,
         recommended_peptides: engineResult.peptides as any,
-        notes: `Score: ${engineResult.totalScore}. Quiz v2.`,
+        notes: `Score: ${engineResult.totalScore}. Quiz v3.`,
       });
       toast({ title: "Protocolo salvo!", description: "Acesse seu Dashboard para ver." });
     } catch (err: any) {
@@ -171,271 +238,361 @@ export default function Finder() {
   };
 
   return (
-    <div className="flex items-start justify-center p-4 sm:p-8">
+    <div className="flex items-start justify-center p-4 sm:p-6">
       <div className="w-full max-w-2xl">
-        {/* Header */}
-        <div className="mb-2 flex items-center gap-2">
-          <Search className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Encontre seu Peptídeo
+        {/* ── Header ── */}
+        <div className="mb-1 flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <Crosshair className="h-4 w-4 text-primary" />
+          </div>
+          <h1
+            className="text-xl font-bold tracking-tight text-foreground"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            PeptiLab Matcher
           </h1>
         </div>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Responda algumas perguntas e receba recomendações personalizadas.
+        <p className="mb-5 text-xs text-muted-foreground pl-[42px]">
+          Engine de recomendação inteligente — 3 etapas, resultado personalizado.
         </p>
 
-        {/* Progress bar */}
-        <div className="mb-8 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-500"
-            style={{ width: `${progressWidth}%` }}
-          />
+        {/* ── Progress ── */}
+        <div className="mb-6 flex items-center gap-3">
+          {[1, 2, 3, 4].map((n) => (
+            <div key={n} className="flex-1 flex flex-col gap-1">
+              <div
+                className={`h-1 rounded-full transition-all duration-500 ${
+                  n <= currentMeta.num ? "bg-primary" : "bg-secondary"
+                }`}
+              />
+            </div>
+          ))}
+          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+            {step === "result" ? "Concluído" : `${currentMeta.num}/4`}
+          </span>
         </div>
 
-        {/* ───── Step 1: Goals ───── */}
+        {/* Step title */}
+        {step !== "analyzing" && step !== "result" && (
+          <div className="mb-5">
+            <h2
+              className="text-base font-bold text-foreground"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              {currentMeta.title}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{currentMeta.sub}</p>
+          </div>
+        )}
+
+        {/* ════════ Step 1: Goals ════════ */}
         {step === "goals" && (
           <>
-            <h2 className="mb-1 text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Quais são seus objetivos?
-            </h2>
-            <p className="mb-6 text-xs text-muted-foreground">
-              Selecione de 1 a 4 objetivos que mais importam para você.
-            </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {goals.map((goal) => {
                 const isSelected = selectedGoals.includes(goal.goal);
                 return (
                   <button
                     key={goal.goal}
                     onClick={() => toggleGoal(goal.goal)}
-                    className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${
+                    className={`group relative flex items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-all ${
                       isSelected
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border/40 bg-card text-muted-foreground hover:border-primary/30"
+                        ? "border-primary/50 bg-primary/8 ring-1 ring-primary/20"
+                        : "border-border/30 bg-card/60 hover:border-border/60 hover:bg-card"
                     }`}
                   >
-                    <span className="text-xl">{goal.emoji}</span>
-                    <span className="flex-1 text-sm font-medium">{goal.goal}</span>
-                    {isSelected && <Check className="h-4 w-4 text-primary" />}
+                    <span className="text-lg leading-none">{goal.emoji}</span>
+                    <span className={`flex-1 text-[13px] font-medium ${isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>
+                      {goal.goal}
+                    </span>
+                    <div
+                      className={`flex h-5 w-5 items-center justify-center rounded-md border transition-all ${
+                        isSelected
+                          ? "border-primary bg-primary"
+                          : "border-border/40 bg-transparent"
+                      }`}
+                    >
+                      {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                    </div>
                   </button>
                 );
               })}
             </div>
+            {selectedGoals.length > 0 && (
+              <p className="mt-3 text-[10px] text-primary font-medium">
+                {selectedGoals.length} alvo{selectedGoals.length > 1 ? "s" : ""} selecionado{selectedGoals.length > 1 ? "s" : ""}
+                {selectedGoals.length < 4 && ` — pode adicionar mais ${4 - selectedGoals.length}`}
+              </p>
+            )}
             <Button
-              className="mt-6 w-full gap-2"
+              className="mt-5 w-full gap-2 h-10"
               disabled={selectedGoals.length === 0}
-              onClick={() => setStep("experience")}
+              onClick={() => setStep("profile")}
             >
-              Continuar <ArrowRight className="h-4 w-4" />
+              Próxima etapa <ArrowRight className="h-4 w-4" />
             </Button>
           </>
         )}
 
-        {/* ───── Step 2: Experience ───── */}
-        {step === "experience" && (
+        {/* ════════ Step 2: Profile ════════ */}
+        {step === "profile" && (
           <>
-            <h2 className="mb-1 text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Qual sua experiência com peptídeos?
-            </h2>
-            <p className="mb-6 text-xs text-muted-foreground">
-              Isso nos ajuda a recomendar opções adequadas ao seu nível.
-            </p>
-            <div className="space-y-3">
-              {EXPERIENCE_OPTIONS.map((opt) => {
+            <div className="space-y-2">
+              {PROFILE_OPTIONS.map((opt) => {
                 const isSelected = experience === opt.key;
+                const Icon = opt.icon;
                 return (
                   <button
                     key={opt.key}
                     onClick={() => setExperience(opt.key)}
-                    className={`w-full rounded-xl border p-4 text-left transition-all ${
+                    className={`w-full flex items-start gap-3 rounded-lg border px-4 py-3.5 text-left transition-all ${
                       isSelected
-                        ? "border-primary bg-primary/10"
-                        : "border-border/40 bg-card hover:border-primary/30"
+                        ? "border-primary/50 bg-primary/8 ring-1 ring-primary/20"
+                        : "border-border/30 bg-card/60 hover:border-border/60"
                     }`}
                   >
-                    <span className="text-sm font-semibold text-foreground">{opt.label}</span>
-                    <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
+                    <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                    <div>
+                      <span className="text-sm font-semibold text-foreground block">{opt.label}</span>
+                      <span className="text-[11px] text-muted-foreground">{opt.desc}</span>
+                    </div>
+                    <div
+                      className={`ml-auto mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all ${
+                        isSelected ? "border-primary bg-primary" : "border-border/40"
+                      }`}
+                    >
+                      {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                    </div>
                   </button>
                 );
               })}
             </div>
-            <div className="mt-6 flex gap-2">
-              <Button variant="outline" className="gap-2" onClick={() => setStep("goals")}>
-                <ArrowLeft className="h-4 w-4" /> Voltar
+            <div className="mt-5 flex gap-2">
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setStep("goals")}>
+                <ArrowLeft className="h-3.5 w-3.5" /> Voltar
               </Button>
-              <Button
-                className="flex-1 gap-2"
-                disabled={!experience}
-                onClick={() => setStep("administration")}
-              >
-                Continuar <ArrowRight className="h-4 w-4" />
+              <Button className="flex-1 gap-2 h-10" disabled={!experience} onClick={() => setStep("preferences")}>
+                Próxima etapa <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </>
         )}
 
-        {/* ───── Step 3: Administration ───── */}
-        {step === "administration" && (
+        {/* ════════ Step 3: Preferences ════════ */}
+        {step === "preferences" && (
           <>
-            <h2 className="mb-1 text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Preferência de administração?
-            </h2>
-            <p className="mb-6 text-xs text-muted-foreground">
-              Qual via de administração você prefere?
-            </p>
-            <div className="space-y-3">
-              {ADMIN_OPTIONS.map((opt) => {
+            <div className="space-y-2">
+              {ROUTE_OPTIONS.map((opt) => {
                 const isSelected = administration === opt.key;
                 return (
                   <button
                     key={opt.key}
                     onClick={() => setAdministration(opt.key)}
-                    className={`w-full rounded-xl border p-4 text-left transition-all ${
+                    className={`w-full flex items-center gap-3 rounded-lg border px-4 py-3.5 text-left transition-all ${
                       isSelected
-                        ? "border-primary bg-primary/10"
-                        : "border-border/40 bg-card hover:border-primary/30"
+                        ? "border-primary/50 bg-primary/8 ring-1 ring-primary/20"
+                        : "border-border/30 bg-card/60 hover:border-border/60"
                     }`}
                   >
-                    <span className="text-sm font-semibold text-foreground">{opt.label}</span>
-                    <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground">{opt.label}</span>
+                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-border/40 text-muted-foreground">
+                          {opt.tag}
+                        </Badge>
+                      </div>
+                      <span className="text-[11px] text-muted-foreground">{opt.desc}</span>
+                    </div>
+                    <div
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all ${
+                        isSelected ? "border-primary bg-primary" : "border-border/40"
+                      }`}
+                    >
+                      {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                    </div>
                   </button>
                 );
               })}
             </div>
-            <div className="mt-6 flex gap-2">
-              <Button variant="outline" className="gap-2" onClick={() => setStep("experience")}>
-                <ArrowLeft className="h-4 w-4" /> Voltar
+
+            {/* Summary chips */}
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              <Badge variant="secondary" className="text-[10px]">{selectedGoals.length} alvo{selectedGoals.length > 1 ? "s" : ""}</Badge>
+              <Badge variant="secondary" className="text-[10px]">{getExperienceLabel()}</Badge>
+              {administration && <Badge variant="secondary" className="text-[10px]">{getAdminLabel()}</Badge>}
+            </div>
+
+            <div className="mt-5 flex gap-2">
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setStep("profile")}>
+                <ArrowLeft className="h-3.5 w-3.5" /> Voltar
               </Button>
-              <Button
-                className="flex-1 gap-2"
-                disabled={!administration || loading}
-                onClick={handleGenerateResults}
-              >
-                {loading ? (
-                  <>Analisando...</>
-                ) : (
-                  <>Ver Resultados <Sparkles className="h-4 w-4" /></>
-                )}
+              <Button className="flex-1 gap-2 h-10" disabled={!administration} onClick={handleGenerate}>
+                <Target className="h-4 w-4" /> Gerar análise
               </Button>
             </div>
           </>
         )}
 
-        {/* ───── Step 4: Results ───── */}
+        {/* ════════ Analyzing (transition) ════════ */}
+        {step === "analyzing" && (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="relative mb-6">
+              <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Loader2 className="h-7 w-7 text-primary animate-spin" />
+              </div>
+            </div>
+            <h2 className="text-base font-bold text-foreground mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              Analisando compatibilidade
+            </h2>
+            <p className="text-xs text-muted-foreground max-w-xs">
+              Cruzando {selectedGoals.length} objetivo{selectedGoals.length > 1 ? "s" : ""} com a base de {">"}70 compostos, verificando interações e sinergias...
+            </p>
+          </div>
+        )}
+
+        {/* ════════ Step 4: Results ════════ */}
         {step === "result" && (
           <>
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Seus Peptídeos Recomendados
-              </h2>
-            </div>
-            <p className="text-xs text-muted-foreground mb-6">
-              Baseado nos seus objetivos ({selectedGoals.length}) e nível de experiência.
-            </p>
-
-            {/* DB-matched peptides */}
-            {dbResults.length > 0 && (
-              <div className="space-y-3 mb-6">
-                {dbResults.map((p) => (
-                  <button
-                    key={p.slug}
-                    onClick={() => navigate(`/peptide/${p.slug}`)}
-                    className="w-full flex items-center gap-4 rounded-xl border border-border/40 bg-card p-4 text-left hover:border-primary/30 transition-all group"
-                  >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                      <Syringe className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-foreground">{p.name}</span>
-                      </div>
-                      <p className="text-xs text-primary font-medium">{p.category}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                        {p.description || "—"}
-                      </p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-                  </button>
+            {/* Result header with context */}
+            <div className="mb-5">
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <h2
+                  className="text-base font-bold text-foreground"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                >
+                  Sua análise personalizada
+                </h2>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {selectedGoals.length} objetivo{selectedGoals.length > 1 ? "s" : ""} analisado{selectedGoals.length > 1 ? "s" : ""}
+                {" · "}perfil {getExperienceLabel().toLowerCase()}
+                {" · "}via {getAdminLabel().toLowerCase()}
+              </p>
+              {/* Show selected goals as context */}
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {selectedGoals.map((g) => (
+                  <Badge key={g} className="text-[10px] bg-primary/10 text-primary border-0">
+                    {g}
+                  </Badge>
                 ))}
+              </div>
+            </div>
+
+            {/* Matched peptides from DB */}
+            {dbResults.length > 0 && (
+              <div className="mb-5">
+                <h3 className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5 uppercase tracking-wider">
+                  <Zap className="h-3 w-3 text-primary" /> Compostos recomendados
+                </h3>
+                <div className="space-y-1.5">
+                  {dbResults.map((p, i) => (
+                    <button
+                      key={p.slug}
+                      onClick={() => navigate(`/peptide/${p.slug}`)}
+                      className="w-full flex items-center gap-3 rounded-lg border border-border/25 bg-card/60 px-3 py-2.5 text-left hover:bg-card hover:border-primary/20 transition-all group"
+                    >
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/8 text-[11px] font-bold text-primary">
+                        {i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[13px] font-bold text-foreground">{p.name}</span>
+                          <span className="text-[10px] text-muted-foreground">·</span>
+                          <span className="text-[10px] text-primary font-medium">{p.category}</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground line-clamp-1">
+                          {p.matchReason}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Engine protocol card */}
+            {/* Engine protocol */}
             {engineResult && (
-              <>
-                <div className="border-t border-border/30 pt-4 mb-4">
-                  <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                    <Star className="h-4 w-4 text-primary" /> Protocolo Sugerido
-                    <Badge className="ml-auto text-[10px] border-0 bg-primary/10 text-primary">
-                      <Timer className="h-3 w-3 mr-1" /> {engineResult.duration}
-                    </Badge>
+              <div className="mb-5">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                    <Star className="h-3 w-3 text-primary" /> Protocolo montado
                   </h3>
-                  <p className="text-xs text-muted-foreground mb-3">{engineResult.description}</p>
-
-                  <Card className="border-border/40 bg-card/80 mb-3">
-                    <CardContent className="p-3 space-y-2">
-                      {engineResult.peptides.map((p, i) => {
-                        // Find slug from engine rules
-                        const slug = p.slug || p.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-                        return (
-                          <button
-                            key={p.name}
-                            onClick={() => navigate(`/peptide/${slug}`)}
-                            className="w-full rounded-lg bg-secondary/20 p-3 text-left hover:bg-secondary/40 transition-colors cursor-pointer"
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-bold text-foreground">{i + 1}. {p.name}</span>
-                              <Badge variant="outline" className="text-[9px]">{p.duration}</Badge>
-                            </div>
-                            <p className="text-[10px] text-primary font-medium">{p.dose}</p>
-                            <p className="text-[10px] text-muted-foreground">{p.frequency}</p>
-                            {p.notes && <p className="text-[9px] text-muted-foreground/70 mt-1 italic">{p.notes}</p>}
-                          </button>
-                        );
-                      })}
-                    </CardContent>
-                  </Card>
-
-                  {engineResult.synergies.length > 0 && (
-                    <Card className="border-emerald-500/20 bg-emerald-500/5 mb-3">
-                      <CardContent className="p-3 space-y-1.5">
-                        <p className="text-[10px] font-semibold text-emerald-400">✓ Sinergias detectadas</p>
-                        {engineResult.synergies.map((s, i) => (
-                          <p key={i} className="text-[10px] text-muted-foreground">{s}</p>
-                        ))}
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {engineResult.warnings.length > 0 && (
-                    <Card className="border-amber-500/20 bg-amber-500/5 mb-3">
-                      <CardContent className="p-3 space-y-1.5">
-                        <p className="text-[10px] font-semibold text-amber-400 flex items-center gap-1">
-                          <AlertTriangle className="h-3 w-3" /> Avisos
-                        </p>
-                        {engineResult.warnings.map((w, i) => (
-                          <p key={i} className="text-[10px] text-muted-foreground">{w}</p>
-                        ))}
-                      </CardContent>
-                    </Card>
-                  )}
+                  <Badge className="text-[9px] border-0 bg-primary/10 text-primary h-5">
+                    <Timer className="h-2.5 w-2.5 mr-0.5" /> {engineResult.duration}
+                  </Badge>
                 </div>
-              </>
+
+                <Card className="border-border/25 bg-card/60 mb-3">
+                  <CardContent className="p-2 space-y-1">
+                    {engineResult.peptides.map((p, i) => {
+                      const slug = p.slug || p.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                      return (
+                        <button
+                          key={p.name}
+                          onClick={() => navigate(`/peptide/${slug}`)}
+                          className="w-full rounded-md bg-secondary/15 px-3 py-2.5 text-left hover:bg-secondary/30 transition-colors group"
+                        >
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                              {i + 1}. {p.name}
+                            </span>
+                            <Badge variant="outline" className="text-[8px] h-4 px-1.5">{p.duration}</Badge>
+                          </div>
+                          <p className="text-[10px] text-primary font-medium">{p.dose}</p>
+                          <p className="text-[10px] text-muted-foreground">{p.frequency}</p>
+                          {p.notes && <p className="text-[9px] text-muted-foreground/60 mt-0.5 italic">{p.notes}</p>}
+                        </button>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+
+                {/* Synergies */}
+                {engineResult.synergies.length > 0 && (
+                  <div className="rounded-lg border border-emerald-500/15 bg-emerald-500/5 px-3 py-2 mb-2">
+                    <p className="text-[10px] font-semibold text-emerald-400 mb-1">✓ Sinergias identificadas</p>
+                    {engineResult.synergies.map((s, i) => (
+                      <p key={i} className="text-[10px] text-muted-foreground leading-relaxed">{s}</p>
+                    ))}
+                  </div>
+                )}
+
+                {/* Warnings */}
+                {engineResult.warnings.length > 0 && (
+                  <div className="rounded-lg border border-amber-500/15 bg-amber-500/5 px-3 py-2 mb-2">
+                    <p className="text-[10px] font-semibold text-amber-400 flex items-center gap-1 mb-1">
+                      <AlertTriangle className="h-2.5 w-2.5" /> Pontos de atenção
+                    </p>
+                    {engineResult.warnings.map((w, i) => (
+                      <p key={i} className="text-[10px] text-muted-foreground leading-relaxed">{w}</p>
+                    ))}
+                  </div>
+                )}
+
+                {/* Score */}
+                <div className="flex items-center justify-between rounded-lg bg-secondary/10 px-3 py-2 mt-3">
+                  <span className="text-[10px] text-muted-foreground">Score de compatibilidade</span>
+                  <span className="text-sm font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                    {engineResult.totalScore}<span className="text-muted-foreground text-[10px] font-normal">/100</span>
+                  </span>
+                </div>
+              </div>
             )}
 
             {/* Actions */}
             <div className="flex gap-2">
-              <Button variant="outline" className="gap-2" onClick={resetQuiz}>
-                <RotateCcw className="h-4 w-4" /> Recomeçar
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={resetQuiz}>
+                <RotateCcw className="h-3.5 w-3.5" /> Nova análise
               </Button>
               {user && engineResult ? (
-                <Button className="flex-1 gap-2" onClick={handleSave} disabled={saving}>
-                  <Save className="h-4 w-4" /> {saving ? "Salvando..." : "Salvar Protocolo"}
+                <Button className="flex-1 gap-2 h-10" onClick={handleSave} disabled={saving}>
+                  <Save className="h-4 w-4" /> {saving ? "Salvando..." : "Salvar protocolo"}
                 </Button>
               ) : (
-                <Button className="flex-1 gap-2" onClick={() => navigate("/app/peptides")}>
-                  Ver Biblioteca Completa <ArrowRight className="h-4 w-4" />
+                <Button className="flex-1 gap-2 h-10" onClick={() => navigate("/app/peptides")}>
+                  Explorar biblioteca <ArrowRight className="h-4 w-4" />
                 </Button>
               )}
             </div>
@@ -447,7 +604,6 @@ export default function Finder() {
   );
 }
 
-/** Calculate match score based on goal overlap */
 function calculateMatchScore(peptide: any, selectedGoals: string[]): number {
   const pGoals = (peptide.goals as string[]) || [];
   let score = 0;
