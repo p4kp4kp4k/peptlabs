@@ -3,6 +3,9 @@ import {
   Crosshair, ArrowRight, ArrowLeft, Check, Sparkles, Zap,
   AlertTriangle, Star, Timer, Save, RotateCcw, ChevronRight,
   Shield, Activity, FlaskConical, Target, Loader2,
+  Bone, Scale, BrainCircuit, Hourglass, Moon, ShieldPlus,
+  HeartPulse, TrendingUp, Palette, Heart,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,8 +83,21 @@ const ROUTE_OPTIONS = [
   },
 ];
 
+const GOAL_ICON_MAP: Record<string, { icon: LucideIcon; gradient: string }> = {
+  "Recuperação & Cicatrização": { icon: Bone, gradient: "from-emerald-500 to-teal-400" },
+  "Emagrecimento & Composição Corporal": { icon: Scale, gradient: "from-orange-500 to-amber-400" },
+  "Desempenho Cognitivo": { icon: BrainCircuit, gradient: "from-violet-500 to-purple-400" },
+  "Anti-aging & Longevidade": { icon: Hourglass, gradient: "from-amber-500 to-yellow-400" },
+  "Sono & Recuperação Noturna": { icon: Moon, gradient: "from-indigo-500 to-blue-400" },
+  "Imunidade & Anti-inflamatório": { icon: ShieldPlus, gradient: "from-rose-500 to-pink-400" },
+  "Saúde Hormonal & Sexual": { icon: HeartPulse, gradient: "from-red-500 to-rose-400" },
+  "Hormônio do Crescimento (GH)": { icon: TrendingUp, gradient: "from-cyan-500 to-teal-400" },
+  "Estética & Pele": { icon: Palette, gradient: "from-pink-500 to-fuchsia-400" },
+  "Saúde Cardiovascular": { icon: Heart, gradient: "from-red-500 to-orange-400" },
+};
+
 const STEP_META: Record<Step, { num: number; title: string; sub: string }> = {
-  goals: { num: 1, title: "Defina seus alvos", sub: "O que você quer alcançar? Escolha até 4 áreas prioritárias." },
+  goals: { num: 1, title: "Quais são seus objetivos?", sub: "Selecione de 1 a 4 objetivos que mais importam para você." },
   profile: { num: 2, title: "Seu perfil de uso", sub: "Adaptamos a complexidade e dosagens ao seu nível." },
   preferences: { num: 3, title: "Via de aplicação", sub: "Cada método tem vantagens distintas. Qual combina com você?" },
   analyzing: { num: 4, title: "Processando análise", sub: "Cruzando dados de compatibilidade e interações..." },
@@ -291,17 +307,22 @@ export default function Finder() {
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {goals.map((goal) => {
                 const isSelected = selectedGoals.includes(goal.goal);
+                const iconData = GOAL_ICON_MAP[goal.goal];
+                const Icon = iconData?.icon || Target;
+                const grad = iconData?.gradient || "from-primary to-primary";
                 return (
                   <button
                     key={goal.goal}
                     onClick={() => toggleGoal(goal.goal)}
-                    className={`group relative flex items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-all ${
+                    className={`group relative flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-all duration-200 ${
                       isSelected
                         ? "border-primary/50 bg-primary/8 ring-1 ring-primary/20"
                         : "border-border/30 bg-card/60 hover:border-border/60 hover:bg-card"
                     }`}
                   >
-                    <span className="text-lg leading-none">{goal.emoji}</span>
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${grad} shadow-lg shadow-black/20`}>
+                      <Icon className="h-4 w-4 text-white" />
+                    </div>
                     <span className={`flex-1 text-[13px] font-medium ${isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>
                       {goal.goal}
                     </span>
