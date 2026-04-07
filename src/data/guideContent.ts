@@ -785,57 +785,56 @@ export const guideContents: Record<string, GuideContent> = {
   },
 
   "equilibrio-redox-101": {
-    intro: "Entenda o equilíbrio redox, como a glicose vira ATP, e por que isso é fundamental antes de usar peptídeos mitocondriais como MOTS-c, SS-31 e NAD+.",
-    steps: [
+    intro: "Redox significa redução e oxidação — reações químicas envolvendo a transferência de elétrons. No nível celular, esse processo controla como geramos energia e como regulamos os danos. Oxidação: perda de elétrons, libera energia mas produz espécies reativas de oxigênio (EROs). Redução: ganho de elétrons, é a forma do corpo neutralizar EROs e restaurar o equilíbrio.",
+    sections: [
       {
-        title: "O que é Equilíbrio Redox?",
-        content: [
-          "Redox = Redução + Oxidação — transferência de elétrons entre moléculas.",
-          "Oxidação: perda de elétrons (produz radicais livres).",
-          "Redução: ganho de elétrons (neutraliza radicais livres).",
-          "Equilíbrio redox = balanço entre produção e neutralização de radicais.",
+        title: "Peptídeos Mitocondriais e o Redox",
+        icon: "table",
+        table: [
+          { label: "MOTS-c", value: "Via AMPK — Ativa sensor de energia celular, melhora captação de glicose" },
+          { label: "SS-31", value: "Via Cardiolipina — Estabiliza membrana mitocondrial, reduz vazamento de elétrons" },
+          { label: "NAD+", value: "Via Sirtuínas / PARPs — Combustível para enzimas de longevidade e reparo de DNA" },
+          { label: "L-Carnitina", value: "Via Beta-oxidação — Transporta ácidos graxos para as mitocôndrias" },
+          { label: "Azul de Metileno", value: "Via Citocromo c oxidase — Doador/receptor de elétrons alternativo" },
+          { label: "SLU-PP-332", value: "Via PPARδ / ERRγ — Mimetiza exercício a nível molecular" },
         ],
-      },
-      {
-        title: "Da Glicose ao ATP",
-        content: [
-          "Glicólise: Glicose → 2 Piruvato (citoplasma, 2 ATP).",
-          "Ciclo de Krebs: Piruvato → CO2 + NADH + FADH2 (mitocôndria).",
-          "Cadeia de Transporte de Elétrons: NADH/FADH2 → 34 ATP.",
-          "Total: ~36 ATP por molécula de glicose.",
-          "A mitocôndria é a 'usina' — 95% do ATP é produzido lá.",
-        ],
-      },
-      {
-        title: "Por que a Mitocôndria Envelhece",
-        content: [
-          "Com a idade, a eficiência da cadeia de elétrons diminui.",
-          "Mais elétrons 'vazam' e formam radicais livres (ROS).",
-          "DNA mitocondrial é 10x mais vulnerável que DNA nuclear.",
-          "Resultado: menos energia, mais inflamação, envelhecimento celular.",
-        ],
-      },
-      {
-        title: "Peptídeos Mitocondriais",
-        content: [
-          "MOTS-c: Ativa AMPK, melhora metabolismo de glicose.",
-          "SS-31 (Elamipretide): Protege a cardiolipina na membrana mitocondrial interna.",
-          "NAD+ (precursores): Restaura os níveis de NAD+ necessários para a cadeia de elétrons.",
-          "Humanin: Peptídeo mitocondrial que protege contra estresse oxidativo.",
-        ],
-      },
-      {
-        title: "Base Antes dos Peptídeos",
-        content: [
-          "Otimizar dieta: antioxidantes naturais (vitamina C, E, CoQ10).",
-          "Exercício regular: estimula biogênese mitocondrial.",
-          "Sono adequado: período de reparo mitocondrial.",
-          "Reduzir estressores: tabaco, álcool, ultra-processados.",
-          "Só então adicionar peptídeos mitocondriais para potencializar.",
-        ],
-        tip: "Peptídeos mitocondriais funcionam melhor quando a base (dieta, exercício, sono) está otimizada. Não são substitutos de um estilo de vida saudável.",
       },
     ],
-    disclaimer: "Este conteúdo é educacional. Consulte um profissional de saúde antes de utilizar peptídeos mitocondriais.",
+    steps: [
+      {
+        title: "Como a Glicose se Torna ATP",
+        content: [
+          "Carboidratos são decompostos em glicose, que entra nas células e passa pela glicólise (10 etapas), produzindo ATP e piruvato.",
+          "O piruvato entra nas mitocôndrias e é convertido em acetil-CoA, alimentando o ciclo de Krebs.",
+          "O ciclo gera NADH e FADH2, que atuam como transportadores de elétrons para a cadeia de transporte de elétrons (CTE).",
+          "Na CTE, esses elétrons impulsionam a produção de grandes quantidades de ATP.",
+        ],
+      },
+      {
+        title: "Sinais de Equilíbrio Redox Desregulado",
+        content: [
+          "Fadiga crônica que só melhora com sono.",
+          "Névoa cerebral, falta de foco.",
+          "Dor nas articulações ou inflamação sistêmica.",
+          "Recuperação lenta do treinamento.",
+          "Instabilidade de humor ou baixa resiliência ao estresse.",
+          "PCR elevada, marcadores inflamatórios elevados em exames.",
+        ],
+        warning: "Esses são sinais de que seu corpo está criando mais estresse do que pode limpar. Quase todos os peptídeos mitocondriais influenciam vias sensíveis ao redox: AMPK, mTOR, NAD+/NADH, SIRT1/SIRT3, PGC-1α.",
+      },
+      {
+        title: "Terapia de Luz Vermelha + Peptídeos",
+        content: [
+          "A luz vermelha e infravermelha próxima (630-850nm) penetra no tecido e visa as mitocôndrias diretamente, melhorando fluxo sanguíneo, oxigenação e produção de ATP.",
+          "Vermelho (630-660nm) para cicatrização superficial.",
+          "Infravermelho próximo (810-850nm) para penetração mais profunda.",
+          "Exposição: 5 a 20 minutos por sessão.",
+          "Frequência: 3-7x por semana durante fases ativas; 1-3x semanalmente para manutenção.",
+          "Distância: 15-30 cm para a maioria dos dispositivos de painel.",
+        ],
+        tip: "Aplique após injeção de BPC-157 ou TB-500 para melhorar absorção e circulação local. Para longevidade: combine com MOTS-c, SS-31 e NAD+.",
+      },
+    ],
+    disclaimer: "Peptídeos mitocondriais podem ser uma faca de dois gumes — embora possam levar as mitocôndrias a níveis suprafisiológicos, isso gera maiores quantidades de subprodutos EROs. Uma base sólida de redox é fundamental.",
   },
 };
