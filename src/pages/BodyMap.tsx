@@ -69,17 +69,17 @@ const injectionSites: InjectionSite[] = [
   // Dorsal
   {
     id: "triceps-dir", name: "Tríceps Direito", region: "Braço", side: "dorsal",
-    x: 28, y: 38, angle: "45°",
-    technique: "Porção posterior do braço, região do tríceps. Pinçar pele, agulha 31G a 45°.",
-    tips: ["Pode precisar de auxílio de outra pessoa", "Boa absorção"],
-    idealFor: ["BPC-157", "TB-500", "GHK-Cu"],
+    x: 28, y: 38, angle: "45° (pouco tecido adiposo)",
+    technique: "Parte posterior do braço (tríceps). Pode ser difícil auto-aplicar. Pinçar o tecido com a mão oposta.",
+    tips: ["Pedir ajuda se necessário", "Agulha 31G de 8mm ideal", "Boa absorção para volumes pequenos"],
+    idealFor: ["Melanotan II", "Peptídeos de dose baixa"],
   },
   {
     id: "triceps-esq", name: "Tríceps Esquerdo", region: "Braço", side: "dorsal",
     x: 72, y: 38, angle: "45°",
-    technique: "Mesmo procedimento do tríceps direito.",
-    tips: ["Alternar com lado direito", "Ideal para peptídeos de recuperação local"],
-    idealFor: ["BPC-157", "TB-500"],
+    technique: "Mesmo procedimento no tríceps esquerdo.",
+    tips: ["Alternar com direito", "Ideal para microdoses"],
+    idealFor: ["Melanotan II", "Peptídeos de dose baixa"],
   },
   {
     id: "gluteo-sup-dir", name: "Glúteo Superior Direito", region: "Glúteo", side: "dorsal",
@@ -96,18 +96,18 @@ const injectionSites: InjectionSite[] = [
     idealFor: ["GH", "Tirzepatida"],
   },
   {
-    id: "lombar-dir", name: "Lombar Direita", region: "Lombar", side: "dorsal",
+    id: "lombar-dir", name: "Lombar Lateral Direita", region: "Lombar", side: "dorsal",
     x: 42, y: 44, angle: "45° a 90°",
-    technique: "Região lombar lateral, abaixo das costelas. Pinçar e inserir a 45°.",
-    tips: ["Menos comum, mas eficaz", "Usar para completar rotação"],
-    idealFor: ["BPC-157", "TB-500"],
+    technique: "Região lateral lombar (love handles). Pinçar tecido e inserir.",
+    tips: ["Bom tecido adiposo na maioria das pessoas", "Evitar a coluna vertebral", "Opção para rotação avançada"],
+    idealFor: ["BPC-157 (lesão lombar)", "Peptídeos gerais"],
   },
   {
-    id: "lombar-esq", name: "Lombar Esquerda", region: "Lombar", side: "dorsal",
+    id: "lombar-esq", name: "Lombar Lateral Esquerda", region: "Lombar", side: "dorsal",
     x: 58, y: 44, angle: "45° a 90°",
     technique: "Mesmo procedimento da lombar direita.",
     tips: ["Alternar com lado direito"],
-    idealFor: ["BPC-157", "TB-500"],
+    idealFor: ["BPC-157 (lesão lombar)", "Peptídeos gerais"],
   },
 ];
 
