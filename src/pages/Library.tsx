@@ -5,37 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { categories, categoryGradients } from "@/data/peptides";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-
-interface DBPeptide {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-  description: string | null;
-  benefits: string[] | null;
-  dosage_info: string | null;
-  mechanism: string | null;
-  side_effects: string | null;
-}
+import { usePeptides } from "@/hooks/usePeptides";
+import type { PeptideListItem } from "@/types";
 
 export default function Library() {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: peptides = [], isLoading } = useQuery({
-    queryKey: ["peptides"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("peptides")
-        .select("*")
-        .order("name");
-      if (error) throw error;
-      return data as DBPeptide[];
-    },
-  });
+  const { data: peptides = [], isLoading } = usePeptides();
 
   const filtered = useMemo(() => {
     return peptides.filter((p) => {
