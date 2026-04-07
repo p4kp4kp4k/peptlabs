@@ -1,0 +1,150 @@
+import { useState, useMemo } from "react";
+import { ArrowLeftRight, Plus, X, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { usePeptides } from "@/hooks/usePeptides";
+import type { PeptideListItem } from "@/types";
+
+export default function Compare() {
+  const { data: peptides = [], isLoading } = usePeptides();
+  const [selected, setSelected] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+  const [showPicker, setShowPicker] = useState(false);
+
+  const selectedPeptides = useMemo(
+    () => peptides.filter((p) => selected.includes(p.id)),
+    [peptides, selected]
+  );
+
+  const filteredPeptides = useMemo(
+    () => peptides.filter((p) =>
+      !selected.includes(p.id) &&
+      p.name.toLowerCase().includes(search.toLowerCase())
+    ).slice(0, 20),
+    [peptides, selected, search]
+  );
+
+  const addPeptide = (id: string) => {
+    if (selected.length < 4) {
+      setSelected((s) => [...s, id]);
+      setShowPicker(false);
+      setSearch("");
+    }
+  };
+
+  const removePeptide = (id: string) => setSelected((s) => s.filter((x) => x !== id));
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-1">
+          <ArrowLeftRight className="h-5 w-5 text-primary" />
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Comparador</h1>
+        </div>
+        <p className="text-sm text-muted-foreground">Selecione até 4 peptídeos para comparar lado a lado.</p>
+      </div>
+
+      {/* Selected chips */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {selectedPeptides.map((p) => (
+          <Badge key={p.id} variant="secondary" className="gap-1 text-xs py-1 px-2.5">
+            {p.name}
+            <button onClick={() => removePeptide(p.id)}>
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
+        {selected.length < 4 && (
+          <Button variant="outline" size="sm" className="gap-1 text-xs h-7" onClick={() => setShowPicker(true)}>
+            <Plus className="h-3 w-3" /> Adicionar
+          </Button>
+        )}
+      </div>
+
+      {/* Picker dropdown */}
+      {showPicker && (
+        <Card className="mb-4 border-primary/20">
+          <CardContent className="p-3">
+            <input
+              autoFocus
+              placeholder="Buscar peptídeo..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-transparent border-b border-border/50 pb-2 text-sm text-foreground placeholder:text-muted-foreground outline-none mb-2"
+            />
+            <div className="max-h-48 overflow-y-auto space-y-0.5">
+              {filteredPeptides.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => addPeptide(p.id)}
+                  className="w-full flex items-center justify-between rounded-md px-2 py-1.5 text-xs hover:bg-secondary/60 transition-colors"
+                >
+                  <span className="text-foreground">{p.name}</span>
+                  <span className="text-[10px] text-muted-foreground">{p.category}</span>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Comparison table */}
+      {selectedPeptides.length >= 2 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border/50">
+                <th className="text-left py-3 px-3 text-muted-foreground font-medium w-32">Atributo</th>
+                {selectedPeptides.map((p) => (
+                  <th key={p.id} className="text-left py-3 px-3 text-foreground font-semibold">{p.name}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-border/20">
+                <td className="py-3 px-3 text-muted-foreground">Categoria</td>
+                {selectedPeptides.map((p) => (
+                  <td key={p.id} className="py-3 px-3">
+                    <Badge variant="outline" className="text-[10px]">{p.category}</Badge>
+                  </td>
+                ))}
+              </tr>
+              <tr className="border-b border-border/20">
+                <td className="py-3 px-3 text-muted-foreground">Descrição</td>
+                {selectedPeptides.map((p) => (
+                  <td key={p.id} className="py-3 px-3 text-foreground">{p.description || "—"}</td>
+                ))}
+              </tr>
+              <tr className="border-b border-border/20">
+                <td className="py-3 px-3 text-muted-foreground">Benefícios</td>
+                {selectedPeptides.map((p) => (
+                  <td key={p.id} className="py-3 px-3">
+                    <div className="flex flex-wrap gap-1">
+                      {(p.benefits || []).slice(0, 4).map((b) => (
+                        <span key={b} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">{b}</span>
+                      ))}
+                    </div>
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <ArrowLeftRight className="h-10 w-10 text-muted-foreground/20 mb-3" />
+          <p className="text-sm text-muted-foreground">Selecione pelo menos 2 peptídeos para comparar</p>
+        </div>
+      )}
+    </div>
+  );
+}
