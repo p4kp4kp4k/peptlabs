@@ -135,7 +135,7 @@ export default function Learn() {
       )}
 
       {/* Segurança tab */}
-      {activeTab === "seguranca" && <SafetyTab />}
+      {!slug && activeTab === "seguranca" && <SafetyTab />}
 
       {/* Guides grid */}
       {activeTab !== "seguranca" && (
