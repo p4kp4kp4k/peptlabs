@@ -128,22 +128,26 @@ export default function CalculatorPage() {
         .select("name, peptides")
         .order("name");
       if (error) throw error;
-      return (data ?? []).flatMap((stack) => {
+      const seen = new Set<string>();
+      const results: { label: string; peptide: string; stack: string; vial: string; water: string; dose: string; doseRaw: string }[] = [];
+      for (const stack of (data ?? [])) {
         const peptides = stack.peptides as { name: string; dose: string }[];
-        return peptides.map((p) => {
-          // Parse dose string to extract vial, water, mcg
-          const doseNum = parseDoseToMcg(p.dose);
-          return {
-            label: `${p.name} ${stack.name}`,
+        for (const p of peptides) {
+          const key = p.name.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          results.push({
+            label: `${p.name}`,
             peptide: p.name,
             stack: stack.name,
             vial: "5",
             water: "2",
-            dose: String(doseNum),
+            dose: String(parseDoseToMcg(p.dose)),
             doseRaw: p.dose,
-          };
-        });
-      });
+          });
+        }
+      }
+      return results;
     },
   });
 
