@@ -65,88 +65,177 @@ export type Database = {
         }
         Relationships: []
       }
+      peptide_references: {
+        Row: {
+          abstract_text: string | null
+          authors: string[] | null
+          created_at: string
+          doi: string | null
+          id: string
+          journal: string | null
+          peptide_id: string
+          pmid: string | null
+          source: string
+          title: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          abstract_text?: string | null
+          authors?: string[] | null
+          created_at?: string
+          doi?: string | null
+          id?: string
+          journal?: string | null
+          peptide_id: string
+          pmid?: string | null
+          source?: string
+          title: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          abstract_text?: string | null
+          authors?: string[] | null
+          created_at?: string
+          doi?: string | null
+          id?: string
+          journal?: string | null
+          peptide_id?: string
+          pmid?: string | null
+          source?: string
+          title?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peptide_references_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "peptides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       peptides: {
         Row: {
           alternative_names: string[] | null
+          apd_id: string | null
           application: string | null
           benefits: string[] | null
+          biological_activity: string[] | null
           category: string
           classification: string | null
+          confidence_score: number | null
           created_at: string
           description: string | null
           dosage_info: string | null
           dosage_table: Json | null
+          dramp_id: string | null
           evidence_level: string | null
           goals: string[] | null
           half_life: string | null
           id: string
           interactions: Json | null
+          last_synced_at: string | null
           mechanism: string | null
           mechanism_points: string[] | null
           name: string
+          ncbi_protein_id: string | null
+          organism: string | null
+          peptipedia_id: string | null
           protocol_phases: Json | null
           reconstitution: string | null
           reconstitution_steps: string[] | null
           scientific_references: Json | null
+          sequence: string | null
+          sequence_length: number | null
           side_effects: string | null
           slug: string
+          source_origins: string[] | null
           stacks: Json | null
+          structure_info: Json | null
           timeline: Json | null
           updated_at: string
         }
         Insert: {
           alternative_names?: string[] | null
+          apd_id?: string | null
           application?: string | null
           benefits?: string[] | null
+          biological_activity?: string[] | null
           category: string
           classification?: string | null
+          confidence_score?: number | null
           created_at?: string
           description?: string | null
           dosage_info?: string | null
           dosage_table?: Json | null
+          dramp_id?: string | null
           evidence_level?: string | null
           goals?: string[] | null
           half_life?: string | null
           id?: string
           interactions?: Json | null
+          last_synced_at?: string | null
           mechanism?: string | null
           mechanism_points?: string[] | null
           name: string
+          ncbi_protein_id?: string | null
+          organism?: string | null
+          peptipedia_id?: string | null
           protocol_phases?: Json | null
           reconstitution?: string | null
           reconstitution_steps?: string[] | null
           scientific_references?: Json | null
+          sequence?: string | null
+          sequence_length?: number | null
           side_effects?: string | null
           slug: string
+          source_origins?: string[] | null
           stacks?: Json | null
+          structure_info?: Json | null
           timeline?: Json | null
           updated_at?: string
         }
         Update: {
           alternative_names?: string[] | null
+          apd_id?: string | null
           application?: string | null
           benefits?: string[] | null
+          biological_activity?: string[] | null
           category?: string
           classification?: string | null
+          confidence_score?: number | null
           created_at?: string
           description?: string | null
           dosage_info?: string | null
           dosage_table?: Json | null
+          dramp_id?: string | null
           evidence_level?: string | null
           goals?: string[] | null
           half_life?: string | null
           id?: string
           interactions?: Json | null
+          last_synced_at?: string | null
           mechanism?: string | null
           mechanism_points?: string[] | null
           name?: string
+          ncbi_protein_id?: string | null
+          organism?: string | null
+          peptipedia_id?: string | null
           protocol_phases?: Json | null
           reconstitution?: string | null
           reconstitution_steps?: string[] | null
           scientific_references?: Json | null
+          sequence?: string | null
+          sequence_length?: number | null
           side_effects?: string | null
           slug?: string
+          source_origins?: string[] | null
           stacks?: Json | null
+          structure_info?: Json | null
           timeline?: Json | null
           updated_at?: string
         }
@@ -352,6 +441,45 @@ export type Database = {
           stripe_subscription_id?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      sync_log: {
+        Row: {
+          completed_at: string | null
+          details: Json | null
+          error_message: string | null
+          id: string
+          records_added: number | null
+          records_processed: number | null
+          records_updated: number | null
+          source: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          details?: Json | null
+          error_message?: string | null
+          id?: string
+          records_added?: number | null
+          records_processed?: number | null
+          records_updated?: number | null
+          source: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          details?: Json | null
+          error_message?: string | null
+          id?: string
+          records_added?: number | null
+          records_processed?: number | null
+          records_updated?: number | null
+          source?: string
+          started_at?: string
+          status?: string
         }
         Relationships: []
       }
