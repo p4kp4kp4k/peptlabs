@@ -1,48 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, Triangle, ArrowRight, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { Json } from "@/integrations/supabase/types";
-
-interface NormalizedInteraction {
-  nome: string;
-  status: string;
-  descricao: string;
-}
-
-interface PeptideInteractions {
-  name: string;
-  slug: string;
-  category: string;
-  interactions: NormalizedInteraction[];
-}
-
-function normalizeInteractions(data: Json | null): NormalizedInteraction[] {
-  if (!data) return [];
-  if (Array.isArray(data)) {
-    return (data as any[]).map((item) => ({
-      nome: item.peptideo || item.nome || "",
-      status: (item.tipo || item.status || "").toUpperCase(),
-      descricao: item.descricao || "",
-    }));
-  }
-  const old = data as any;
-  return [
-    ...(old.peptideos || []).map((i: any) => ({
-      nome: i.nome || "",
-      status: (i.status || "").toUpperCase(),
-      descricao: i.descricao || "",
-    })),
-    ...(old.outras_substancias || []).map((i: any) => ({
-      nome: i.nome || "",
-      status: (i.status || "").toUpperCase(),
-      descricao: i.descricao || "",
-    })),
-  ];
-}
+import { usePeptidesWithInteractions } from "@/hooks/usePeptides";
+import type { StatusFilter } from "@/types";
+import { STATUS_FILTER_MAP } from "@/types";
 
 function getStatusInfo(status: string) {
   const s = status.toUpperCase();
@@ -56,8 +19,6 @@ function getStatusInfo(status: string) {
     return { label: "EVITAR", color: "bg-red-500/15 text-red-400 border-red-500/25" };
   return { label: status, color: "bg-secondary text-muted-foreground border-border/30" };
 }
-
-type StatusFilter = "all" | "synergic" | "complementary" | "caution" | "avoid";
 
 export default function Interactions() {
   const [search, setSearch] = useState("");
