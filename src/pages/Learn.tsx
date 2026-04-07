@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { BookOpen, FlaskConical, Shield, Lock, Clock, Check, ArrowRight, Sparkles, GraduationCap, FileText, Microscope, AlertTriangle, Unlock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ export default function Learn() {
   const [activeTab, setActiveTab] = useState<"guias" | "estudos" | "seguranca">("guias");
   const { isPremium, isAdmin } = useEntitlements();
   const hasFullAccess = isPremium || isAdmin;
+  const navigate = useNavigate();
 
   const filtered = guides.filter((g) => g.tab === activeTab);
 
@@ -136,8 +138,15 @@ export default function Learn() {
               const CatIcon = categoryIcons[guide.category] || FileText;
               return (
                 <div
-                  key={guide.title}
-                  className="group relative overflow-hidden rounded-xl border border-border/30 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
+                  key={guide.slug}
+                  onClick={() => {
+                    if (guide.isPro && !hasFullAccess) return;
+                    navigate(`/app/learn/${guide.slug}`);
+                  }}
+                  className={cn(
+                    "group relative overflow-hidden rounded-xl border border-border/30 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5",
+                    guide.isPro && !hasFullAccess ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                  )}
                 >
                   {/* Top accent line */}
                   <div className={cn("h-0.5 w-full bg-gradient-to-r", categoryGradients[guide.category] || "from-primary to-primary")} />
