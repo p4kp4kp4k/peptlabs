@@ -106,8 +106,13 @@ export default function Learn() {
         })}
       </div>
 
+      {/* Guide Detail (inline) */}
+      {slug && (
+        <GuideDetailInline slug={slug} />
+      )}
+
       {/* Featured guide (first free guide) */}
-      {activeTab === "guias" && (
+      {!slug && activeTab === "guias" && (
         <div className="mb-6 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card p-6 sm:p-8">
           <div className="flex items-start gap-4">
             <div className="hidden sm:flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
