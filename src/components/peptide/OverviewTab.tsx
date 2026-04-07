@@ -42,11 +42,24 @@ export default function OverviewTab({ name, mechanism, mechanism_points, benefit
 
   return (
     <div className="space-y-4">
-      {/* O que é */}
+      {/* O que é + Como funciona */}
       {mechanism && (
         <SectionCard>
           <SectionTitle icon={Zap} iconColor="text-primary" iconBg="bg-primary/10">O que é {name}</SectionTitle>
-          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{mechanism}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-3">{mechanism}</p>
+          {mechanism_points && mechanism_points.length > 0 && (
+            <div className="space-y-1.5 mt-3 pt-3 border-t border-border/20">
+              <p className="text-[11px] font-bold text-foreground/80 uppercase tracking-wider mb-2">Mecanismos de Ação</p>
+              {mechanism_points.map((point, i) => (
+                <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg bg-secondary/40 border border-border/10">
+                  <span className="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-[9px] font-bold mt-0.5">
+                    {i + 1}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground leading-relaxed">{point}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </SectionCard>
       )}
 
