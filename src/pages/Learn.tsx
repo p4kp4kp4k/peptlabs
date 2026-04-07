@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { guides, categoryGradients } from "@/data/peptides";
 import { cn } from "@/lib/utils";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import SafetyTab from "@/components/learn/SafetyTab";
 
 const tabs = [
   { key: "guias", label: "Guias Práticos", icon: GraduationCap, count: 0 },
@@ -124,74 +125,81 @@ export default function Learn() {
         </div>
       )}
 
+      {/* Segurança tab */}
+      {activeTab === "seguranca" && <SafetyTab />}
+
       {/* Guides grid */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {filtered.map((guide, i) => {
-          const CatIcon = categoryIcons[guide.category] || FileText;
-          return (
-            <div
-              key={guide.title}
-              className="group relative overflow-hidden rounded-xl border border-border/30 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
-            >
-              {/* Top accent line */}
-              <div className={cn("h-0.5 w-full bg-gradient-to-r", categoryGradients[guide.category] || "from-primary to-primary")} />
-              
-              <div className="p-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary/60">
-                      <CatIcon className="h-3.5 w-3.5 text-muted-foreground" />
+      {activeTab !== "seguranca" && (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {filtered.map((guide, i) => {
+              const CatIcon = categoryIcons[guide.category] || FileText;
+              return (
+                <div
+                  key={guide.title}
+                  className="group relative overflow-hidden rounded-xl border border-border/30 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
+                >
+                  {/* Top accent line */}
+                  <div className={cn("h-0.5 w-full bg-gradient-to-r", categoryGradients[guide.category] || "from-primary to-primary")} />
+                  
+                  <div className="p-5">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary/60">
+                          <CatIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <Badge className={cn("border-0 bg-gradient-to-r text-[9px] text-white", categoryGradients[guide.category] || "from-primary to-primary")}>
+                          {guide.category}
+                        </Badge>
+                      </div>
+                      {guide.isPro && !hasFullAccess ? (
+                        <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5">
+                          <Lock className="h-2.5 w-2.5 text-amber-400" />
+                          <span className="text-[9px] font-semibold text-amber-400">PRO</span>
+                        </div>
+                      ) : guide.isPro && hasFullAccess ? (
+                        <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5">
+                          <Unlock className="h-2.5 w-2.5 text-emerald-400" />
+                          <span className="text-[9px] font-semibold text-emerald-400">DESBLOQUEADO</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5">
+                          <Check className="h-2.5 w-2.5 text-emerald-400" />
+                          <span className="text-[9px] font-semibold text-emerald-400">GRÁTIS</span>
+                        </div>
+                      )}
                     </div>
-                    <Badge className={cn("border-0 bg-gradient-to-r text-[9px] text-white", categoryGradients[guide.category] || "from-primary to-primary")}>
-                      {guide.category}
-                    </Badge>
-                  </div>
-                  {guide.isPro && !hasFullAccess ? (
-                    <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5">
-                      <Lock className="h-2.5 w-2.5 text-amber-400" />
-                      <span className="text-[9px] font-semibold text-amber-400">PRO</span>
-                    </div>
-                  ) : guide.isPro && hasFullAccess ? (
-                    <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5">
-                      <Unlock className="h-2.5 w-2.5 text-emerald-400" />
-                      <span className="text-[9px] font-semibold text-emerald-400">DESBLOQUEADO</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5">
-                      <Check className="h-2.5 w-2.5 text-emerald-400" />
-                      <span className="text-[9px] font-semibold text-emerald-400">GRÁTIS</span>
-                    </div>
-                  )}
-                </div>
 
-                <h3 className="mb-2 text-sm font-semibold leading-snug text-foreground group-hover:text-primary transition-colors" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                  {guide.title}
-                </h3>
-                <p className="mb-4 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
-                  {guide.description}
-                </p>
+                    <h3 className="mb-2 text-sm font-semibold leading-snug text-foreground group-hover:text-primary transition-colors" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                      {guide.title}
+                    </h3>
+                    <p className="mb-4 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+                      {guide.description}
+                    </p>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-muted-foreground/60">
-                    <Clock className="h-3 w-3" />
-                    <span className="text-[10px]">{guide.date}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-muted-foreground/60">
+                        <Clock className="h-3 w-3" />
+                        <span className="text-[10px]">{guide.date}</span>
+                      </div>
+                      <span className="text-[11px] font-medium text-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                        {guide.isPro && !hasFullAccess ? "Desbloquear →" : "Ler →"}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-medium text-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                    {guide.isPro && !hasFullAccess ? "Desbloquear →" : "Ler →"}
-                  </span>
                 </div>
-              </div>
+              );
+            })}
+          </div>
+
+          {filtered.length === 0 && (
+            <div className="rounded-xl border border-border/30 bg-card/60 p-12 text-center">
+              <Microscope className="mx-auto mb-3 h-8 w-8 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">Nenhum conteúdo disponível nesta categoria ainda.</p>
+              <p className="mt-1 text-xs text-muted-foreground/60">Novos artigos são publicados semanalmente.</p>
             </div>
-          );
-        })}
-      </div>
-
-      {filtered.length === 0 && (
-        <div className="rounded-xl border border-border/30 bg-card/60 p-12 text-center">
-          <Microscope className="mx-auto mb-3 h-8 w-8 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">Nenhum conteúdo disponível nesta categoria ainda.</p>
-          <p className="mt-1 text-xs text-muted-foreground/60">Novos artigos são publicados semanalmente.</p>
-        </div>
+          )}
+        </>
       )}
 
       {/* Bottom CTA */}
