@@ -78,14 +78,14 @@ const sideEffectsData: SideEffect[] = [
 ];
 
 const examsData = [
-  { name: "Hemograma completo", frequency: "A cada 8 semanas", relevance: "Todos os peptídeos" },
-  { name: "Glicose em jejum + HbA1c", frequency: "A cada 12 semanas", relevance: "MK-677, Tirzepatida, Semaglutida" },
-  { name: "IGF-1", frequency: "A cada 8-12 semanas", relevance: "GH Secretagogos, CJC-1295, Ipamorelin" },
-  { name: "Função hepática (TGO/TGP)", frequency: "A cada 12 semanas", relevance: "Todos os peptídeos injetáveis" },
-  { name: "Função renal (Creatinina/Ureia)", frequency: "A cada 12 semanas", relevance: "Todos os peptídeos" },
-  { name: "TSH / T4 Livre", frequency: "A cada 16 semanas", relevance: "MK-677, Tesamorelin" },
-  { name: "Lipidograma", frequency: "A cada 12 semanas", relevance: "Tirzepatida, Semaglutida" },
-  { name: "Insulina em jejum", frequency: "A cada 12 semanas", relevance: "MK-677" },
+  { name: "IGF-1", why: "Mede a eficácia do eixo GH", peptides: "CJC, Ipamorelin, MK-677", frequency: "1x a cada 3 meses" },
+  { name: "Glicemia em Jejum", why: "Risco de hiperglicemia", peptides: "MK-677, HGH, Tirzepatida", frequency: "Mensal" },
+  { name: "HbA1c", why: "Média de glicose (3 meses)", peptides: "MK-677, Tirzepatida", frequency: "1x a cada 3 meses" },
+  { name: "ALT / AST", why: "Função hepática", peptides: "Todos (especialmente orais)", frequency: "1x a cada 6 meses" },
+  { name: "Creatinina / Ureia", why: "Função renal", peptides: "Todos", frequency: "1x a cada 6 meses" },
+  { name: "Proteína C-Reativa", why: "Inflamação sistêmica", peptides: "BPC-157, TB-500", frequency: "1x a cada 3 meses" },
+  { name: "TSH / T4 Livre", why: "Função tireoidiana", peptides: "Tirzepatida, Semaglutida", frequency: "1x a cada 6 meses" },
+  { name: "Hemograma Completo", why: "Saúde geral e imunidade", peptides: "Thymosin Alpha-1, LL-37", frequency: "1x a cada 6 meses" },
 ];
 
 const absoluteContraindications = [
