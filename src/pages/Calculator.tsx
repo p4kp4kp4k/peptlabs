@@ -86,11 +86,11 @@ const diluents = [
 ];
 
 const commonErrors = [
-  { text: "Agitar o frasco após adicionar o diluente", fix: "Gire suavemente o frasco até dissolver" },
-  { text: "Usar água da torneira ou destilada comum", fix: "Sempre use água bacteriostática ou estéril" },
-  { text: "Não refrigerar o peptídeo reconstituído", fix: "Armazene a 2–8°C imediatamente após reconstituição" },
-  { text: "Aspirar com a mesma agulha que perfurou o selo", fix: "Troque a agulha antes de aspirar" },
-  { text: "Reconstituar sem limpar o topo do frasco", fix: "Limpe com álcool 70% antes de perfurar" },
+  { text: "Agitar o frasco após adicionar o diluente", fix: "Gire suavemente – agitar destrói ligações de aminoácidos de peptídeos frágeis (HGH, IGF-1)" },
+  { text: "Deixar fora da geladeira por mais de 2h", fix: "Mais de 2h fora reduz potência em até 30%. Refrigere imediatamente após reconstituição" },
+  { text: "Usar água da torneira ou mineral", fix: "Causa infecções graves. Sempre use água bacteriostática ou estéril" },
+  { text: "Aspirar com a mesma agulha que perfurou o selo", fix: "Troque a agulha antes de aspirar para evitar contaminação" },
+  { text: "Reconstituir sem limpar o topo do frasco", fix: "Limpe com álcool 70% em movimentos circulares antes de perfurar" },
 ];
 
 export default function CalculatorPage() {
