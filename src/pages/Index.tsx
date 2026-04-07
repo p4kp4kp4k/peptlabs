@@ -46,7 +46,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const handleCTA = () => navigate(user ? "/dashboard" : "/auth");
+  const handleCTA = () => navigate(user ? "/app/dashboard" : "/auth");
 
   return (
     <div className="pb-8">
@@ -55,13 +55,13 @@ const Index = () => {
         <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <FlaskConical className="h-4.5 w-4.5 text-primary" />
-            <span className="text-sm font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Peptídeos<span className="text-primary">Health</span>
+            <span className="text-sm font-semibold tracking-tight">
+              Pepti<span className="text-primary">Lab</span>
             </span>
           </div>
           <div className="flex items-center gap-2">
             {user ? (
-              <Button size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate("/dashboard")}>
+              <Button size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate("/app/dashboard")}>
                 Meu Painel <ArrowRight className="h-3 w-3" />
               </Button>
             ) : (
@@ -84,8 +84,8 @@ const Index = () => {
         </div>
         <motion.div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6" initial="hidden" animate="visible" variants={stagger}>
           <motion.div variants={fadeUp}>
-            <Badge className="mb-4 border-primary/20 bg-primary/10 text-primary text-[10px]">
-              <Sparkles className="mr-1 h-3 w-3" /> Plataforma #1 de Peptídeos do Brasil
+             <Badge className="mb-4 border-primary/20 bg-primary/10 text-primary text-[10px]">
+              <Sparkles className="mr-1 h-3 w-3" /> PeptiLab — Plataforma de Peptídeos
             </Badge>
           </motion.div>
           <motion.h1 variants={fadeUp} className="mb-4 text-3xl font-bold leading-[1.15] text-foreground sm:text-4xl lg:text-5xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
@@ -220,7 +220,7 @@ const Index = () => {
         <div className="mx-auto max-w-4xl">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl font-bold text-foreground sm:text-2xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Peptídeos em Destaque</h2>
-            <a href="/library" className="flex items-center gap-1 text-[11px] text-primary hover:underline">Ver todos <ChevronRight className="h-3 w-3" /></a>
+            <a href="/app/peptides" className="flex items-center gap-1 text-[11px] text-primary hover:underline">Ver todos <ChevronRight className="h-3 w-3" /></a>
           </div>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
             {featuredPeptides.map((p) => (
