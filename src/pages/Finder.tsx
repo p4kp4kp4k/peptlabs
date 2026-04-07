@@ -83,8 +83,21 @@ const ROUTE_OPTIONS = [
   },
 ];
 
+const GOAL_ICON_MAP: Record<string, { icon: LucideIcon; gradient: string }> = {
+  "Recuperação & Cicatrização": { icon: Bone, gradient: "from-emerald-500 to-teal-400" },
+  "Emagrecimento & Composição Corporal": { icon: Scale, gradient: "from-orange-500 to-amber-400" },
+  "Desempenho Cognitivo": { icon: BrainCircuit, gradient: "from-violet-500 to-purple-400" },
+  "Anti-aging & Longevidade": { icon: Hourglass, gradient: "from-amber-500 to-yellow-400" },
+  "Sono & Recuperação Noturna": { icon: Moon, gradient: "from-indigo-500 to-blue-400" },
+  "Imunidade & Anti-inflamatório": { icon: ShieldPlus, gradient: "from-rose-500 to-pink-400" },
+  "Saúde Hormonal & Sexual": { icon: HeartPulse, gradient: "from-red-500 to-rose-400" },
+  "Hormônio do Crescimento (GH)": { icon: TrendingUp, gradient: "from-cyan-500 to-teal-400" },
+  "Estética & Pele": { icon: Palette, gradient: "from-pink-500 to-fuchsia-400" },
+  "Saúde Cardiovascular": { icon: Heart, gradient: "from-red-500 to-orange-400" },
+};
+
 const STEP_META: Record<Step, { num: number; title: string; sub: string }> = {
-  goals: { num: 1, title: "Defina seus alvos", sub: "O que você quer alcançar? Escolha até 4 áreas prioritárias." },
+  goals: { num: 1, title: "Quais são seus objetivos?", sub: "Selecione de 1 a 4 objetivos que mais importam para você." },
   profile: { num: 2, title: "Seu perfil de uso", sub: "Adaptamos a complexidade e dosagens ao seu nível." },
   preferences: { num: 3, title: "Via de aplicação", sub: "Cada método tem vantagens distintas. Qual combina com você?" },
   analyzing: { num: 4, title: "Processando análise", sub: "Cruzando dados de compatibilidade e interações..." },
