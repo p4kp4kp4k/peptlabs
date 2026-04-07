@@ -52,11 +52,20 @@ export default function ProtocolsTab({ dosage_info, dosage_table, protocol_phase
 
   return (
     <div className="space-y-4">
-      {/* Dosage info header */}
-      {dosage_info && (
+      {/* Resumo do protocolo + meia-vida */}
+      {(dosage_info || half_life) && (
         <SectionCard>
-          <SectionTitle icon={Info}>Protocolo</SectionTitle>
-          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{dosage_info}</p>
+          <SectionTitle icon={Info}>Resumo do Protocolo</SectionTitle>
+          {dosage_info && (
+            <div className="p-3 rounded-lg bg-primary/5 border border-primary/15 mb-3">
+              <p className="text-xs sm:text-sm text-foreground font-medium leading-relaxed">{dosage_info}</p>
+            </div>
+          )}
+          {half_life && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">Meia-vida:</span> ~{half_life}
+            </div>
+          )}
         </SectionCard>
       )}
 
