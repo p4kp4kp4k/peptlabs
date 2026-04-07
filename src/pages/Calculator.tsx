@@ -151,6 +151,16 @@ const protocolPresets = [
   { label: "Oxytocin", vial: "5", water: "2", dose: "200" },
   { label: "PT-141 (Bremelanotide)", vial: "10", water: "2", dose: "1750" },
   { label: "Thymosin Alpha-1", vial: "5", water: "1", dose: "1600" },
+  { label: "LL-37", vial: "5", water: "2", dose: "100" },
+  { label: "KPV Anti-inflamatório", vial: "10", water: "2", dose: "500" },
+  { label: "Thymalin", vial: "10", water: "2", dose: "500" },
+  { label: "5-Amino-1MQ", vial: "50", water: "2", dose: "10000" },
+  { label: "MOTS-C", vial: "5", water: "2", dose: "500" },
+  { label: "SLU-PP-332", vial: "5", water: "2", dose: "500" },
+  { label: "Melanotan II", vial: "10", water: "2", dose: "250" },
+  { label: "Glutathione 600mg", vial: "600", water: "5", dose: "200000" },
+  { label: "SS-31 (Elamipretide)", vial: "5", water: "2", dose: "500" },
+  { label: "VIP (Peptídeo Intestinal)", vial: "5", water: "2", dose: "100" },
 ];
 
 export default function CalculatorPage() {
