@@ -375,17 +375,25 @@ export default function Finder() {
 
                   <Card className="border-border/40 bg-card/80 mb-3">
                     <CardContent className="p-3 space-y-2">
-                      {engineResult.peptides.map((p, i) => (
-                        <div key={p.name} className="rounded-lg bg-secondary/20 p-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-bold text-foreground">{i + 1}. {p.name}</span>
-                            <Badge variant="outline" className="text-[9px]">{p.duration}</Badge>
-                          </div>
-                          <p className="text-[10px] text-primary font-medium">{p.dose}</p>
-                          <p className="text-[10px] text-muted-foreground">{p.frequency}</p>
-                          {p.notes && <p className="text-[9px] text-muted-foreground/70 mt-1 italic">{p.notes}</p>}
-                        </div>
-                      ))}
+                      {engineResult.peptides.map((p, i) => {
+                        // Find slug from engine rules
+                        const slug = p.slug || p.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                        return (
+                          <button
+                            key={p.name}
+                            onClick={() => navigate(`/app/library/${slug}`)}
+                            className="w-full rounded-lg bg-secondary/20 p-3 text-left hover:bg-secondary/40 transition-colors cursor-pointer"
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-bold text-foreground">{i + 1}. {p.name}</span>
+                              <Badge variant="outline" className="text-[9px]">{p.duration}</Badge>
+                            </div>
+                            <p className="text-[10px] text-primary font-medium">{p.dose}</p>
+                            <p className="text-[10px] text-muted-foreground">{p.frequency}</p>
+                            {p.notes && <p className="text-[9px] text-muted-foreground/70 mt-1 italic">{p.notes}</p>}
+                          </button>
+                        );
+                      })}
                     </CardContent>
                   </Card>
 
