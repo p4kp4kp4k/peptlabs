@@ -1,48 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, Triangle, ArrowRight, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { Json } from "@/integrations/supabase/types";
-
-interface NormalizedInteraction {
-  nome: string;
-  status: string;
-  descricao: string;
-}
-
-interface PeptideInteractions {
-  name: string;
-  slug: string;
-  category: string;
-  interactions: NormalizedInteraction[];
-}
-
-function normalizeInteractions(data: Json | null): NormalizedInteraction[] {
-  if (!data) return [];
-  if (Array.isArray(data)) {
-    return (data as any[]).map((item) => ({
-      nome: item.peptideo || item.nome || "",
-      status: (item.tipo || item.status || "").toUpperCase(),
-      descricao: item.descricao || "",
-    }));
-  }
-  const old = data as any;
-  return [
-    ...(old.peptideos || []).map((i: any) => ({
-      nome: i.nome || "",
-      status: (i.status || "").toUpperCase(),
-      descricao: i.descricao || "",
-    })),
-    ...(old.outras_substancias || []).map((i: any) => ({
-      nome: i.nome || "",
-      status: (i.status || "").toUpperCase(),
-      descricao: i.descricao || "",
-    })),
-  ];
-}
+import { usePeptidesWithInteractions } from "@/hooks/usePeptides";
+import type { StatusFilter } from "@/types";
+import { STATUS_FILTER_MAP } from "@/types";
 
 function getStatusInfo(status: string) {
   const s = status.toUpperCase();
@@ -57,37 +20,13 @@ function getStatusInfo(status: string) {
   return { label: status, color: "bg-secondary text-muted-foreground border-border/30" };
 }
 
-type StatusFilter = "all" | "synergic" | "complementary" | "caution" | "avoid";
-
 export default function Interactions() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  const { data: peptides, isLoading } = useQuery({
-    queryKey: ["peptides-interactions"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("peptides")
-        .select("name, slug, category, interactions")
-        .not("interactions", "is", null);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const allPeptides = useMemo<PeptideInteractions[]>(() => {
-    if (!peptides) return [];
-    return peptides
-      .map((p) => ({
-        name: p.name,
-        slug: p.slug,
-        category: p.category,
-        interactions: normalizeInteractions(p.interactions),
-      }))
-      .filter((p) => p.interactions.length > 0)
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [peptides]);
+  const { data: allPeptides = [], isLoading } = usePeptidesWithInteractions();
+  
 
   const categories = useMemo(() => {
     return Array.from(new Set(allPeptides.map((p) => p.category))).sort();
@@ -123,14 +62,7 @@ export default function Interactions() {
     }
 
     if (statusFilter !== "all") {
-      const filterMap: Record<StatusFilter, string> = {
-        all: "",
-        synergic: "SINÉRGICO",
-        complementary: "COMPLEMENTAR",
-        caution: "MONITORAR",
-        avoid: "EVITAR",
-      };
-      const target = filterMap[statusFilter];
+      const target = STATUS_FILTER_MAP[statusFilter];
       result = result
         .map((p) => ({
           ...p,
