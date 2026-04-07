@@ -18,7 +18,7 @@ const navItems = [
   { label: "Meus Protocolos", icon: Layers, path: "#" },
   { label: "Aprender", icon: BookOpen, path: "/learn" },
   { label: "Calculadora", icon: Calculator, path: "/calculator" },
-  { label: "Biblioteca de Stacks", icon: Layers, path: "#" },
+  { label: "Biblioteca de Stacks", icon: Layers, path: "/stacks" },
   { label: "Interações", icon: Triangle, path: "#" },
   { label: "Mapa de Aplicação", icon: MapPin, path: "#" },
   { label: "Cronograma", icon: CalendarDays, path: "#" },

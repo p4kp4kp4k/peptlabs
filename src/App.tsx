@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Calculator from "./pages/Calculator";
 import PeptideDetail from "./pages/PeptideDetail";
+import Stacks from "./pages/Stacks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
