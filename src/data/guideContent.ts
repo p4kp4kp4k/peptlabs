@@ -230,64 +230,56 @@ export const guideContents: Record<string, GuideContent> = {
   },
 
   "injecao-subcutanea-rotacao": {
-    intro: "Técnica detalhada de aplicação subcutânea, mapa corporal de locais, rotação semanal e assepsia para peptídeos injetáveis.",
+    intro: "A eficácia depende não apenas da dose, mas da técnica de entrega. Erros de aplicação causam perda de biodisponibilidade ou abscessos. O objetivo é depositar o líquido na camada de gordura logo abaixo da derme.",
+    sections: [
+      {
+        title: "Técnica Detalhada de Injeção SubQ",
+        icon: "syringe",
+        items: [
+          "Ângulo: 45° para pessoas magras ou 90° para quem tem mais tecido adiposo.",
+          "Profundidade: Agulhas de 8mm (31G) ou 12.7mm (29G) são o padrão.",
+          "Velocidade: Injeção lenta (2-3 segundos por 10 unidades) reduz a dor e o risco de hematomas.",
+          "Finalização: Após injetar, conte 5 segundos antes de retirar a agulha para evitar o refluxo do peptídeo.",
+        ],
+      },
+      {
+        title: "Mapa Corporal e Locais de Aplicação",
+        icon: "body",
+        items: [
+          "Abdômen — região periumbilical, boa absorção.",
+          "Coxas — parte externa superior (vasto lateral), boa absorção e fácil acesso.",
+          "Braços — face posterior.",
+          "Glúteos — quadrante superior externo, excelente para volumes maiores.",
+        ],
+      },
+      {
+        title: "Esquema de Rotação Semanal",
+        icon: "calendar",
+        table: [
+          { label: "Segunda", value: "Abdômen Inferior — Direito" },
+          { label: "Terça", value: "Abdômen Inferior — Esquerdo" },
+          { label: "Quarta", value: "Coxa Externa — Direito" },
+          { label: "Quinta", value: "Coxa Externa — Esquerdo" },
+          { label: "Sexta", value: "Tríceps Posterior — Direito" },
+          { label: "Sábado", value: "Tríceps Posterior — Esquerdo" },
+          { label: "Domingo", value: "Glúteo Superior — Direito" },
+        ],
+      },
+    ],
     steps: [
       {
-        title: "Preparação do Local",
+        title: "Higiene e Assepsia",
         content: [
-          "Escolha um local com tecido adiposo adequado (abdômen, coxas, braços).",
-          "Limpe a área com swab de álcool 70% em movimento circular.",
-          "Aguarde secar completamente (15-30 segundos).",
-        ],
-      },
-      {
-        title: "Técnica de Injeção",
-        content: [
-          "Faça uma prega na pele com o polegar e indicador.",
-          "Insira a agulha em ângulo de 90° (agulhas curtas 4-6mm) ou 45° (agulhas mais longas).",
-          "Injete lentamente a dose completa.",
-          "Mantenha a agulha inserida por 5-10 segundos após a injeção.",
-          "Retire a agulha e pressione levemente com algodão seco.",
-        ],
-        warning: "Nunca massageie o local após a aplicação — pode alterar a absorção do peptídeo.",
-      },
-      {
-        title: "Mapa de Rotação Corporal",
-        content: [
-          "Abdômen (região periumbilical) — evitar 5cm ao redor do umbigo.",
-          "Coxas (face lateral e anterior) — terço médio.",
-          "Braços (face posterior) — abaixo do deltóide.",
-          "Flancos (região lateral do abdômen).",
-        ],
-        tip: "Divida cada região em 4 quadrantes e alterne entre eles a cada aplicação para prevenir lipodistrofia.",
-      },
-      {
-        title: "Esquema Semanal de Rotação",
-        content: [
-          "Segunda: Abdômen lado direito.",
-          "Terça: Coxa esquerda.",
-          "Quarta: Abdômen lado esquerdo.",
-          "Quinta: Coxa direita.",
-          "Sexta: Braço direito.",
-          "Sábado: Flanco esquerdo.",
-          "Domingo: Braço esquerdo.",
-        ],
-      },
-      {
-        title: "Cuidados Pós-Aplicação",
-        content: [
-          "Descarte a agulha imediatamente em recipiente para perfurocortantes.",
-          "Não reutilize agulhas — cada aplicação requer agulha nova.",
-          "Observe o local por vermelhidão excessiva ou endurecimento.",
-          "Registre o local utilizado para manter a rotação correta.",
+          "Sempre use swabs de álcool 70% em movimentos circulares de dentro para fora no local de aplicação.",
+          "Lave as mãos com água e sabão antes de manipular materiais.",
+          "Nunca reutilize agulhas ou seringas.",
         ],
       },
     ],
     precautions: [
-      { label: "Agulhas", value: "Use 29G-32G (4-6mm) para injeção subcutânea." },
-      { label: "Higiene", value: "Sempre limpe o local com álcool 70%." },
-      { label: "Rotação", value: "Mantenha ao menos 2cm entre aplicações consecutivas." },
-      { label: "Velocidade", value: "Injete lentamente para minimizar dor e irritação." },
+      { label: "Agulhas", value: "Use 29G-32G (8mm ou 12.7mm) para injeção subcutânea." },
+      { label: "Velocidade", value: "2-3 segundos por 10 unidades para minimizar dor." },
+      { label: "Refluxo", value: "Conte 5 segundos antes de retirar a agulha." },
     ],
     disclaimer: "Consulte um profissional de saúde para orientação sobre técnica de aplicação adequada.",
   },
