@@ -88,14 +88,22 @@ const examsData = [
   { name: "Insulina em jejum", frequency: "A cada 12 semanas", relevance: "MK-677" },
 ];
 
-const risksData = [
-  { condition: "Histórico de câncer ativo", peptides: "Todos os secretagogos de GH", severity: "Absoluta" },
-  { condition: "Gravidez / Amamentação", peptides: "Todos os peptídeos", severity: "Absoluta" },
-  { condition: "Pancreatite ativa ou histórica", peptides: "Tirzepatida, Semaglutida", severity: "Absoluta" },
-  { condition: "Diabetes tipo 1 descompensado", peptides: "MK-677", severity: "Absoluta" },
-  { condition: "Insuficiência renal severa", peptides: "Todos os peptídeos injetáveis", severity: "Relativa" },
-  { condition: "Melanoma ou histórico familiar", peptides: "Melanotan II", severity: "Absoluta" },
-  { condition: "Menores de 18 anos", peptides: "Todos os peptídeos", severity: "Absoluta" },
+const absoluteContraindications = [
+  { condition: "Câncer Ativo", description: "Peptídeos de GH podem agravar a condição ocular.", peptides: "Todos os secretagogos de GH" },
+  { condition: "Retinopatia Diabética", description: "Peptídeos de GH podem agravar a condição ocular.", peptides: "Secretagogos de GH" },
+  { condition: "Pancreatite", description: "Contraindicação absoluta para GLP-1s (Tirzepatida/Semaglutida).", peptides: "Tirzepatida, Semaglutida" },
+  { condition: "Gravidez / Amamentação", description: "Nenhum peptídeo pesquisado possui dados de segurança em gestantes.", peptides: "Todos os peptídeos" },
+  { condition: "Uso de Insulina", description: "Risco de hipoglicemia severa com peptídeos que afetam glicose.", peptides: "MK-677, IGF-1" },
+];
+
+const relativeContraindications = [
+  { condition: "Doenças Autoimunes Ativas", description: "Imunomoduladores como Thymosin Alpha-1 podem exacerbar flares.", peptides: "Thymosin Alpha-1" },
+];
+
+const dangerousCombinations = [
+  { combination: "CJC-1295 + GHRP-6", risk: "Hipoglicemia / Fome", reason: "Aumento massivo de grelina e cortisol." },
+  { combination: "Tirzepatida + Semaglutida", risk: "Desidratação / Vômito", reason: "Sobrecarga de receptores GLP-1/GIP." },
+  { combination: "IGF-1 + Insulina", risk: "Hipoglicemia Severa", reason: "Ambos reduzem glicose no sangue drasticamente." },
 ];
 
 function SideEffectCard({ data }: { data: SideEffect }) {
