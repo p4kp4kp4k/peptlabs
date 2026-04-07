@@ -22,6 +22,7 @@ import Compare from "./pages/Compare";
 import HistoryPage from "./pages/History";
 import SettingsPage from "./pages/Settings";
 import Billing from "./pages/Billing";
+import Learn from "./pages/Learn";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/app/history" element={<AppRoute><HistoryPage /></AppRoute>} />
             <Route path="/app/settings" element={<AppRoute><SettingsPage /></AppRoute>} />
             <Route path="/app/billing" element={<AppRoute><Billing /></AppRoute>} />
+            <Route path="/app/learn" element={<AppRoute><Learn /></AppRoute>} />
             <Route path="/app/admin" element={<AppRoute requireAdmin><Admin /></AppRoute>} />
             <Route path="/peptide/:slug" element={<AppRoute><PeptideDetail /></AppRoute>} />
 
