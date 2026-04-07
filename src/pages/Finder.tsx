@@ -52,8 +52,24 @@ export default function Finder() {
 
   const handleSave = async () => {
     if (!user || !result) return;
+
+    // Quick client check
+    if (!canCreate("protocol")) {
+      setGateReason("Limite de 3 protocolos atingido no plano gratuito.");
+      setGateOpen(true);
+      return;
+    }
+
     setSaving(true);
     try {
+      // Backend enforcement
+      const check = await checkEntitlement("protocol");
+      if (!check.allowed) {
+        setGateReason(check.reason || "Limite atingido.");
+        setGateOpen(true);
+        return;
+      }
+
       await createProtocol({
         user_id: user.id,
         name: result.name,
