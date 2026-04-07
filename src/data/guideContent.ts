@@ -230,64 +230,56 @@ export const guideContents: Record<string, GuideContent> = {
   },
 
   "injecao-subcutanea-rotacao": {
-    intro: "Técnica detalhada de aplicação subcutânea, mapa corporal de locais, rotação semanal e assepsia para peptídeos injetáveis.",
+    intro: "A eficácia depende não apenas da dose, mas da técnica de entrega. Erros de aplicação causam perda de biodisponibilidade ou abscessos. O objetivo é depositar o líquido na camada de gordura logo abaixo da derme.",
+    sections: [
+      {
+        title: "Técnica Detalhada de Injeção SubQ",
+        icon: "syringe",
+        items: [
+          "Ângulo: 45° para pessoas magras ou 90° para quem tem mais tecido adiposo.",
+          "Profundidade: Agulhas de 8mm (31G) ou 12.7mm (29G) são o padrão.",
+          "Velocidade: Injeção lenta (2-3 segundos por 10 unidades) reduz a dor e o risco de hematomas.",
+          "Finalização: Após injetar, conte 5 segundos antes de retirar a agulha para evitar o refluxo do peptídeo.",
+        ],
+      },
+      {
+        title: "Mapa Corporal e Locais de Aplicação",
+        icon: "body",
+        items: [
+          "Abdômen — região periumbilical, boa absorção.",
+          "Coxas — parte externa superior (vasto lateral), boa absorção e fácil acesso.",
+          "Braços — face posterior.",
+          "Glúteos — quadrante superior externo, excelente para volumes maiores.",
+        ],
+      },
+      {
+        title: "Esquema de Rotação Semanal",
+        icon: "calendar",
+        table: [
+          { label: "Segunda", value: "Abdômen Inferior — Direito" },
+          { label: "Terça", value: "Abdômen Inferior — Esquerdo" },
+          { label: "Quarta", value: "Coxa Externa — Direito" },
+          { label: "Quinta", value: "Coxa Externa — Esquerdo" },
+          { label: "Sexta", value: "Tríceps Posterior — Direito" },
+          { label: "Sábado", value: "Tríceps Posterior — Esquerdo" },
+          { label: "Domingo", value: "Glúteo Superior — Direito" },
+        ],
+      },
+    ],
     steps: [
       {
-        title: "Preparação do Local",
+        title: "Higiene e Assepsia",
         content: [
-          "Escolha um local com tecido adiposo adequado (abdômen, coxas, braços).",
-          "Limpe a área com swab de álcool 70% em movimento circular.",
-          "Aguarde secar completamente (15-30 segundos).",
-        ],
-      },
-      {
-        title: "Técnica de Injeção",
-        content: [
-          "Faça uma prega na pele com o polegar e indicador.",
-          "Insira a agulha em ângulo de 90° (agulhas curtas 4-6mm) ou 45° (agulhas mais longas).",
-          "Injete lentamente a dose completa.",
-          "Mantenha a agulha inserida por 5-10 segundos após a injeção.",
-          "Retire a agulha e pressione levemente com algodão seco.",
-        ],
-        warning: "Nunca massageie o local após a aplicação — pode alterar a absorção do peptídeo.",
-      },
-      {
-        title: "Mapa de Rotação Corporal",
-        content: [
-          "Abdômen (região periumbilical) — evitar 5cm ao redor do umbigo.",
-          "Coxas (face lateral e anterior) — terço médio.",
-          "Braços (face posterior) — abaixo do deltóide.",
-          "Flancos (região lateral do abdômen).",
-        ],
-        tip: "Divida cada região em 4 quadrantes e alterne entre eles a cada aplicação para prevenir lipodistrofia.",
-      },
-      {
-        title: "Esquema Semanal de Rotação",
-        content: [
-          "Segunda: Abdômen lado direito.",
-          "Terça: Coxa esquerda.",
-          "Quarta: Abdômen lado esquerdo.",
-          "Quinta: Coxa direita.",
-          "Sexta: Braço direito.",
-          "Sábado: Flanco esquerdo.",
-          "Domingo: Braço esquerdo.",
-        ],
-      },
-      {
-        title: "Cuidados Pós-Aplicação",
-        content: [
-          "Descarte a agulha imediatamente em recipiente para perfurocortantes.",
-          "Não reutilize agulhas — cada aplicação requer agulha nova.",
-          "Observe o local por vermelhidão excessiva ou endurecimento.",
-          "Registre o local utilizado para manter a rotação correta.",
+          "Sempre use swabs de álcool 70% em movimentos circulares de dentro para fora no local de aplicação.",
+          "Lave as mãos com água e sabão antes de manipular materiais.",
+          "Nunca reutilize agulhas ou seringas.",
         ],
       },
     ],
     precautions: [
-      { label: "Agulhas", value: "Use 29G-32G (4-6mm) para injeção subcutânea." },
-      { label: "Higiene", value: "Sempre limpe o local com álcool 70%." },
-      { label: "Rotação", value: "Mantenha ao menos 2cm entre aplicações consecutivas." },
-      { label: "Velocidade", value: "Injete lentamente para minimizar dor e irritação." },
+      { label: "Agulhas", value: "Use 29G-32G (8mm ou 12.7mm) para injeção subcutânea." },
+      { label: "Velocidade", value: "2-3 segundos por 10 unidades para minimizar dor." },
+      { label: "Refluxo", value: "Conte 5 segundos antes de retirar a agulha." },
     ],
     disclaimer: "Consulte um profissional de saúde para orientação sobre técnica de aplicação adequada.",
   },
@@ -491,72 +483,76 @@ export const guideContents: Record<string, GuideContent> = {
   },
 
   "hgh-dose-guia": {
-    intro: "Guia completo sobre dosagem de HGH — cada faixa de dose (1-2, 2-4, 4-8, 6-10+ UI) serve a um propósito diferente.",
-    steps: [
+    intro: "O hormônio do crescimento (HGH) ocupa uma categoria única. Não é um anabolizante típico, nem um estimulante. Mas é facilmente uma das ferramentas mais transformadoras tanto no espaço de performance quanto de longevidade — se você entender como realmente usá-lo. O que torna o HGH tão singular é que cada faixa de dose serve a um propósito diferente. Com HGH, 1 UI e 8 UI são ferramentas completamente diferentes.",
+    sections: [
       {
-        title: "1-2 UI/dia — Anti-Aging & Bem-Estar",
-        content: [
-          "Melhora da qualidade do sono e energia.",
-          "Pele mais hidratada e elástica.",
-          "Recuperação muscular moderada.",
-          "Dose segura para uso prolongado (6-12 meses).",
-          "Mínimos efeitos colaterais.",
-        ],
-        tip: "Dose ideal para iniciantes. Aplique antes de dormir para imitar o pico fisiológico.",
-      },
-      {
-        title: "2-4 UI/dia — Composição Corporal",
-        content: [
-          "Redução de gordura corporal (especialmente visceral).",
-          "Aumento modesto de massa magra.",
-          "Melhora na recuperação pós-treino.",
-          "Necessário monitorar IGF-1 a cada 3 meses.",
-          "Pode dividir dose: manhã + noite.",
-        ],
-      },
-      {
-        title: "4-8 UI/dia — Performance & Hipertrofia",
-        content: [
-          "Ganho significativo de massa muscular.",
-          "Aceleração dramática da recuperação.",
-          "Retenção hídrica moderada a significativa.",
-          "Risco de resistência à insulina — monitorar HbA1c.",
-          "Requer acompanhamento médico regular.",
-        ],
-        warning: "Doses acima de 4 UI/dia aumentam significativamente o risco de efeitos colaterais. Monitoramento bioquímico obrigatório.",
-      },
-      {
-        title: "6-10+ UI/dia — Terapêutico/Avançado",
-        content: [
-          "Usado em contextos clínicos específicos.",
-          "Alto risco de efeitos colaterais (síndrome do túnel do carpo, edema).",
-          "Requer monitoramento rigoroso de IGF-1, glicose e insulina.",
-          "Pode necessitar de metformina ou berberina como suporte.",
-          "Apenas sob supervisão médica direta.",
-        ],
-      },
-      {
-        title: "Timing & Administração",
-        content: [
-          "Dose única: antes de dormir (pico fisiológico).",
-          "Dose dividida: manhã em jejum + antes de dormir.",
-          "Evitar carboidratos 2h antes e 1h após a injeção.",
-          "Aplicação subcutânea no abdômen ou coxas.",
-          "Rotacionar locais de aplicação.",
-        ],
-      },
-      {
-        title: "Exames de Monitoramento",
-        content: [
-          "IGF-1 — a cada 8-12 semanas.",
-          "Glicose em jejum + HbA1c — a cada 12 semanas.",
-          "Insulina em jejum (HOMA-IR).",
-          "TSH e T4 Livre (GH pode afetar tireoide).",
-          "Hemograma completo.",
+        title: "Tabela Resumo — Objetivo vs Dose",
+        icon: "table",
+        table: [
+          { label: "Reparo e otimização de longo prazo", value: "1-2 UI/dia" },
+          { label: "Physique e recuperação de alta performance", value: "2-4 UI/dia" },
+          { label: "Remodelação agressiva e prep de competição", value: "4-8 UI/dia" },
+          { label: "Resultados de nível elite com protocolos empilhados", value: "6-10+ UI/dia" },
         ],
       },
     ],
-    disclaimer: "O uso de HGH exógeno requer prescrição médica. Este guia é educacional e não substitui orientação profissional.",
+    steps: [
+      {
+        title: "1-2 UI Diárias: Sutil, Fundacional e Focado no Longo Prazo",
+        content: [
+          "Melhora nos ciclos de sono, especialmente REM e sono profundo.",
+          "Melhora no tônus, elasticidade e hidratação da pele.",
+          "Recuperação mais rápida de estresse articular e fadiga tendínea.",
+          "Perda de gordura leve mas constante, particularmente na região abdominal.",
+          "Sistema nervoso mais calmo — menos overtraining.",
+          "Leve plenitude nos ventres musculares.",
+          "Suporte para mucosa intestinal e redução de inflamação.",
+        ],
+        tip: "Ideal para: maiores de 35 anos, treinando pesado, buscando recuperação de longo prazo, anti-aging, ou manter-se magro e vital o ano todo. Mínimo 12-16 semanas de uso consistente.",
+      },
+      {
+        title: "2-4 UI Diárias: Ganhos Magros, Recuperação e Impacto Estético",
+        content: [
+          "Oxidação de gordura aprimorada, especialmente durante cardio em jejum.",
+          "Aumento do armazenamento de glicogênio pós-treino — músculos mais cheios.",
+          "Partição de nutrientes melhora: carboidratos direcionados ao músculo, não à gordura.",
+          "Articulações e tendões se recuperam mais rápido.",
+          "Physique visivelmente mais denso ao longo do tempo.",
+          "Melhor resposta ao volume de treinamento.",
+          "IGF-1 na faixa de 200-300 ng/dL para muitos usuários.",
+          "Mais fácil manter-se magro comendo na manutenção ou ligeiramente acima.",
+        ],
+        tip: "Efeitos colaterais tipicamente leves: rigidez nas mãos/pulsos, inchaço matinal moderado ou elevação leve da glicemia. Ideal para manutenção de physique, acúmulo de massa magra e recomposição corporal.",
+      },
+      {
+        title: "4-8 UI Diárias: Remodelação Completa e Prep de Competição",
+        content: [
+          "Remodelação corporal agressiva.",
+          "Retenção hídrica moderada a significativa.",
+          "Risco de resistência à insulina.",
+          "Requer acompanhamento médico regular.",
+        ],
+        warning: "Monitoramento obrigatório: glicemia de jejum, IGF-1, enzimas hepáticas e função tireoidiana. Muitos usuários introduzem berberina, metformina ou GLP-1s nesta fase.",
+      },
+      {
+        title: "6-10+ UI Diárias: Nível Elite e Uso Extremo",
+        content: [
+          "Aumentos massivos na capacidade de recuperação.",
+          "Perda de gordura acelerada quando combinada com medicamentos tireoidianos.",
+          "Plenitude muscular incomparável — visual denso, redondo e duro.",
+          "Mudanças visíveis semana a semana.",
+          "Impulso significativo na síntese de colágeno e reparo tecidual.",
+          "Maior chance de retenção hídrica, fadiga e instabilidade glicêmica.",
+          "IGF-1 em níveis suprafisiológicos (500-700+ ng/dL).",
+          "Possível disrupção do sono se o timing não for calibrado.",
+        ],
+        warning: "Tudo precisa ser monitorado. Esta faixa é melhor reservada para quando o objetivo é transformação, não sustentabilidade. Muitos rotacionam 4-8 semanas aqui antes de recuar para 2-4 UI.",
+      },
+    ],
+    precautions: [
+      { label: "Monitoramento", value: "Para doses acima de 4 UI, monitore obrigatoriamente: Glicemia de Jejum, IGF-1 e Função Tireoidiana (T3/T4/TSH)." },
+    ],
+    disclaimer: "A dose determina a direção. Não existe \"um protocolo certo\". Mais nem sempre é melhor. Mais inteligente sempre é. Fonte: Adaptado de Elevate Biohacking. O uso de HGH exógeno requer prescrição médica.",
   },
 
   "stacking-top-10": {
