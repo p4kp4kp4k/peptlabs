@@ -241,7 +241,7 @@ export default function Stacks() {
                   </div>
 
                   {/* Category badge */}
-                  <Badge className="text-[9px] bg-primary/15 text-primary border border-primary/25 font-semibold px-2 mb-2.5">
+                  <Badge variant="outline" className="text-[9px] bg-primary/15 text-primary border-primary/25 font-semibold px-2 mb-2.5">
                     {stack.sourceCategory}
                   </Badge>
 
