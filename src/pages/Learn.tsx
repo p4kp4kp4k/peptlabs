@@ -51,6 +51,7 @@ export default function Learn() {
   const navigate = useNavigate();
 
   const filtered = activeTab === "todos" ? guides : guides.filter((g) => g.tab === activeTab);
+  const showFeaturedGuide = activeTab === "todos" || activeTab === "guias";
 
   const tabCounts: Record<TabKey, number> = {
     todos: guides.length,
@@ -59,92 +60,103 @@ export default function Learn() {
     seguranca: guides.filter((g) => g.tab === "seguranca").length,
   };
 
-  // On mobile, if slug is selected, show only the content
-  // On desktop, always show two columns
   return (
-    <div className="flex h-[calc(100vh-3.5rem)]">
-      {/* Left Panel - Guide List */}
-      <div
-        className={cn(
-          "shrink-0 border-r border-border/30 flex flex-col",
-          slug ? "hidden md:flex md:w-80 lg:w-96" : "w-full md:w-80 lg:w-96"
-        )}
-      >
-        {/* Header - fixed */}
-        <div className="shrink-0 p-4 pb-0">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <BookOpen className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-base font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Aprender
-              </h1>
-              <p className="text-[10px] text-muted-foreground">
-                Guias, estudos e segurança
-              </p>
-            </div>
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto">
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <BookOpen className="h-5 w-5 text-primary" />
           </div>
-
-          {/* Stats row */}
-          <div className="mb-3 grid grid-cols-3 gap-2">
-            {[
-              { label: "Guias", value: guides.length, icon: FileText },
-              { label: "PRO", value: guides.filter((g) => g.isPro).length, icon: Lock },
-              { label: "Grátis", value: guides.filter((g) => !g.isPro).length, icon: Check },
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-lg border border-border/30 bg-card/60 p-2 text-center">
-                <stat.icon className="mx-auto mb-0.5 h-3 w-3 text-primary/70" />
-                <p className="text-sm font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                  {stat.value}
-                </p>
-                <p className="text-[9px] text-muted-foreground">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Tabs */}
-          <div className="flex flex-wrap gap-1.5 pb-3">
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => {
-                    setActiveTab(tab.key);
-                    if (slug) navigate("/app/learn");
-                  }}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-medium transition-all duration-200",
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
-                      : "bg-card border border-border/40 text-muted-foreground hover:text-foreground hover:border-primary/30"
-                  )}
-                >
-                  <tab.icon className="h-3 w-3" />
-                  <span>{tab.label}</span>
-                  <span
-                    className={cn(
-                      "ml-0.5 rounded-full px-1 py-0 text-[8px] font-bold",
-                      isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-secondary text-muted-foreground"
-                    )}
-                  >
-                    {tabCounts[tab.key]}
-                  </span>
-                </button>
-              );
-            })}
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              Aprender
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Guias, estudos científicos e segurança em um só lugar.
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Scrollable guide list */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin px-4 pb-4">
+      <div className="mb-6 grid grid-cols-3 gap-3">
+        {[
+          { label: "Guias Disponíveis", value: guides.length, icon: FileText },
+          { label: "Conteúdo PRO", value: guides.filter((g) => g.isPro).length, icon: Lock },
+          { label: "Gratuitos", value: guides.filter((g) => !g.isPro).length, icon: Check },
+        ].map((stat) => (
+          <div key={stat.label} className="rounded-xl border border-border/30 bg-card/60 p-3 text-center">
+            <stat.icon className="mx-auto mb-1 h-4 w-4 text-primary/70" />
+            <p className="text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              {stat.value}
+            </p>
+            <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mb-6 flex flex-wrap gap-2">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setActiveTab(tab.key);
+                if (slug) navigate("/app/learn");
+              }}
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-medium transition-all duration-200",
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                  : "bg-card border border-border/40 text-muted-foreground hover:text-foreground hover:border-primary/30"
+              )}
+            >
+              <tab.icon className="h-3.5 w-3.5" />
+              <span>{tab.label}</span>
+              <span
+                className={cn(
+                  "ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold",
+                  isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-secondary text-muted-foreground"
+                )}
+              >
+                {tabCounts[tab.key]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {slug ? (
+        <GuideDetailInline slug={slug} />
+      ) : (
+        <>
+          {showFeaturedGuide && (
+            <div className="mb-6 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card p-6 sm:p-8">
+              <div className="flex items-start gap-4">
+                <div className="hidden sm:flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                  <BookOpen className="h-7 w-7 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <Badge className="mb-2 border-0 bg-emerald-500/15 text-emerald-400 text-[9px]">GRATUITO · RECOMENDADO</Badge>
+                  <h2 className="mb-2 text-base sm:text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                    O Que São Peptídeos? Guia para Iniciantes
+                  </h2>
+                  <p className="mb-4 text-xs text-muted-foreground leading-relaxed max-w-xl">
+                    Entenda o que são peptídeos, como funcionam no corpo, a história desde a insulina até os neuropeptídeos modernos e por que são diferentes de esteroides.
+                  </p>
+                  <Button size="sm" className="text-xs gap-1.5" onClick={() => navigate("/app/learn/o-que-sao-peptideos")}>
+                    Ler Agora <ArrowRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === "seguranca" && <SafetyTab />}
 
-          <div className="space-y-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {filtered.map((guide) => {
               const CatIcon = categoryIcons[guide.category] || FileText;
-              const isSelected = slug === guide.slug;
               return (
                 <div
                   key={guide.slug}
@@ -153,57 +165,56 @@ export default function Learn() {
                     navigate(`/app/learn/${guide.slug}`);
                   }}
                   className={cn(
-                    "group relative overflow-hidden rounded-lg border transition-all duration-200",
-                    isSelected
-                      ? "border-primary/50 bg-primary/5 shadow-md shadow-primary/10"
-                      : "border-border/30 bg-card hover:border-primary/30 hover:shadow-sm",
+                    "group relative overflow-hidden rounded-xl border border-border/30 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5",
                     guide.isPro && !hasFullAccess ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
                   )}
                 >
                   <div className={cn("h-0.5 w-full bg-gradient-to-r", categoryGradients[guide.category] || "from-primary to-primary")} />
 
-                  <div className="p-3">
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <Badge className={cn("border-0 bg-gradient-to-r text-[8px] text-white px-1.5 py-0", categoryGradients[guide.category] || "from-primary to-primary")}>
+                  <div className="p-5">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary/60 shrink-0">
+                          <CatIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <Badge className={cn("border-0 bg-gradient-to-r text-[9px] text-white", categoryGradients[guide.category] || "from-primary to-primary")}>
                           {guide.category}
                         </Badge>
                       </div>
 
                       {guide.isPro && !hasFullAccess ? (
-                        <div className="flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 shrink-0">
-                          <Lock className="h-2 w-2 text-amber-400" />
-                          <span className="text-[8px] font-semibold text-amber-400">PRO</span>
+                        <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 shrink-0">
+                          <Lock className="h-2.5 w-2.5 text-amber-400" />
+                          <span className="text-[9px] font-semibold text-amber-400">PRO</span>
                         </div>
                       ) : guide.isPro && hasFullAccess ? (
-                        <div className="flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 shrink-0">
-                          <Unlock className="h-2 w-2 text-emerald-400" />
-                          <span className="text-[8px] font-semibold text-emerald-400">DESBLOQUEADO</span>
+                        <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 shrink-0">
+                          <Unlock className="h-2.5 w-2.5 text-emerald-400" />
+                          <span className="text-[9px] font-semibold text-emerald-400">DESBLOQUEADO</span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 shrink-0">
-                          <Check className="h-2 w-2 text-emerald-400" />
-                          <span className="text-[8px] font-semibold text-emerald-400">GRÁTIS</span>
+                        <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 shrink-0">
+                          <Check className="h-2.5 w-2.5 text-emerald-400" />
+                          <span className="text-[9px] font-semibold text-emerald-400">GRÁTIS</span>
                         </div>
                       )}
                     </div>
 
-                    <h3
-                      className={cn(
-                        "mb-1 text-[12px] font-semibold leading-snug transition-colors",
-                        isSelected ? "text-primary" : "text-foreground group-hover:text-primary"
-                      )}
-                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                    >
+                    <h3 className="mb-2 text-sm font-semibold leading-snug text-foreground group-hover:text-primary transition-colors" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                       {guide.title}
                     </h3>
-                    <p className="line-clamp-2 text-[10px] leading-relaxed text-muted-foreground">
+                    <p className="mb-4 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
                       {guide.description}
                     </p>
 
-                    <div className="mt-2 flex items-center gap-1.5 text-muted-foreground/50">
-                      <Clock className="h-2.5 w-2.5" />
-                      <span className="text-[9px]">{guide.date}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-muted-foreground/60">
+                        <Clock className="h-3 w-3" />
+                        <span className="text-[10px]">{guide.date}</span>
+                      </div>
+                      <span className="text-[11px] font-medium text-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                        {guide.isPro && !hasFullAccess ? "Desbloquear →" : "Ler →"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -212,55 +223,89 @@ export default function Learn() {
           </div>
 
           {filtered.length === 0 && (
-            <div className="rounded-lg border border-border/30 bg-card/60 p-8 text-center">
-              <Microscope className="mx-auto mb-2 h-6 w-6 text-muted-foreground/40" />
-              <p className="text-xs text-muted-foreground">Nenhum conteúdo nesta categoria.</p>
+            <div className="rounded-xl border border-border/30 bg-card/60 p-12 text-center">
+              <Microscope className="mx-auto mb-3 h-8 w-8 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">Nenhum conteúdo disponível nesta categoria ainda.</p>
+              <p className="mt-1 text-xs text-muted-foreground/60">Novos artigos são publicados semanalmente.</p>
             </div>
           )}
 
-          {/* Pricing CTA - only in list */}
           {!hasFullAccess && (
-            <div className="mt-4 rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 to-card p-4 text-center">
-              <Sparkles className="mx-auto mb-2 h-5 w-5 text-primary" />
-              <p className="text-[11px] font-semibold text-foreground mb-1">Acesso Completo</p>
-              <p className="text-[9px] text-muted-foreground mb-3">Desbloqueie todos os guias e protocolos</p>
-              <Button size="sm" className="text-[10px] h-7" onClick={() => navigate("/app/billing")}>
-                Assinar PRO
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Right Panel - Content */}
-      <div
-        className={cn(
-          "flex-1 min-w-0 flex flex-col",
-          !slug ? "hidden md:flex" : "flex"
-        )}
-      >
-        <div className="flex-1 overflow-y-auto scrollbar-thin">
-          {slug ? (
-            <div className="p-4 sm:p-6">
-              <GuideDetailInline slug={slug} />
-            </div>
-          ) : (
-            <div className="flex h-full items-center justify-center p-6">
-              <div className="text-center max-w-xs">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5 border border-primary/10">
-                  <BookOpen className="h-8 w-8 text-primary/30" />
+            <div className="mt-10 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card">
+              <div className="p-6 sm:p-8 text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+                  <Sparkles className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-sm font-semibold text-foreground mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                  Selecione um guia
-                </h3>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Escolha um guia na lista ao lado para visualizar o conteúdo completo aqui.
+                <h2 className="mb-2 text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  Acesso completo à Central de Conhecimento
+                </h2>
+                <p className="mx-auto mb-8 max-w-md text-xs text-muted-foreground">
+                  Desbloqueie todos os guias, estudos científicos e protocolos de segurança com evidência real.
                 </p>
+
+                <div className="grid gap-4 sm:grid-cols-3 max-w-3xl mx-auto">
+                  <div className="rounded-xl border border-border/30 bg-background p-5 text-left">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 mb-1">Mensal</p>
+                    <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                      R$147<span className="text-xs font-normal text-muted-foreground">/mês</span>
+                    </p>
+                    <p className="mb-4 text-[10px] text-muted-foreground">Cancele quando quiser</p>
+                    <ul className="mb-4 space-y-2">
+                      {["Biblioteca completa", "Calculadora avançada", "Guias atualizados", "Suporte e-mail"].map((feature) => (
+                        <li key={feature} className="flex items-start gap-2 text-[10px] text-muted-foreground">
+                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button variant="outline" size="sm" className="w-full text-xs">Começar</Button>
+                  </div>
+
+                  <div className="relative rounded-xl border-2 border-primary bg-background p-5 text-left shadow-lg shadow-primary/10">
+                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                      <Badge className="border-0 bg-primary text-primary-foreground text-[9px] shadow-lg">
+                        Mais Popular
+                      </Badge>
+                    </div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-primary mb-1">Vitalício</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>R$397</p>
+                      <span className="text-[10px] text-muted-foreground line-through">R$794</span>
+                    </div>
+                    <p className="mb-4 text-[10px] text-muted-foreground">Pagamento único · <span className="text-primary font-semibold">-50%</span></p>
+                    <ul className="mb-4 space-y-2">
+                      {["Tudo do Mensal", "Acesso antecipado", "Lives exclusivas", "Consultoria em grupo"].map((feature) => (
+                        <li key={feature} className="flex items-start gap-2 text-[10px] text-muted-foreground">
+                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button size="sm" className="w-full text-xs">Garantir Acesso</Button>
+                  </div>
+
+                  <div className="rounded-xl border border-border/30 bg-background p-5 text-left">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 mb-1">Premium</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>R$997</p>
+                      <span className="text-[10px] text-muted-foreground line-through">R$1.997</span>
+                    </div>
+                    <p className="mb-4 text-[10px] text-muted-foreground">Vitalício + comunidade · <span className="text-primary font-semibold">-50%</span></p>
+                    <ul className="mb-4 space-y-2">
+                      {["Tudo do Vitalício", "Fornecedores confiáveis", "Comunidade +700", "Suporte WhatsApp"].map((feature) => (
+                        <li key={feature} className="flex items-start gap-2 text-[10px] text-muted-foreground">
+                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button variant="outline" size="sm" className="w-full border-primary text-primary text-xs hover:bg-primary hover:text-primary-foreground">
+                      Pagar Uma Vez
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
