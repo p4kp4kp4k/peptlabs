@@ -217,6 +217,54 @@ export type Database = {
         }
         Relationships: []
       }
+      stacks: {
+        Row: {
+          benefits: string[] | null
+          category: string
+          created_at: string
+          description: string | null
+          duration: string | null
+          icon: string | null
+          id: string
+          name: string
+          peptides: Json
+          subtitle: string | null
+          timing: string | null
+          updated_at: string
+          warnings: string[] | null
+        }
+        Insert: {
+          benefits?: string[] | null
+          category: string
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          peptides?: Json
+          subtitle?: string | null
+          timing?: string | null
+          updated_at?: string
+          warnings?: string[] | null
+        }
+        Update: {
+          benefits?: string[] | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          peptides?: Json
+          subtitle?: string | null
+          timing?: string | null
+          updated_at?: string
+          warnings?: string[] | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
