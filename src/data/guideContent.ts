@@ -557,98 +557,56 @@ export const guideContents: Record<string, GuideContent> = {
   },
 
   "stacking-top-10": {
-    intro: "As melhores combinações de peptídeos por objetivo: recuperação, emagrecimento, cognição, longevidade, imunidade e mais.",
+    intro: "Stacking é a arte de combinar peptídeos para obter sinergia — onde o resultado final é maior que a soma das partes. A chave é entender quais peptídeos se complementam e quais devem ser evitados juntos.",
+    sections: [
+      {
+        title: "Top 10 Stacks Comprovados",
+        icon: "table",
+        table: [
+          { label: "Recuperação de Lesão", value: "BPC-157 + TB-500 — BPC: 250mcg 2x/dia; TB: 2.5mg 2x/sem — 6-12 sem" },
+          { label: "Emagrecimento", value: "Tirzepatida + MOTS-c — Tirz: 2.5-15mg/sem; MOTS: 5mg 2x/sem — 12-24 sem" },
+          { label: "Cognição/Nootrópico", value: "Selank + Semax — 200mcg/dia cada — 4-8 sem" },
+          { label: "Anti-Aging / Pele", value: "GHK-Cu + Epitalon — GHK: 2mg/dia; Epitalon: 5mg/dia — Ciclos anuais" },
+          { label: "Performance / GH", value: "CJC-1295 + Ipamorelin — 100mcg/200mcg antes dormir (5on/2off) — 3-6 meses" },
+          { label: "Imunidade", value: "Thymosin Alpha-1 — 1.5mg 2x/semana — 4-6 sem" },
+          { label: "Estética / Bronzeado", value: "Melanotan II — 250-500mcg EOD — Até cor desejada" },
+          { label: "Longevidade (Biorreg)", value: "Pinealon + Vilon — Protocolos 10-20 dias/ano — Ciclos anuais" },
+          { label: "Saúde Intestinal", value: "BPC-157 (Oral) + KPV — BPC: 500mcg 2x/dia; KPV: 500mcg/dia — 8-12 sem" },
+          { label: "Massa Muscular", value: "IGF-1 LR3 + PEG-MGF — IGF: 50mcg pré-treino; MGF: 200mcg pós — 4-6 sem" },
+        ],
+      },
+      {
+        title: "Interações Perigosas — Combinações a Evitar",
+        icon: "alert",
+        table: [
+          { label: "CJC-1295 + GHRP-6", value: "Hipoglicemia/Fome — Aumento massivo de grelina e cortisol" },
+          { label: "Tirzepatida + Semaglutida", value: "Desidratação/Vômito — Sobrecarga de receptores GLP-1/GIP" },
+          { label: "IGF-1 + Insulina", value: "Hipoglicemia Severa — Ambos reduzem glicose drasticamente" },
+        ],
+      },
+    ],
     steps: [
       {
-        title: "1. The Wolverine — Recuperação de Lesão",
+        title: "Framework para Montar seu Stack",
         content: [
-          "BPC-157 (250mcg 2x/dia) + TB-500 (2.5mg 2x/semana).",
-          "Taxa de sucesso de 85% em lesões de tecidos moles.",
-          "Ação sinérgica local (BPC) + sistêmica (TB-500).",
-          "Duração: 6-12 semanas.",
+          "1. Identifique a Dor Principal: ex: lesão no ombro.",
+          "2. Escolha o Peptídeo Âncora: ex: BPC-157.",
+          "3. Adicione o Sinergista: ex: TB-500 para mobilidade.",
+          "4. Defina o Suporte Sistêmico: ex: CJC/Ipa para reparo noturno.",
+          "5. Monitore Marcadores: ex: IGF-1, Proteína C-Reativa.",
         ],
       },
       {
-        title: "2. Metabolic Reset — Emagrecimento",
+        title: "Timing e Frequência",
         content: [
-          "Tirzepatida (2.5→15mg/semana) + MOTS-c (5mg 2x/semana).",
-          "Perda de peso de 15-25% em 6 meses.",
-          "Preservação de massa magra com MOTS-c.",
-          "Duração: 12-24 semanas.",
+          "Jejum (Manhã): Ideal para GHRHs (CJC-1295) e GHRPs (Ipamorelin) para maximizar o pulso natural de GH.",
+          "Antes de Dormir: Ideal para MK-677 e stacks de GH para aproveitar o ciclo circadiano.",
+          "Protocolo 5on/2off: Estratégia comum para evitar a dessensibilização de receptores de GH. Aplique de segunda a sexta e descanse no fim de semana.",
         ],
       },
-      {
-        title: "3. Neuro Boost — Cognição",
-        content: [
-          "Selank (200mcg/dia nasal) + Semax (200mcg/dia nasal).",
-          "Aumento de BDNF em até 200%.",
-          "Estado de foco calmo sem estimulantes.",
-          "Duração: 4-8 semanas.",
-        ],
-      },
-      {
-        title: "4. Fountain of Youth — Anti-Aging",
-        content: [
-          "GHK-Cu (2mg/dia SubQ) + Epithalon (5mg ciclos de 10-20 dias).",
-          "Ativação da telomerase.",
-          "Melhora na textura da pele.",
-          "Ciclos anuais.",
-        ],
-      },
-      {
-        title: "5. GH Optimizer — Performance",
-        content: [
-          "CJC-1295 no DAC (100mcg) + Ipamorelin (200mcg) antes de dormir.",
-          "Aumento de IGF-1 em 30-50%.",
-          "Melhora no sono profundo.",
-          "Regime 5on/2off por 3-6 meses.",
-        ],
-      },
-      {
-        title: "6. Iron Shield — Imunidade",
-        content: [
-          "Thymosin Alpha-1 (1.5mg 2x/semana SubQ).",
-          "Aprovado clinicamente em 35+ países.",
-          "Modula sem superestimular o sistema imune.",
-          "Duração: 4-6 semanas.",
-        ],
-      },
-      {
-        title: "7. Gut Restore — Saúde Intestinal",
-        content: [
-          "BPC-157 Oral (500mcg 2x/dia) + KPV (500mcg/dia).",
-          "Reparo direto da mucosa GI.",
-          "Redução de inflamação intestinal.",
-          "Duração: 8-12 semanas.",
-        ],
-      },
-      {
-        title: "8. Anabolic Edge — Massa Muscular",
-        content: [
-          "IGF-1 LR3 (50mcg pré-treino) + PEG-MGF (200mcg pós-treino).",
-          "Hiperplasia + hipertrofia muscular.",
-          "Ciclos curtos obrigatórios (4-6 semanas).",
-        ],
-        warning: "Risco de hipoglicemia — nunca combinar com insulina. Monitorar glicemia e IGF-1.",
-      },
-      {
-        title: "9. Bioregulator Protocol — Longevidade Celular",
-        content: [
-          "Pinealon (10mg) + Vilon (10mg) — ciclos de 10-20 dias.",
-          "Regulação epigenética.",
-          "Pesquisa de 40+ anos na Rússia.",
-          "Ciclos anuais.",
-        ],
-      },
-      {
-        title: "10. Sleep & Recovery — Sono Profundo",
-        content: [
-          "DSIP (100mcg antes de dormir) + CJC-1295/Ipamorelin.",
-          "Aumento do sono de ondas lentas.",
-          "Potencialização da liberação noturna de GH.",
-          "Duração: 4-8 semanas.",
-        ],
-      },
+    ],
+    precautions: [
+      { label: "⚠️ ATENÇÃO", value: "Nunca combine dois agonistas GLP-1 (ex: Tirzepatida + Semaglutida). O risco de desidratação e vômito é grave." },
     ],
     disclaimer: "Combinações de peptídeos devem ser supervisionadas por profissional de saúde qualificado.",
   },
