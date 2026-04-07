@@ -22,7 +22,10 @@ export default function Finder() {
   const [experience, setExperience] = useState<"beginner" | "intermediate" | "advanced">("intermediate");
   const [result, setResult] = useState<GeneratedProtocol | null>(null);
   const [saving, setSaving] = useState(false);
+  const [gateOpen, setGateOpen] = useState(false);
+  const [gateReason, setGateReason] = useState("");
   const { user } = useAuth();
+  const { canCreate } = useEntitlements();
   const { toast } = useToast();
 
   const goals = getAvailableGoals();
