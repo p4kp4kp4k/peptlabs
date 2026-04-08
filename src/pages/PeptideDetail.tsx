@@ -59,20 +59,21 @@ function Section({ id, icon, title, iconColor = "text-primary", action, children
     const el = ref.current;
     if (!el || manualToggle) return;
 
-    // Small delay so initial layout settles before observing
+    let observer: IntersectionObserver | null = null;
     const timeout = setTimeout(() => {
-      const observer = new IntersectionObserver(
+      observer = new IntersectionObserver(
         ([entry]) => {
-          if (manualToggle) return;
           setExpanded(entry.isIntersecting);
         },
         { threshold: 0.2, rootMargin: "0px 0px -20% 0px" }
       );
       observer.observe(el);
-      return () => observer.disconnect();
     }, 300);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      observer?.disconnect();
+    };
   }, [manualToggle]);
 
   const handleToggle = () => {
