@@ -51,31 +51,38 @@ function Section({ id, icon, title, iconColor = "text-primary", action, children
   id?: string; icon: React.ElementType; title: string; iconColor?: string; action?: React.ReactNode; children: React.ReactNode;
 }) {
   const ref = useRef<HTMLElement>(null);
-  const [expanded, setExpanded] = useState(false);
-  const [autoUsed, setAutoUsed] = useState(false); // once auto-expanded & left, no more auto
+  const [expanded, setExpanded] = useState(true);
+  const [autoCollapsed, setAutoCollapsed] = useState(false);
+  const lastScrollY = useRef(0);
   const Icon = icon;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || autoUsed) return;
+    if (!el || autoCollapsed) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setExpanded(true);
-        } else {
-          // Only collapse after it was auto-opened once
-          setExpanded(prev => {
-            if (prev) setAutoUsed(true); // mark: from now on, only manual
-            return false;
-          });
-        }
-      },
-      { threshold: 0.15, rootMargin: "-10% 0px -35% 0px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [autoUsed]);
+    lastScrollY.current = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const isScrollingUp = currentScrollY < lastScrollY.current;
+      lastScrollY.current = currentScrollY;
+
+      if (!isScrollingUp) return;
+
+      const rect = el.getBoundingClientRect();
+      const bandTop = window.innerHeight * 0.12;
+      const bandBottom = window.innerHeight * 0.72;
+      const isInCollapseBand = rect.bottom > bandTop && rect.top < bandBottom;
+
+      if (isInCollapseBand) {
+        setExpanded(false);
+        setAutoCollapsed(true);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [autoCollapsed]);
 
   const handleToggle = () => {
     setExpanded(prev => !prev);
