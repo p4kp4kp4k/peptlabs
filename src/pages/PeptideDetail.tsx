@@ -47,42 +47,17 @@ function normalizeInteractions(data: Json | null | undefined): Array<{ nome: str
 }
 
 /* ─── Collapsible section wrapper ─── */
-function Section({ id, icon, title, iconColor = "text-primary", action, children }: {
-  id?: string; icon: React.ElementType; title: string; iconColor?: string; action?: React.ReactNode; children: React.ReactNode;
+function Section({ id, icon, title, iconColor = "text-primary", action, children, collapseSignal }: {
+  id?: string; icon: React.ElementType; title: string; iconColor?: string; action?: React.ReactNode; children: React.ReactNode; collapseSignal: number;
 }) {
-  const ref = useRef<HTMLElement>(null);
   const [expanded, setExpanded] = useState(true);
-  const [autoCollapsed, setAutoCollapsed] = useState(false);
-  const lastScrollY = useRef(0);
   const Icon = icon;
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el || autoCollapsed) return;
-
-    lastScrollY.current = window.scrollY;
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const isScrollingUp = currentScrollY < lastScrollY.current;
-      lastScrollY.current = currentScrollY;
-
-      if (!isScrollingUp) return;
-
-      const rect = el.getBoundingClientRect();
-      const bandTop = window.innerHeight * 0.12;
-      const bandBottom = window.innerHeight * 0.72;
-      const isInCollapseBand = rect.bottom > bandTop && rect.top < bandBottom;
-
-      if (isInCollapseBand) {
-        setExpanded(false);
-        setAutoCollapsed(true);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [autoCollapsed]);
+    if (collapseSignal > 0) {
+      setExpanded(false);
+    }
+  }, [collapseSignal]);
 
   const handleToggle = () => {
     setExpanded(prev => !prev);
@@ -90,7 +65,7 @@ function Section({ id, icon, title, iconColor = "text-primary", action, children
 
   return (
     <ScrollReveal>
-      <section ref={ref} id={id} data-section-id={id} className="rounded-xl border border-border bg-card card-line overflow-hidden">
+      <section id={id} data-section-id={id} className="rounded-xl border border-border bg-card card-line overflow-hidden">
         {/* Header — always visible, clickable */}
         <button
           onClick={handleToggle}
@@ -155,6 +130,9 @@ export default function PeptideDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<string>("");
+  const [collapseSignal, setCollapseSignal] = useState(0);
+  const hasScrolledDown = useRef(false);
+  const hasAutoCollapsed = useRef(false);
 
   const { data: peptide, isLoading } = useQuery({
     queryKey: ["peptide", slug],
@@ -193,6 +171,34 @@ export default function PeptideDetail() {
     const timer = setTimeout(observeSections, 200);
     return () => clearTimeout(timer);
   }, [peptide, observeSections]);
+
+  useEffect(() => {
+    hasScrolledDown.current = false;
+    hasAutoCollapsed.current = false;
+    setCollapseSignal(0);
+
+    let lastScrollY = window.scrollY;
+    const downThreshold = Math.max(window.innerHeight * 0.75, 320);
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > downThreshold) {
+        hasScrolledDown.current = true;
+      }
+
+      const isScrollingUp = currentScrollY < lastScrollY;
+      if (isScrollingUp && hasScrolledDown.current && !hasAutoCollapsed.current) {
+        hasAutoCollapsed.current = true;
+        setCollapseSignal((value) => value + 1);
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [slug]);
 
   /* Loading */
   if (isLoading) {
@@ -311,10 +317,10 @@ export default function PeptideDetail() {
       {/* ── TWO-COLUMN LAYOUT: Content + Sticky Sidebar ── */}
       <div className="flex gap-5">
         {/* Main content */}
-        <div className="flex-1 min-w-0 space-y-4">
+        <div key={slug} className="flex-1 min-w-0 space-y-4">
 
       {/* ── SCORE ── */}
-      <Section id="score" icon={TrendingUp} title="Score do Peptídeo">
+      <Section collapseSignal={collapseSignal} id="score" icon={TrendingUp} title="Score do Peptídeo">
         <div className="flex items-center gap-4">
           <div className="relative flex h-20 w-20 items-center justify-center">
             <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
@@ -347,7 +353,7 @@ export default function PeptideDetail() {
 
       {/* ── MECHANISM ── */}
       {p.mechanism && (
-        <Section id="mechanism" icon={Zap} title="Mecanismo de Ação">
+        <Section collapseSignal={collapseSignal} id="mechanism" icon={Zap} title="Mecanismo de Ação">
           <p className="text-xs text-muted-foreground leading-relaxed mb-3">{p.mechanism}</p>
           {p.mechanism_points && p.mechanism_points.length > 0 && (
             <div className="space-y-1.5">
@@ -364,7 +370,7 @@ export default function PeptideDetail() {
 
       {/* ── BENEFITS ── */}
       {p.benefits && p.benefits.length > 0 && (
-        <Section id="benefits" icon={CheckCircle2} title="Benefícios Comprovados" iconColor="text-emerald-400">
+        <Section collapseSignal={collapseSignal} id="benefits" icon={CheckCircle2} title="Benefícios Comprovados" iconColor="text-emerald-400">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {p.benefits.map((b: string, i: number) => (
               <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/40 border border-border">
@@ -378,7 +384,7 @@ export default function PeptideDetail() {
 
       {/* ── SIDE EFFECTS ── */}
       {p.side_effects && (
-        <Section icon={AlertTriangle} title="Efeitos Colaterais" iconColor="text-amber-400">
+        <Section collapseSignal={collapseSignal} icon={AlertTriangle} title="Efeitos Colaterais" iconColor="text-amber-400">
           <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">
             <p className="text-xs text-muted-foreground leading-relaxed">{p.side_effects}</p>
           </div>
@@ -387,7 +393,7 @@ export default function PeptideDetail() {
 
       {/* ── TIMELINE ── */}
       {timelineData && timelineData.length > 0 && (
-        <Section id="timeline" icon={Clock} title="Timeline de Resultados" iconColor="text-sky-400">
+        <Section collapseSignal={collapseSignal} id="timeline" icon={Clock} title="Timeline de Resultados" iconColor="text-sky-400">
           <div className="space-y-0">
             {timelineData.map((t, i) => {
               const period = t.periodo || t.period || '';
@@ -411,7 +417,7 @@ export default function PeptideDetail() {
 
       {/* ── DOSAGE ── */}
       {(dosageRows?.length || p.dosage_info) && (
-        <Section id="dosage" icon={Syringe} title="Dosagem" action={<Button size="sm" variant="outline" className="text-[10px] gap-1 h-6" onClick={() => navigate("/app/calculator")}><Calculator className="h-3 w-3" /> Calculadora</Button>}>
+        <Section collapseSignal={collapseSignal} id="dosage" icon={Syringe} title="Dosagem" action={<Button size="sm" variant="outline" className="text-[10px] gap-1 h-6" onClick={() => navigate("/app/calculator")}><Calculator className="h-3 w-3" /> Calculadora</Button>}>
           {p.dosage_info && (
             <div className="p-3 rounded-lg bg-primary/5 border border-primary/15 mb-3">
               <p className="text-xs text-foreground font-medium leading-relaxed">{p.dosage_info}</p>
@@ -446,7 +452,7 @@ export default function PeptideDetail() {
 
       {/* ── PROTOCOLS ── */}
       {phases && phases.length > 0 && (
-        <Section id="protocols" icon={ListChecks} title="Fases do Protocolo">
+        <Section collapseSignal={collapseSignal} id="protocols" icon={ListChecks} title="Fases do Protocolo">
           <div className="overflow-x-auto -mx-1">
             <table className="w-full text-xs">
               <thead>
@@ -474,7 +480,7 @@ export default function PeptideDetail() {
 
       {/* ── RECONSTITUTION ── */}
       {p.reconstitution_steps && p.reconstitution_steps.length > 0 && (
-        <Section id="recon" icon={Beaker} title="Reconstituição">
+        <Section collapseSignal={collapseSignal} id="recon" icon={Beaker} title="Reconstituição">
           <div className="space-y-1.5">
             {p.reconstitution_steps.map((step, i) => (
               <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/40 border border-border">
@@ -488,7 +494,7 @@ export default function PeptideDetail() {
 
       {/* ── STACKS ── */}
       {stacksData && stacksData.length > 0 && (
-        <Section id="stacks" icon={Layers} title="Stacks Recomendados">
+        <Section collapseSignal={collapseSignal} id="stacks" icon={Layers} title="Stacks Recomendados">
           <div className="space-y-2.5">
             {stacksData.map((stack, i) => (
               <div key={i} className="p-3 rounded-lg bg-secondary/30 border border-border">
@@ -510,7 +516,7 @@ export default function PeptideDetail() {
 
       {/* ── INTERACTIONS ── */}
       {allInteractions.length > 0 && (
-        <Section id="interactions" icon={GitMerge} title="Interações">
+        <Section collapseSignal={collapseSignal} id="interactions" icon={GitMerge} title="Interações">
           <div className="space-y-1.5">
             {allInteractions.map((item, i) => (
               <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-lg bg-secondary/30 border border-border">
@@ -525,7 +531,7 @@ export default function PeptideDetail() {
 
       {/* ── REFERENCES ── */}
       {refs && refs.length > 0 && (
-        <Section id="refs" icon={BookOpen} title="Referências Científicas">
+        <Section collapseSignal={collapseSignal} id="refs" icon={BookOpen} title="Referências Científicas">
           <div className="space-y-1.5">
             {refs.map((ref, i) => (
               <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/30 border border-border">
