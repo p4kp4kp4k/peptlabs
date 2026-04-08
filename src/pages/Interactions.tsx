@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Shield, AlertTriangle, ShieldCheck, ShieldAlert, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Search, Shield, AlertTriangle, ShieldCheck, ShieldAlert, ChevronDown, CheckCircle2, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePeptidesWithInteractions } from "@/hooks/usePeptides";
 import type { PeptideWithInteractions, NormalizedInteraction } from "@/types";
