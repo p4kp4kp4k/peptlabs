@@ -713,11 +713,23 @@ function ResultCard({ label, value, sub, color, highlight }: {
 }
 
 function FormulaStep({ step, label, formula }: { step: string; label: string; formula: string }) {
+  // Extract the result (after the last "=")
+  const parts = formula.split("=");
+  const result = parts.length > 1 ? parts.pop()!.trim() : null;
+  const expression = parts.join("=").trim();
+
   return (
-    <div className="flex items-center gap-2">
-      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[9px] font-bold text-primary shrink-0">{step}</span>
-      <span className="text-[10px] font-semibold text-foreground w-20 shrink-0">{label}</span>
-      <code className="text-[10px] text-muted-foreground font-mono">{formula}</code>
+    <div className="flex items-center gap-2 py-1">
+      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-[9px] font-bold text-primary shrink-0">{step}</span>
+      <span className="text-[10px] font-bold text-foreground w-20 shrink-0">{label}</span>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <code className="text-[10px] text-muted-foreground font-mono">{expression} =</code>
+        {result && (
+          <span className="text-[11px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
+            {result}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
