@@ -39,30 +39,6 @@ export default function Library() {
         </p>
       </div>
 
-      {/* Featured */}
-      <div className="mb-6 rounded-xl border border-border/40 bg-card p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="h-20 w-20 shrink-0 rounded-lg bg-gradient-to-br from-orange-400 to-amber-600" />
-          <div className="flex-1">
-            <div className="mb-1 flex items-center gap-2">
-              <Badge className="border-0 bg-primary/15 text-primary text-[10px]">
-                <Sparkles className="mr-1 h-3 w-3" /> PEPTÍDEO DO DIA
-              </Badge>
-              <span className="text-[10px] text-muted-foreground">Acesso gratuito por 24h</span>
-            </div>
-            <h2 className="text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Tirzepatide</h2>
-            <p className="text-xs text-muted-foreground">Agonista duplo GIP/GLP-1 de última geração para emagrecimento.</p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {["Perda de peso significativa", "Redução de HbA1c", "Melhora cardiovascular"].map((t) => (
-                <span key={t} className="rounded-full bg-secondary px-2 py-0.5 text-[10px] text-secondary-foreground">{t}</span>
-              ))}
-            </div>
-          </div>
-          <Button size="sm" className="shrink-0 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
-            <Sparkles className="h-3.5 w-3.5" /> Explorar Agora
-          </Button>
-        </div>
-      </div>
 
       {/* Access bar */}
       <div className="mb-5 flex items-center justify-between rounded-lg border border-border/40 bg-card px-4 py-2.5">
