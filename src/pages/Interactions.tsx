@@ -149,6 +149,36 @@ export default function Interactions() {
     );
   };
 
+  // Compute which peptides are blocked (would create EVITAR interaction with any selected peptide)
+  const blockedSlugs = useMemo(() => {
+    if (tab !== "cross" || selectedPeptides.length === 0) return new Set<string>();
+
+    const blocked = new Set<string>();
+    const selectedData = selectedPeptides
+      .map((slug) => allPeptides.find((p) => p.slug === slug))
+      .filter(Boolean) as PeptideWithInteractions[];
+
+    for (const candidate of allPeptides) {
+      if (selectedPeptides.includes(candidate.slug)) continue;
+
+      for (const sel of selectedData) {
+        // Check sel → candidate
+        const matchAB = sel.interactions.find(
+          (int) => namesMatch(int.nome, candidate.name) && getStatusInfo(int.status).label === "EVITAR"
+        );
+        if (matchAB) { blocked.add(candidate.slug); break; }
+
+        // Check candidate → sel
+        const matchBA = candidate.interactions.find(
+          (int) => namesMatch(int.nome, sel.name) && getStatusInfo(int.status).label === "EVITAR"
+        );
+        if (matchBA) { blocked.add(candidate.slug); break; }
+      }
+    }
+
+    return blocked;
+  }, [tab, allPeptides, selectedPeptides]);
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-5">
       {/* Warning banner */}
