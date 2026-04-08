@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +50,7 @@ function normalizeInteractions(data: Json | null | undefined): Array<{ nome: str
 function Section({ id, children }: { id?: string; children: React.ReactNode }) {
   return (
     <ScrollReveal>
-      <section id={id} className="rounded-xl border border-border bg-card p-4 sm:p-5 card-line">{children}</section>
+      <section id={id} data-section-id={id} className="rounded-xl border border-border bg-card p-4 sm:p-5 card-line">{children}</section>
     </ScrollReveal>
   );
 }
@@ -97,6 +98,7 @@ function computeScore(p: any) {
 export default function PeptideDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState<string>("");
 
   const { data: peptide, isLoading } = useQuery({
     queryKey: ["peptide", slug],
@@ -108,10 +110,38 @@ export default function PeptideDetail() {
     enabled: !!slug,
   });
 
+  /* Intersection observer for active section tracking */
+  const observeSections = useCallback(() => {
+    const sectionEls = document.querySelectorAll("[data-section-id]");
+    if (!sectionEls.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) {
+          const id = (visible[0].target as HTMLElement).dataset.sectionId;
+          if (id) setActiveSection(id);
+        }
+      },
+      { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+    );
+
+    sectionEls.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!peptide) return;
+    const timer = setTimeout(observeSections, 200);
+    return () => clearTimeout(timer);
+  }, [peptide, observeSections]);
+
   /* Loading */
   if (isLoading) {
     return (
-      <div className="p-4 sm:p-5 space-y-4 max-w-4xl mx-auto">
+      <div className="p-4 sm:p-5 space-y-4 max-w-5xl mx-auto">
         <Skeleton className="h-6 w-40" />
         <Skeleton className="h-36 w-full rounded-xl" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{[1,2,3,4].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
@@ -148,22 +178,24 @@ export default function PeptideDetail() {
     { icon: RotateCcw, label: "Reconstituição", value: p.reconstitution || "—" },
   ];
 
-  /* Nav sections for sticky jump-links */
+  /* Nav sections */
   const sections = [
-    { id: "score", label: "Score" },
-    p.mechanism ? { id: "mechanism", label: "Mecanismo" } : null,
-    p.benefits?.length ? { id: "benefits", label: "Benefícios" } : null,
-    timelineData?.length ? { id: "timeline", label: "Timeline" } : null,
-    (dosageRows?.length || p.dosage_info) ? { id: "dosage", label: "Dosagem" } : null,
-    phases?.length ? { id: "protocols", label: "Protocolos" } : null,
-    p.reconstitution_steps?.length ? { id: "recon", label: "Reconstituição" } : null,
-    stacksData?.length ? { id: "stacks", label: "Stacks" } : null,
-    allInteractions.length ? { id: "interactions", label: "Interações" } : null,
-    refs?.length ? { id: "refs", label: "Referências" } : null,
-  ].filter(Boolean) as { id: string; label: string }[];
+    { id: "score", label: "Score", icon: TrendingUp },
+    p.mechanism ? { id: "mechanism", label: "Mecanismo", icon: Zap } : null,
+    p.benefits?.length ? { id: "benefits", label: "Benefícios", icon: CheckCircle2 } : null,
+    timelineData?.length ? { id: "timeline", label: "Timeline", icon: Clock } : null,
+    (dosageRows?.length || p.dosage_info) ? { id: "dosage", label: "Dosagem", icon: Syringe } : null,
+    phases?.length ? { id: "protocols", label: "Protocolos", icon: ListChecks } : null,
+    p.reconstitution_steps?.length ? { id: "recon", label: "Reconstituição", icon: Beaker } : null,
+    stacksData?.length ? { id: "stacks", label: "Stacks", icon: Layers } : null,
+    allInteractions.length ? { id: "interactions", label: "Interações", icon: GitMerge } : null,
+    refs?.length ? { id: "refs", label: "Referências", icon: BookOpen } : null,
+  ].filter(Boolean) as { id: string; label: string; icon: React.ElementType }[];
 
   return (
-    <div className="p-3 sm:p-5 max-w-4xl mx-auto space-y-4">
+    <div className="p-3 sm:p-5 max-w-5xl mx-auto">
+      {/* ── TOP AREA (full width) ── */}
+      <div className="space-y-4 mb-4">
 
       {/* ── HERO ── */}
       <div>
@@ -218,14 +250,12 @@ export default function PeptideDetail() {
         ))}
       </div>
 
-      {/* ── SECTION NAV ── */}
-      <div className="flex flex-wrap gap-1.5">
-        {sections.map(s => (
-          <a key={s.id} href={`#${s.id}`} className="rounded-md bg-secondary px-2.5 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors">
-            {s.label}
-          </a>
-        ))}
-      </div>
+      </div>{/* end top area */}
+
+      {/* ── TWO-COLUMN LAYOUT: Content + Sticky Sidebar ── */}
+      <div className="flex gap-5">
+        {/* Main content */}
+        <div className="flex-1 min-w-0 space-y-4">
 
       {/* ── SCORE ── */}
       <Section id="score">
@@ -473,6 +503,63 @@ export default function PeptideDetail() {
       )}
 
       <div className="h-6" />
+        </div>{/* end main content */}
+
+        {/* ── STICKY SIDEBAR TOC ── */}
+        <aside className="hidden lg:block w-48 shrink-0">
+          <div className="sticky top-5">
+            <div className="rounded-xl border border-border bg-card p-3 card-line">
+              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 pb-2 border-b border-border">
+                Sumário
+              </h4>
+              <nav className="space-y-0.5">
+                {sections.map(s => {
+                  const isActive = activeSection === s.id;
+                  return (
+                    <a
+                      key={s.id}
+                      href={`#${s.id}`}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] font-medium transition-all duration-200 ${
+                        isActive
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                      }`}
+                    >
+                      <div className={`flex h-4 w-4 items-center justify-center rounded shrink-0 transition-colors duration-200 ${
+                        isActive ? "bg-primary/20" : "bg-secondary"
+                      }`}>
+                        <s.icon className={`h-2.5 w-2.5 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                      </div>
+                      {s.label}
+                      {isActive && (
+                        <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+                      )}
+                    </a>
+                  );
+                })}
+              </nav>
+
+              {/* Score mini */}
+              <div className="mt-3 pt-3 border-t border-border">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex h-8 w-8 items-center justify-center">
+                    <svg className="h-8 w-8 -rotate-90" viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="hsl(var(--primary))" strokeWidth="3"
+                        strokeDasharray={`${(score / 100) * 87.96} 87.96`} strokeLinecap="round" />
+                    </svg>
+                    <span className="absolute text-[9px] font-black text-foreground">{score}</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-foreground leading-none">Score</p>
+                    <p className="text-[9px] text-muted-foreground">Scientific</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>{/* end two-column */}
     </div>
   );
 }
