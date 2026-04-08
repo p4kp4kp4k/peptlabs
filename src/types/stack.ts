@@ -28,6 +28,11 @@ export const STACK_CATEGORIES = [
   "Performance",
   "Imunidade",
   "Estética",
+  "Anti-aging",
+  "Cardiovascular",
+  "Hormonal",
+  "Neuroproteção",
+  "Sono / Recuperação",
 ] as const;
 
 export type StackCategory = (typeof STACK_CATEGORIES)[number];
