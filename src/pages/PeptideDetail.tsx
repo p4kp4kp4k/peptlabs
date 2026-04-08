@@ -63,9 +63,11 @@ function Section({ id, icon, title, iconColor = "text-primary", action, children
     const timeout = setTimeout(() => {
       observer = new IntersectionObserver(
         ([entry]) => {
+          // Only expand when entering the center band of the viewport
+          // Collapse immediately when leaving
           setExpanded(entry.isIntersecting);
         },
-        { threshold: 0.2, rootMargin: "0px 0px -20% 0px" }
+        { threshold: 0.15, rootMargin: "-15% 0px -40% 0px" }
       );
       observer.observe(el);
     }, 300);
