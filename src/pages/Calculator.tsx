@@ -444,16 +444,19 @@ export default function CalculatorPage() {
 
               {/* Result cards */}
               <div className="space-y-2">
-                <ResultCard label="Concentração" value={hasInput ? `${concentrationMcgPerMl.toFixed(1)} mcg/mL` : "—"} color="text-emerald-400" />
+                <ResultCard label="Concentração" value={hasInput ? `${concentrationMcgPerMl.toFixed(1)} mcg/mL` : "—"} color="text-emerald-400" numericValue={hasInput ? concentrationMcgPerMl : undefined} decimals={1} suffix="mcg/mL" />
                 <ResultCard
                   label="Volume a Injetar"
                   value={hasInput ? `${volumeToInjectMl.toFixed(3)} mL` : "—"}
                   sub={hasInput ? `≈ ${volumeToInjectUnits.toFixed(1)} UI (${selectedSyringe.label})` : undefined}
                   color="text-cyan-400"
                   highlight={hasInput}
+                  numericValue={hasInput ? volumeToInjectMl : undefined}
+                  decimals={3}
+                  suffix="mL"
                 />
-                <ResultCard label="Doses por Frasco" value={hasInput ? `${Math.floor(dosesPerVial)} doses` : "—"} color="text-violet-400" />
-                <ResultCard label="Total no Frasco" value={vial > 0 ? `${(vial * 1000).toLocaleString()} mcg` : "—"} color="text-amber-400" />
+                <ResultCard label="Doses por Frasco" value={hasInput ? `${Math.floor(dosesPerVial)} doses` : "—"} color="text-violet-400" numericValue={hasInput ? Math.floor(dosesPerVial) : undefined} decimals={0} suffix="doses" />
+                <ResultCard label="Total no Frasco" value={vial > 0 ? `${(vial * 1000).toLocaleString()} mcg` : "—"} color="text-amber-400" numericValue={vial > 0 ? vial * 1000 : undefined} decimals={0} suffix="mcg" />
               </div>
             </div>
           </div>
