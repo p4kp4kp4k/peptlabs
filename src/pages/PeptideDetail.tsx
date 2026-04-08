@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import type { Json } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Tag, Activity, Clock, RotateCcw, Zap, CheckCircle2,
   AlertTriangle, Syringe, ListChecks, Beaker, BookOpen, GitMerge,
-  Layers, ExternalLink, Calculator, Shield, TrendingUp, Star
+  Layers, ExternalLink, Calculator, Shield, TrendingUp, Star, ChevronDown
 } from "lucide-react";
 
 /* ─── Type helpers ─── */
@@ -46,26 +46,67 @@ function normalizeInteractions(data: Json | null | undefined): Array<{ nome: str
   return [...(old.peptideos || []), ...(old.outras_substancias || [])];
 }
 
-/* ─── Reusable section wrapper ─── */
-function Section({ id, children }: { id?: string; children: React.ReactNode }) {
+/* ─── Collapsible section wrapper ─── */
+function Section({ id, icon, title, iconColor = "text-primary", action, children }: {
+  id?: string; icon: React.ElementType; title: string; iconColor?: string; action?: React.ReactNode; children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [hasBeenSeen, setHasBeenSeen] = useState(false);
+  const Icon = icon;
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setExpanded(true);
+          setHasBeenSeen(true);
+        } else if (hasBeenSeen) {
+          setExpanded(false);
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -30% 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasBeenSeen]);
+
   return (
     <ScrollReveal>
-      <section id={id} data-section-id={id} className="rounded-xl border border-border bg-card p-4 sm:p-5 card-line">{children}</section>
-    </ScrollReveal>
-  );
-}
-
-function STitle({ icon: Icon, children, iconColor = "text-primary", action }: { icon: React.ElementType; children: React.ReactNode; iconColor?: string; action?: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between mb-3">
-      <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-        <div className={`flex h-6 w-6 items-center justify-center rounded-md bg-primary/8 ${iconColor}`}>
-          <Icon className="h-3.5 w-3.5" />
+      <section ref={ref} id={id} data-section-id={id} className="rounded-xl border border-border bg-card card-line overflow-hidden">
+        {/* Header — always visible, clickable */}
+        <button
+          onClick={() => setExpanded(prev => !prev)}
+          className="w-full flex items-center justify-between p-4 sm:px-5 sm:py-3.5 text-left group hover:bg-secondary/20 transition-colors"
+        >
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <div className={`flex h-6 w-6 items-center justify-center rounded-md bg-primary/8 ${iconColor}`}>
+              <Icon className="h-3.5 w-3.5" />
+            </div>
+            {title}
+          </h3>
+          <div className="flex items-center gap-2">
+            {action && <div onClick={e => e.stopPropagation()}>{action}</div>}
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${expanded ? "rotate-180" : ""}`} />
+          </div>
+        </button>
+        {/* Content — collapses */}
+        <div
+          className="transition-all duration-400 ease-in-out overflow-hidden"
+          style={{
+            maxHeight: expanded ? "2000px" : "0px",
+            opacity: expanded ? 1 : 0,
+            transition: "max-height 0.4s ease-in-out, opacity 0.3s ease-in-out",
+          }}
+        >
+          <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+            {children}
+          </div>
         </div>
-        {children}
-      </h3>
-      {action}
-    </div>
+      </section>
+    </ScrollReveal>
   );
 }
 
@@ -258,8 +299,7 @@ export default function PeptideDetail() {
         <div className="flex-1 min-w-0 space-y-4">
 
       {/* ── SCORE ── */}
-      <Section id="score">
-        <STitle icon={TrendingUp}>Score do Peptídeo</STitle>
+      <Section id="score" icon={TrendingUp} title="Score do Peptídeo">
         <div className="flex items-center gap-4">
           <div className="relative flex h-20 w-20 items-center justify-center">
             <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
@@ -292,8 +332,7 @@ export default function PeptideDetail() {
 
       {/* ── MECHANISM ── */}
       {p.mechanism && (
-        <Section id="mechanism">
-          <STitle icon={Zap}>Mecanismo de Ação</STitle>
+        <Section id="mechanism" icon={Zap} title="Mecanismo de Ação">
           <p className="text-xs text-muted-foreground leading-relaxed mb-3">{p.mechanism}</p>
           {p.mechanism_points && p.mechanism_points.length > 0 && (
             <div className="space-y-1.5">
@@ -310,8 +349,7 @@ export default function PeptideDetail() {
 
       {/* ── BENEFITS ── */}
       {p.benefits && p.benefits.length > 0 && (
-        <Section id="benefits">
-          <STitle icon={CheckCircle2} iconColor="text-emerald-400">Benefícios Comprovados</STitle>
+        <Section id="benefits" icon={CheckCircle2} title="Benefícios Comprovados" iconColor="text-emerald-400">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {p.benefits.map((b: string, i: number) => (
               <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/40 border border-border">
@@ -325,8 +363,7 @@ export default function PeptideDetail() {
 
       {/* ── SIDE EFFECTS ── */}
       {p.side_effects && (
-        <Section>
-          <STitle icon={AlertTriangle} iconColor="text-amber-400">Efeitos Colaterais</STitle>
+        <Section icon={AlertTriangle} title="Efeitos Colaterais" iconColor="text-amber-400">
           <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">
             <p className="text-xs text-muted-foreground leading-relaxed">{p.side_effects}</p>
           </div>
@@ -335,8 +372,7 @@ export default function PeptideDetail() {
 
       {/* ── TIMELINE ── */}
       {timelineData && timelineData.length > 0 && (
-        <Section id="timeline">
-          <STitle icon={Clock} iconColor="text-sky-400">Timeline de Resultados</STitle>
+        <Section id="timeline" icon={Clock} title="Timeline de Resultados" iconColor="text-sky-400">
           <div className="space-y-0">
             {timelineData.map((t, i) => {
               const period = t.periodo || t.period || '';
@@ -360,10 +396,7 @@ export default function PeptideDetail() {
 
       {/* ── DOSAGE ── */}
       {(dosageRows?.length || p.dosage_info) && (
-        <Section id="dosage">
-          <STitle icon={Syringe} action={<Button size="sm" variant="outline" className="text-[10px] gap-1 h-6" onClick={() => navigate("/app/calculator")}><Calculator className="h-3 w-3" /> Calculadora</Button>}>
-            Dosagem
-          </STitle>
+        <Section id="dosage" icon={Syringe} title="Dosagem" action={<Button size="sm" variant="outline" className="text-[10px] gap-1 h-6" onClick={() => navigate("/app/calculator")}><Calculator className="h-3 w-3" /> Calculadora</Button>}>
           {p.dosage_info && (
             <div className="p-3 rounded-lg bg-primary/5 border border-primary/15 mb-3">
               <p className="text-xs text-foreground font-medium leading-relaxed">{p.dosage_info}</p>
@@ -398,8 +431,7 @@ export default function PeptideDetail() {
 
       {/* ── PROTOCOLS ── */}
       {phases && phases.length > 0 && (
-        <Section id="protocols">
-          <STitle icon={ListChecks}>Fases do Protocolo</STitle>
+        <Section id="protocols" icon={ListChecks} title="Fases do Protocolo">
           <div className="overflow-x-auto -mx-1">
             <table className="w-full text-xs">
               <thead>
@@ -427,8 +459,7 @@ export default function PeptideDetail() {
 
       {/* ── RECONSTITUTION ── */}
       {p.reconstitution_steps && p.reconstitution_steps.length > 0 && (
-        <Section id="recon">
-          <STitle icon={Beaker}>Reconstituição</STitle>
+        <Section id="recon" icon={Beaker} title="Reconstituição">
           <div className="space-y-1.5">
             {p.reconstitution_steps.map((step, i) => (
               <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/40 border border-border">
@@ -442,8 +473,7 @@ export default function PeptideDetail() {
 
       {/* ── STACKS ── */}
       {stacksData && stacksData.length > 0 && (
-        <Section id="stacks">
-          <STitle icon={Layers}>Stacks Recomendados</STitle>
+        <Section id="stacks" icon={Layers} title="Stacks Recomendados">
           <div className="space-y-2.5">
             {stacksData.map((stack, i) => (
               <div key={i} className="p-3 rounded-lg bg-secondary/30 border border-border">
@@ -465,8 +495,7 @@ export default function PeptideDetail() {
 
       {/* ── INTERACTIONS ── */}
       {allInteractions.length > 0 && (
-        <Section id="interactions">
-          <STitle icon={GitMerge}>Interações</STitle>
+        <Section id="interactions" icon={GitMerge} title="Interações">
           <div className="space-y-1.5">
             {allInteractions.map((item, i) => (
               <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-lg bg-secondary/30 border border-border">
@@ -481,8 +510,7 @@ export default function PeptideDetail() {
 
       {/* ── REFERENCES ── */}
       {refs && refs.length > 0 && (
-        <Section id="refs">
-          <STitle icon={BookOpen}>Referências Científicas</STitle>
+        <Section id="refs" icon={BookOpen} title="Referências Científicas">
           <div className="space-y-1.5">
             {refs.map((ref, i) => (
               <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/30 border border-border">
