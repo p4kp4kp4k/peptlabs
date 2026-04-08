@@ -652,11 +652,14 @@ export default function CalculatorPage() {
             <CardContent className="px-4 pb-4">
               <div className="space-y-2">
                 {commonErrors.map((err, i) => (
-                  <div key={i} className="flex gap-3 items-start rounded-lg bg-secondary/20 p-2.5">
-                    <span className="text-[10px] text-destructive font-bold shrink-0">✗</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-muted-foreground line-through">{err.text}</p>
-                      <p className="text-[10px] text-emerald-400 mt-0.5">✓ {err.fix}</p>
+                  <div key={i} className="rounded-lg bg-secondary/20 p-3 space-y-1.5">
+                    <div className="flex items-start gap-2">
+                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-destructive/15 text-destructive text-[9px] font-bold shrink-0 mt-0.5">✗</span>
+                      <p className="text-[10px] text-destructive font-semibold">{err.text}</p>
+                    </div>
+                    <div className="flex items-start gap-2 ml-0.5">
+                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 text-[9px] font-bold shrink-0 mt-0.5">✓</span>
+                      <p className="text-[10px] text-emerald-400 font-medium">{err.fix}</p>
                     </div>
                   </div>
                 ))}
