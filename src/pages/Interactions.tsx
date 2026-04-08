@@ -62,7 +62,21 @@ export default function Interactions() {
 
   // Cross-check: gather all interactions from selected peptides
   const crossData = useMemo(() => {
-    if (selectedPeptides.length < 2) return { safe: false, interactions: [] };
+    if (selectedPeptides.length === 0) return { safe: false, interactions: [] };
+
+    // With 1 peptide, show all its interactions (same as individual)
+    if (selectedPeptides.length === 1) {
+      const p = allPeptides.find((pp) => pp.slug === selectedPeptides[0]);
+      if (!p) return { safe: false, interactions: [] };
+      return {
+        safe: false,
+        interactions: p.interactions.map((int) => ({
+          peptideA: p.name,
+          peptideB: int.nome,
+          interaction: int,
+        })),
+      };
+    }
 
     const selectedNames = selectedPeptides.map(
       (slug) => allPeptides.find((p) => p.slug === slug)?.name ?? ""
