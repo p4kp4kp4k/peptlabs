@@ -273,6 +273,9 @@ function IndividualResults({ peptide }: { peptide: PeptideWithInteractions | nul
           source={peptide.name}
           status={interaction.status}
           description={interaction.descricao}
+          mecanismo={interaction.mecanismo}
+          consequencias={interaction.consequencias}
+          fonte={interaction.fonte}
         />
       ))}
     </div>
