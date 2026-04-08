@@ -1,244 +1,350 @@
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Triangle, ArrowRight, Filter } from "lucide-react";
+import { Search, Shield, AlertTriangle, ShieldCheck, ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePeptidesWithInteractions } from "@/hooks/usePeptides";
-import type { StatusFilter } from "@/types";
-import { STATUS_FILTER_MAP } from "@/types";
+import type { PeptideWithInteractions, NormalizedInteraction } from "@/types";
 
 function getStatusInfo(status: string) {
   const s = status.toUpperCase();
   if (s.includes("SINÉR") || s.includes("SINERG") || s.includes("COMPATÍV"))
-    return { label: "SINÉRGICO", color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25" };
+    return { label: "SINÉRGICO", color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25", dot: "bg-emerald-400" };
   if (s.includes("COMPLEMENTAR"))
-    return { label: "COMPLEMENTAR", color: "bg-sky-500/15 text-sky-400 border-sky-500/25" };
+    return { label: "COMPLEMENTAR", color: "bg-sky-500/15 text-sky-400 border-sky-500/25", dot: "bg-sky-400" };
   if (s.includes("MONITOR") || s.includes("CAUTELA"))
-    return { label: "MONITORAR", color: "bg-amber-500/15 text-amber-400 border-amber-500/25" };
+    return { label: "MONITORAR", color: "bg-amber-500/15 text-amber-400 border-amber-500/25", dot: "bg-amber-400" };
   if (s.includes("EVITAR"))
-    return { label: "EVITAR", color: "bg-red-500/15 text-red-400 border-red-500/25" };
-  return { label: status, color: "bg-secondary text-muted-foreground border-border/30" };
+    return { label: "EVITAR", color: "bg-red-500/15 text-red-400 border-red-500/25", dot: "bg-red-400" };
+  return { label: status, color: "bg-secondary text-muted-foreground border-border/30", dot: "bg-muted-foreground" };
 }
 
+/** Get the "worst" interaction status for a peptide to show a warning icon */
+function getWorstStatus(interactions: NormalizedInteraction[]): "none" | "caution" | "avoid" {
+  let worst: "none" | "caution" | "avoid" = "none";
+  for (const i of interactions) {
+    const info = getStatusInfo(i.status);
+    if (info.label === "EVITAR") return "avoid";
+    if (info.label === "MONITORAR") worst = "caution";
+  }
+  return worst;
+}
+
+type Tab = "individual" | "cross";
+
 export default function Interactions() {
+  const [tab, setTab] = useState<Tab>("individual");
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [selectedPeptide, setSelectedPeptide] = useState<string | null>(null);
+  const [selectedPeptides, setSelectedPeptides] = useState<string[]>([]);
 
   const { data: allPeptides = [], isLoading } = usePeptidesWithInteractions();
-  
 
-  const categories = useMemo(() => {
-    return Array.from(new Set(allPeptides.map((p) => p.category))).sort();
-  }, [allPeptides]);
+  const filteredPeptides = useMemo(() => {
+    if (!search.trim()) return allPeptides;
+    const q = search.toLowerCase();
+    return allPeptides.filter((p) => p.name.toLowerCase().includes(q));
+  }, [allPeptides, search]);
 
-  const stats = useMemo(() => {
-    const all = allPeptides.flatMap((p) => p.interactions);
-    return {
-      total: all.length,
-      synergic: all.filter((i) => getStatusInfo(i.status).label === "SINÉRGICO").length,
-      complementary: all.filter((i) => getStatusInfo(i.status).label === "COMPLEMENTAR").length,
-      caution: all.filter((i) => getStatusInfo(i.status).label === "MONITORAR").length,
-      avoid: all.filter((i) => getStatusInfo(i.status).label === "EVITAR").length,
-    };
-  }, [allPeptides]);
+  // Individual tab: selected peptide's interactions
+  const individualData = useMemo(() => {
+    if (!selectedPeptide) return null;
+    return allPeptides.find((p) => p.slug === selectedPeptide) ?? null;
+  }, [allPeptides, selectedPeptide]);
 
-  const filtered = useMemo(() => {
-    let result = allPeptides;
-
-    if (selectedCategory) {
-      result = result.filter((p) => p.category === selectedCategory);
+  // Cross-check tab: find interactions between selected peptides
+  const crossData = useMemo(() => {
+    if (selectedPeptides.length < 2) return [];
+    const results: { peptideA: string; peptideB: string; interaction: NormalizedInteraction }[] = [];
+    
+    for (let i = 0; i < selectedPeptides.length; i++) {
+      const pA = allPeptides.find((p) => p.slug === selectedPeptides[i]);
+      if (!pA) continue;
+      for (let j = i + 1; j < selectedPeptides.length; j++) {
+        const pBName = allPeptides.find((p) => p.slug === selectedPeptides[j])?.name;
+        if (!pBName) continue;
+        const match = pA.interactions.find(
+          (int) => int.nome.toLowerCase() === pBName.toLowerCase()
+        );
+        if (match) {
+          results.push({ peptideA: pA.name, peptideB: pBName, interaction: match });
+        }
+      }
     }
+    return results;
+  }, [allPeptides, selectedPeptides]);
 
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.interactions.some(
-            (i) => i.nome.toLowerCase().includes(q) || i.descricao.toLowerCase().includes(q)
-          )
-      );
-    }
-
-    if (statusFilter !== "all") {
-      const target = STATUS_FILTER_MAP[statusFilter];
-      result = result
-        .map((p) => ({
-          ...p,
-          interactions: p.interactions.filter((i) => getStatusInfo(i.status).label === target),
-        }))
-        .filter((p) => p.interactions.length > 0);
-    }
-
-    return result;
-  }, [allPeptides, selectedCategory, search, statusFilter]);
-
-  const statusFilters: { key: StatusFilter; label: string; count: number; dot: string }[] = [
-    { key: "all", label: "Todos", count: stats.total, dot: "bg-muted-foreground" },
-    { key: "synergic", label: "Sinérgicos", count: stats.synergic, dot: "bg-emerald-400" },
-    { key: "complementary", label: "Complementares", count: stats.complementary, dot: "bg-sky-400" },
-    { key: "caution", label: "Monitorar", count: stats.caution, dot: "bg-amber-400" },
-    { key: "avoid", label: "Evitar", count: stats.avoid, dot: "bg-red-400" },
-  ];
+  const toggleCrossPeptide = (slug: string) => {
+    setSelectedPeptides((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+    );
+  };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-5">
+      {/* Warning banner */}
+      <div className="flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-4 py-3">
+        <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-xs font-bold text-amber-300 uppercase tracking-wide">⚡ Aviso Importante</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+            Esta ferramenta é apenas informativa e educacional. NÃO substitui orientação médica profissional. Sempre consulte um médico antes de iniciar, alterar ou combinar qualquer protocolo de peptídeos ou medicamentos.
+          </p>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="space-y-1">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-            <Triangle className="h-4 w-4 text-primary" />
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Interações entre Peptídeos
-          </h1>
-        </div>
-        <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
-          Matriz de compatibilidade entre peptídeos e outras substâncias. Consulte antes de montar seus protocolos.
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          Verificador de Interações
+        </h1>
+        <p className="text-xs text-muted-foreground">
+          Verifique interações medicamentosas e combinações perigosas
         </p>
       </div>
 
-      {/* Status filter pills */}
-      <div className="flex flex-wrap gap-2">
-        {statusFilters.map((sf) => (
-          <button
-            key={sf.key}
-            onClick={() => setStatusFilter(sf.key)}
-            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
-              statusFilter === sf.key
-                ? "border-primary/40 bg-primary/10 text-primary"
-                : "border-border/30 bg-card/60 text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <span className={`h-2 w-2 rounded-full ${sf.dot}`} />
-            {sf.label}
-            <span className="text-[10px] font-bold opacity-70">{sf.count}</span>
-          </button>
-        ))}
+      {/* Tabs */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setTab("individual")}
+          className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-semibold transition-all ${
+            tab === "individual"
+              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+              : "bg-card/60 text-muted-foreground border border-border/30 hover:text-foreground"
+          }`}
+        >
+          <ShieldCheck className="h-3.5 w-3.5" />
+          Peptídeo Individual
+        </button>
+        <button
+          onClick={() => setTab("cross")}
+          className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-semibold transition-all ${
+            tab === "cross"
+              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+              : "bg-card/60 text-muted-foreground border border-border/30 hover:text-foreground"
+          }`}
+        >
+          <ShieldAlert className="h-3.5 w-3.5" />
+          Verificação Cruzada
+        </button>
       </div>
 
-      {/* Search + Category */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative max-w-sm flex-1">
+      {/* Peptide selector card */}
+      <div className="rounded-xl border border-border/25 bg-card/70 p-4 space-y-3">
+        <p className="text-xs font-semibold text-foreground">
+          {tab === "individual" ? "Selecione um peptídeo:" : "Selecione 2 ou mais peptídeos para verificar:"}
+        </p>
+
+        {/* Search */}
+        <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar peptídeos ou substâncias..."
+            placeholder="Buscar peptídeo..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-9 pl-9 text-xs border-border/40 bg-card/60"
+            className="h-9 pl-9 text-xs border-border/40 bg-background/50"
           />
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={`rounded-full px-3 py-1 text-[10px] font-semibold transition-colors ${
-              !selectedCategory
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Todos
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
-              className={`rounded-full px-3 py-1 text-[10px] font-semibold transition-colors ${
-                selectedCategory === cat
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+
+        {/* Peptide chips */}
+        {isLoading ? (
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <div key={i} className="h-7 w-24 rounded-md bg-secondary/50 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-x-3 gap-y-2 max-h-[220px] overflow-y-auto pr-1">
+            {filteredPeptides.map((p) => {
+              const worst = getWorstStatus(p.interactions);
+              const isSelected = tab === "individual"
+                ? selectedPeptide === p.slug
+                : selectedPeptides.includes(p.slug);
+
+              return (
+                <button
+                  key={p.slug}
+                  onClick={() => {
+                    if (tab === "individual") {
+                      setSelectedPeptide(selectedPeptide === p.slug ? null : p.slug);
+                    } else {
+                      toggleCrossPeptide(p.slug);
+                    }
+                  }}
+                  className={`inline-flex items-center gap-1 text-xs font-medium py-1 px-0.5 transition-all rounded-sm ${
+                    isSelected
+                      ? "text-primary font-bold underline underline-offset-2"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <span className={isSelected ? "text-primary" : ""}>{p.name}</span>
+                  {worst === "caution" && (
+                    <AlertTriangle className="h-3 w-3 text-amber-400" />
+                  )}
+                  {worst === "avoid" && (
+                    <AlertTriangle className="h-3 w-3 text-red-400" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Loading */}
-      {isLoading && (
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-32 rounded-xl bg-card/50 animate-pulse border border-border/20" />
-          ))}
-        </div>
+      {/* Results area */}
+      {tab === "individual" && (
+        <IndividualResults peptide={individualData} />
       )}
-
-      {/* Empty */}
-      {!isLoading && filtered.length === 0 && (
-        <div className="text-center py-16">
-          <Triangle className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Nenhuma interação encontrada.</p>
-        </div>
+      {tab === "cross" && (
+        <CrossResults 
+          results={crossData} 
+          selectedCount={selectedPeptides.length} 
+        />
       )}
+    </div>
+  );
+}
 
-      {/* Interaction cards */}
-      {!isLoading && filtered.map((peptide) => {
-        return (
-          <div key={peptide.slug} className="rounded-xl border border-border/25 bg-card/70 overflow-hidden">
-            {/* Peptide header */}
-            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/15 bg-card/40">
-              <div className="flex items-center gap-3 min-w-0">
-                <Link
-                  to={`/peptide/${peptide.slug}`}
-                  className="text-sm font-bold text-foreground hover:text-primary transition-colors truncate"
-                >
-                  {peptide.name}
-                </Link>
-                <Badge variant="outline" className="text-[9px] bg-primary/15 text-primary border-primary/25 font-semibold px-2 shrink-0">
-                  {peptide.category}
-                </Badge>
-              </div>
-              <span className="text-[10px] text-muted-foreground shrink-0">
-                {peptide.interactions.length} interações
-              </span>
-            </div>
+function IndividualResults({ peptide }: { peptide: PeptideWithInteractions | null }) {
+  if (!peptide) {
+    return (
+      <div className="rounded-xl border border-border/25 bg-card/70 py-16 text-center">
+        <Shield className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
+        <p className="text-sm font-semibold text-muted-foreground">Selecione um peptídeo para começar</p>
+        <p className="text-[11px] text-muted-foreground/60 mt-1">
+          Escolha um peptídeo acima para ver todas as interações medicamentosas conhecidas.
+        </p>
+      </div>
+    );
+  }
 
-            {/* Interactions table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border/20">
-                    <th className="text-left py-2 px-4 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider w-[180px]">
-                      Substância
-                    </th>
-                    <th className="text-left py-2 px-4 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider w-[120px]">
-                      Status
-                    </th>
-                    <th className="text-left py-2 px-4 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">
-                      Descrição
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {peptide.interactions.map((interaction, i) => {
-                    const info = getStatusInfo(interaction.status);
-                    return (
-                      <tr
-                        key={i}
-                        className="border-b border-border/10 last:border-0 hover:bg-secondary/20 transition-colors"
-                      >
-                        <td className="py-2.5 px-4 text-foreground font-medium whitespace-nowrap">
-                          {interaction.nome}
-                        </td>
-                        <td className="py-2.5 px-4">
-                          <Badge className={`text-[9px] ${info.color} border font-bold px-2`}>
-                            {info.label}
-                          </Badge>
-                        </td>
-                        <td className="py-2.5 px-4 text-muted-foreground leading-relaxed">
-                          {interaction.descricao}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      })}
+  return (
+    <div className="rounded-xl border border-border/25 bg-card/70 overflow-hidden">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/15 bg-card/40">
+        <div className="flex items-center gap-3">
+          <Link
+            to={`/peptide/${peptide.slug}`}
+            className="text-sm font-bold text-foreground hover:text-primary transition-colors"
+          >
+            {peptide.name}
+          </Link>
+          <Badge variant="outline" className="text-[9px] bg-primary/15 text-primary border-primary/25 font-semibold px-2">
+            {peptide.category}
+          </Badge>
+        </div>
+        <span className="text-[10px] text-muted-foreground">
+          {peptide.interactions.length} interações
+        </span>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-border/20">
+              <th className="text-left py-2 px-4 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider w-[180px]">
+                Substância
+              </th>
+              <th className="text-left py-2 px-4 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider w-[120px]">
+                Status
+              </th>
+              <th className="text-left py-2 px-4 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">
+                Descrição
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {peptide.interactions.map((interaction, i) => {
+              const info = getStatusInfo(interaction.status);
+              return (
+                <tr key={i} className="border-b border-border/10 last:border-0 hover:bg-secondary/20 transition-colors">
+                  <td className="py-2.5 px-4 text-foreground font-medium whitespace-nowrap">
+                    {interaction.nome}
+                  </td>
+                  <td className="py-2.5 px-4">
+                    <Badge className={`text-[9px] ${info.color} border font-bold px-2`}>
+                      {info.label}
+                    </Badge>
+                  </td>
+                  <td className="py-2.5 px-4 text-muted-foreground leading-relaxed">
+                    {interaction.descricao}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CrossResults({ results, selectedCount }: { results: { peptideA: string; peptideB: string; interaction: NormalizedInteraction }[]; selectedCount: number }) {
+  if (selectedCount < 2) {
+    return (
+      <div className="rounded-xl border border-border/25 bg-card/70 py-16 text-center">
+        <Shield className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
+        <p className="text-sm font-semibold text-muted-foreground">Selecione um peptídeo para começar</p>
+        <p className="text-[11px] text-muted-foreground/60 mt-1">
+          Escolha um peptídeo acima para ver todas as interações medicamentosas conhecidas.
+        </p>
+      </div>
+    );
+  }
+
+  if (results.length === 0) {
+    return (
+      <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 py-12 text-center">
+        <ShieldCheck className="h-10 w-10 text-emerald-400/40 mx-auto mb-3" />
+        <p className="text-sm font-semibold text-emerald-400">Nenhuma interação encontrada</p>
+        <p className="text-[11px] text-muted-foreground/60 mt-1">
+          Não foram encontradas interações conhecidas entre os peptídeos selecionados.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-border/25 bg-card/70 overflow-hidden">
+      <div className="px-4 py-3 border-b border-border/15 bg-card/40">
+        <p className="text-sm font-bold text-foreground">
+          {results.length} interação(ões) encontrada(s)
+        </p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-border/20">
+              <th className="text-left py-2 px-4 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">
+                Peptídeo A
+              </th>
+              <th className="text-left py-2 px-4 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">
+                Peptídeo B
+              </th>
+              <th className="text-left py-2 px-4 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider w-[120px]">
+                Status
+              </th>
+              <th className="text-left py-2 px-4 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">
+                Descrição
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {results.map((r, i) => {
+              const info = getStatusInfo(r.interaction.status);
+              return (
+                <tr key={i} className="border-b border-border/10 last:border-0 hover:bg-secondary/20 transition-colors">
+                  <td className="py-2.5 px-4 text-foreground font-medium whitespace-nowrap">{r.peptideA}</td>
+                  <td className="py-2.5 px-4 text-foreground font-medium whitespace-nowrap">{r.peptideB}</td>
+                  <td className="py-2.5 px-4">
+                    <Badge className={`text-[9px] ${info.color} border font-bold px-2`}>{info.label}</Badge>
+                  </td>
+                  <td className="py-2.5 px-4 text-muted-foreground leading-relaxed">{r.interaction.descricao}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
