@@ -52,33 +52,43 @@ function Section({ id, icon, title, iconColor = "text-primary", action, children
 }) {
   const ref = useRef<HTMLElement>(null);
   const [expanded, setExpanded] = useState(false);
-  const [hasBeenSeen, setHasBeenSeen] = useState(false);
+  const [manualToggle, setManualToggle] = useState(false);
   const Icon = icon;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setExpanded(true);
-          setHasBeenSeen(true);
-        } else if (hasBeenSeen) {
-          setExpanded(false);
-        }
-      },
-      { threshold: 0.15, rootMargin: "0px 0px -30% 0px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasBeenSeen]);
+    if (!el || manualToggle) return;
+
+    let observer: IntersectionObserver | null = null;
+    const timeout = setTimeout(() => {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          setExpanded(entry.isIntersecting);
+        },
+        { threshold: 0.2, rootMargin: "0px 0px -20% 0px" }
+      );
+      observer.observe(el);
+    }, 300);
+
+    return () => {
+      clearTimeout(timeout);
+      observer?.disconnect();
+    };
+  }, [manualToggle]);
+
+  const handleToggle = () => {
+    setManualToggle(true);
+    setExpanded(prev => !prev);
+    // Re-enable auto after 5s
+    setTimeout(() => setManualToggle(false), 5000);
+  };
 
   return (
     <ScrollReveal>
       <section ref={ref} id={id} data-section-id={id} className="rounded-xl border border-border bg-card card-line overflow-hidden">
         {/* Header — always visible, clickable */}
         <button
-          onClick={() => setExpanded(prev => !prev)}
+          onClick={handleToggle}
           className="w-full flex items-center justify-between p-4 sm:px-5 sm:py-3.5 text-left group hover:bg-secondary/20 transition-colors"
         >
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
