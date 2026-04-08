@@ -10,7 +10,7 @@ import type { Json } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Tag, Activity, Clock, RotateCcw, Zap, CheckCircle2,
   AlertTriangle, Syringe, ListChecks, Beaker, BookOpen, GitMerge,
-  Layers, ExternalLink, Calculator, Shield, TrendingUp, Star
+  Layers, ExternalLink, Calculator, Shield, TrendingUp, Star, ChevronDown
 } from "lucide-react";
 
 /* ─── Type helpers ─── */
