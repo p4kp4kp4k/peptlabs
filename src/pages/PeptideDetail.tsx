@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { CalculatorModal } from "@/components/peptide/CalculatorModal";
 import type { Json } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Tag, Activity, Clock, RotateCcw, Zap, CheckCircle2,
@@ -131,6 +132,7 @@ export default function PeptideDetail() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<string>("");
   const [collapseSignal, setCollapseSignal] = useState(0);
+  const [calcOpen, setCalcOpen] = useState(false);
   const hasScrolledDown = useRef(false);
   const hasAutoCollapsed = useRef(false);
 
@@ -285,7 +287,7 @@ export default function PeptideDetail() {
 
             {/* Quick action buttons */}
             <div className="flex flex-wrap gap-2 mt-3">
-              <Button size="sm" variant="outline" className="text-[11px] gap-1.5 h-7" onClick={() => navigate("/app/calculator")}>
+              <Button size="sm" variant="outline" className="text-[11px] gap-1.5 h-7" onClick={() => setCalcOpen(true)}>
                 <Calculator className="h-3 w-3" /> Calcular Dose
               </Button>
               <Button size="sm" variant="outline" className="text-[11px] gap-1.5 h-7" onClick={() => navigate("/app/compare")}>
@@ -417,7 +419,7 @@ export default function PeptideDetail() {
 
       {/* ── DOSAGE ── */}
       {(dosageRows?.length || p.dosage_info) && (
-        <Section collapseSignal={collapseSignal} id="dosage" icon={Syringe} title="Dosagem" action={<Button size="sm" variant="outline" className="text-[10px] gap-1 h-6" onClick={() => navigate("/app/calculator")}><Calculator className="h-3 w-3" /> Calculadora</Button>}>
+        <Section collapseSignal={collapseSignal} id="dosage" icon={Syringe} title="Dosagem" action={<Button size="sm" variant="outline" className="text-[10px] gap-1 h-6" onClick={() => setCalcOpen(true)}><Calculator className="h-3 w-3" /> Calculadora</Button>}>
           {p.dosage_info && (
             <div className="p-3 rounded-lg bg-primary/5 border border-primary/15 mb-3">
               <p className="text-xs text-foreground font-medium leading-relaxed">{p.dosage_info}</p>
@@ -609,6 +611,12 @@ export default function PeptideDetail() {
           </div>
         </aside>
       </div>{/* end two-column */}
+
+      <CalculatorModal
+        open={calcOpen}
+        onOpenChange={setCalcOpen}
+        peptideName={p.name}
+      />
     </div>
   );
 }
