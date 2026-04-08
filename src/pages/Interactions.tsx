@@ -257,11 +257,14 @@ export default function Interactions() {
               const isSelected = tab === "individual"
                 ? selectedPeptide === p.slug
                 : selectedPeptides.includes(p.slug);
+              const isBlocked = tab === "cross" && !isSelected && blockedSlugs.has(p.slug);
 
               return (
                 <button
                   key={p.slug}
+                  disabled={isBlocked}
                   onClick={() => {
+                    if (isBlocked) return;
                     if (tab === "individual") {
                       setSelectedPeptide(selectedPeptide === p.slug ? null : p.slug);
                     } else {
@@ -271,15 +274,19 @@ export default function Interactions() {
                   className={`inline-flex items-center gap-1 text-xs font-medium py-1 px-1.5 transition-all rounded ${
                     isSelected
                       ? "bg-primary/20 text-primary font-bold ring-1 ring-primary/40"
-                      : "text-muted-foreground hover:text-foreground"
+                      : isBlocked
+                        ? "text-muted-foreground/30 line-through cursor-not-allowed opacity-40"
+                        : "text-muted-foreground hover:text-foreground"
                   }`}
+                  title={isBlocked ? "Combinação não segura com os peptídeos selecionados" : undefined}
                 >
                   {isSelected && <span className="text-primary">✓</span>}
+                  {isBlocked && <ShieldAlert className="h-3 w-3 text-red-400/50" />}
                   <span>{p.name}</span>
-                  {worst === "caution" && (
+                  {!isBlocked && worst === "caution" && (
                     <AlertTriangle className="h-3 w-3 text-amber-400" />
                   )}
-                  {worst === "avoid" && (
+                  {!isBlocked && worst === "avoid" && (
                     <AlertTriangle className="h-3 w-3 text-red-400" />
                   )}
                 </button>
