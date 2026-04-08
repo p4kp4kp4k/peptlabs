@@ -332,8 +332,7 @@ export default function PeptideDetail() {
 
       {/* ── MECHANISM ── */}
       {p.mechanism && (
-        <Section id="mechanism">
-          <STitle icon={Zap}>Mecanismo de Ação</STitle>
+        <Section id="mechanism" icon={Zap} title="Mecanismo de Ação">
           <p className="text-xs text-muted-foreground leading-relaxed mb-3">{p.mechanism}</p>
           {p.mechanism_points && p.mechanism_points.length > 0 && (
             <div className="space-y-1.5">
@@ -350,8 +349,7 @@ export default function PeptideDetail() {
 
       {/* ── BENEFITS ── */}
       {p.benefits && p.benefits.length > 0 && (
-        <Section id="benefits">
-          <STitle icon={CheckCircle2} iconColor="text-emerald-400">Benefícios Comprovados</STitle>
+        <Section id="benefits" icon={CheckCircle2} title="Benefícios Comprovados" iconColor="text-emerald-400">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {p.benefits.map((b: string, i: number) => (
               <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/40 border border-border">
@@ -365,8 +363,7 @@ export default function PeptideDetail() {
 
       {/* ── SIDE EFFECTS ── */}
       {p.side_effects && (
-        <Section>
-          <STitle icon={AlertTriangle} iconColor="text-amber-400">Efeitos Colaterais</STitle>
+        <Section icon={AlertTriangle} title="Efeitos Colaterais" iconColor="text-amber-400">
           <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">
             <p className="text-xs text-muted-foreground leading-relaxed">{p.side_effects}</p>
           </div>
@@ -375,8 +372,7 @@ export default function PeptideDetail() {
 
       {/* ── TIMELINE ── */}
       {timelineData && timelineData.length > 0 && (
-        <Section id="timeline">
-          <STitle icon={Clock} iconColor="text-sky-400">Timeline de Resultados</STitle>
+        <Section id="timeline" icon={Clock} title="Timeline de Resultados" iconColor="text-sky-400">
           <div className="space-y-0">
             {timelineData.map((t, i) => {
               const period = t.periodo || t.period || '';
@@ -438,8 +434,7 @@ export default function PeptideDetail() {
 
       {/* ── PROTOCOLS ── */}
       {phases && phases.length > 0 && (
-        <Section id="protocols">
-          <STitle icon={ListChecks}>Fases do Protocolo</STitle>
+        <Section id="protocols" icon={ListChecks} title="Fases do Protocolo">
           <div className="overflow-x-auto -mx-1">
             <table className="w-full text-xs">
               <thead>
@@ -467,8 +462,7 @@ export default function PeptideDetail() {
 
       {/* ── RECONSTITUTION ── */}
       {p.reconstitution_steps && p.reconstitution_steps.length > 0 && (
-        <Section id="recon">
-          <STitle icon={Beaker}>Reconstituição</STitle>
+        <Section id="recon" icon={Beaker} title="Reconstituição">
           <div className="space-y-1.5">
             {p.reconstitution_steps.map((step, i) => (
               <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/40 border border-border">
@@ -482,8 +476,7 @@ export default function PeptideDetail() {
 
       {/* ── STACKS ── */}
       {stacksData && stacksData.length > 0 && (
-        <Section id="stacks">
-          <STitle icon={Layers}>Stacks Recomendados</STitle>
+        <Section id="stacks" icon={Layers} title="Stacks Recomendados">
           <div className="space-y-2.5">
             {stacksData.map((stack, i) => (
               <div key={i} className="p-3 rounded-lg bg-secondary/30 border border-border">
@@ -505,8 +498,7 @@ export default function PeptideDetail() {
 
       {/* ── INTERACTIONS ── */}
       {allInteractions.length > 0 && (
-        <Section id="interactions">
-          <STitle icon={GitMerge}>Interações</STitle>
+        <Section id="interactions" icon={GitMerge} title="Interações">
           <div className="space-y-1.5">
             {allInteractions.map((item, i) => (
               <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-lg bg-secondary/30 border border-border">
@@ -521,8 +513,7 @@ export default function PeptideDetail() {
 
       {/* ── REFERENCES ── */}
       {refs && refs.length > 0 && (
-        <Section id="refs">
-          <STitle icon={BookOpen}>Referências Científicas</STitle>
+        <Section id="refs" icon={BookOpen} title="Referências Científicas">
           <div className="space-y-1.5">
             {refs.map((ref, i) => (
               <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/30 border border-border">
