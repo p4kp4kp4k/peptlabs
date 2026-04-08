@@ -29,6 +29,15 @@ function getActionLabel(status: string) {
   return "Info";
 }
 
+// Helper: fuzzy match interaction name against peptide name
+const namesMatch = (interactionName: string, peptideName: string): boolean => {
+  const a = interactionName.toLowerCase().trim();
+  const b = peptideName.toLowerCase().trim();
+  if (a === b) return true;
+  if (a.includes(b) || b.includes(a)) return true;
+  return false;
+};
+
 function getWorstStatus(interactions: NormalizedInteraction[]): "none" | "caution" | "avoid" {
   let worst: "none" | "caution" | "avoid" = "none";
   for (const i of interactions) {
