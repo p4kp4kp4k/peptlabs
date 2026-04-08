@@ -179,27 +179,30 @@ export default function PeptideDetail() {
     hasAutoCollapsed.current = false;
     setCollapseSignal(0);
 
-    let lastScrollY = window.scrollY;
-    const downThreshold = Math.max(window.innerHeight * 0.75, 320);
+    const scrollContainer = document.querySelector("main") as HTMLElement | null;
+    if (!scrollContainer) return;
+
+    let lastScrollTop = scrollContainer.scrollTop;
+    const downThreshold = 120;
 
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const currentScrollTop = scrollContainer.scrollTop;
 
-      if (currentScrollY > downThreshold) {
+      if (currentScrollTop > downThreshold) {
         hasScrolledDown.current = true;
       }
 
-      const isScrollingUp = currentScrollY < lastScrollY;
+      const isScrollingUp = currentScrollTop < lastScrollTop;
       if (isScrollingUp && hasScrolledDown.current && !hasAutoCollapsed.current) {
         hasAutoCollapsed.current = true;
         setCollapseSignal((value) => value + 1);
       }
 
-      lastScrollY = currentScrollY;
+      lastScrollTop = currentScrollTop;
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener("scroll", handleScroll);
   }, [slug]);
 
   /* Loading */
