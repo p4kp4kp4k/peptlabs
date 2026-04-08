@@ -46,26 +46,67 @@ function normalizeInteractions(data: Json | null | undefined): Array<{ nome: str
   return [...(old.peptideos || []), ...(old.outras_substancias || [])];
 }
 
-/* ─── Reusable section wrapper ─── */
-function Section({ id, children }: { id?: string; children: React.ReactNode }) {
+/* ─── Collapsible section wrapper ─── */
+function Section({ id, icon, title, iconColor = "text-primary", action, children }: {
+  id?: string; icon: React.ElementType; title: string; iconColor?: string; action?: React.ReactNode; children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [hasBeenSeen, setHasBeenSeen] = useState(false);
+  const Icon = icon;
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setExpanded(true);
+          setHasBeenSeen(true);
+        } else if (hasBeenSeen) {
+          setExpanded(false);
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -30% 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasBeenSeen]);
+
   return (
     <ScrollReveal>
-      <section id={id} data-section-id={id} className="rounded-xl border border-border bg-card p-4 sm:p-5 card-line">{children}</section>
-    </ScrollReveal>
-  );
-}
-
-function STitle({ icon: Icon, children, iconColor = "text-primary", action }: { icon: React.ElementType; children: React.ReactNode; iconColor?: string; action?: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between mb-3">
-      <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-        <div className={`flex h-6 w-6 items-center justify-center rounded-md bg-primary/8 ${iconColor}`}>
-          <Icon className="h-3.5 w-3.5" />
+      <section ref={ref} id={id} data-section-id={id} className="rounded-xl border border-border bg-card card-line overflow-hidden">
+        {/* Header — always visible, clickable */}
+        <button
+          onClick={() => setExpanded(prev => !prev)}
+          className="w-full flex items-center justify-between p-4 sm:px-5 sm:py-3.5 text-left group hover:bg-secondary/20 transition-colors"
+        >
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <div className={`flex h-6 w-6 items-center justify-center rounded-md bg-primary/8 ${iconColor}`}>
+              <Icon className="h-3.5 w-3.5" />
+            </div>
+            {title}
+          </h3>
+          <div className="flex items-center gap-2">
+            {action && <div onClick={e => e.stopPropagation()}>{action}</div>}
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${expanded ? "rotate-180" : ""}`} />
+          </div>
+        </button>
+        {/* Content — collapses */}
+        <div
+          className="transition-all duration-400 ease-in-out overflow-hidden"
+          style={{
+            maxHeight: expanded ? "2000px" : "0px",
+            opacity: expanded ? 1 : 0,
+            transition: "max-height 0.4s ease-in-out, opacity 0.3s ease-in-out",
+          }}
+        >
+          <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+            {children}
+          </div>
         </div>
-        {children}
-      </h3>
-      {action}
-    </div>
+      </section>
+    </ScrollReveal>
   );
 }
 
