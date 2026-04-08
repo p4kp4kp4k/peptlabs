@@ -419,7 +419,7 @@ export default function PeptideDetail() {
 
       {/* ── DOSAGE ── */}
       {(dosageRows?.length || p.dosage_info) && (
-        <Section collapseSignal={collapseSignal} id="dosage" icon={Syringe} title="Dosagem" action={<Button size="sm" variant="outline" className="text-[10px] gap-1 h-6" onClick={() => navigate("/app/calculator")}><Calculator className="h-3 w-3" /> Calculadora</Button>}>
+        <Section collapseSignal={collapseSignal} id="dosage" icon={Syringe} title="Dosagem" action={<Button size="sm" variant="outline" className="text-[10px] gap-1 h-6" onClick={() => setCalcOpen(true)}><Calculator className="h-3 w-3" /> Calculadora</Button>}>
           {p.dosage_info && (
             <div className="p-3 rounded-lg bg-primary/5 border border-primary/15 mb-3">
               <p className="text-xs text-foreground font-medium leading-relaxed">{p.dosage_info}</p>
