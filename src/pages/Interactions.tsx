@@ -29,6 +29,15 @@ function getActionLabel(status: string) {
   return "Info";
 }
 
+// Helper: fuzzy match interaction name against peptide name
+const namesMatch = (interactionName: string, peptideName: string): boolean => {
+  const a = interactionName.toLowerCase().trim();
+  const b = peptideName.toLowerCase().trim();
+  if (a === b) return true;
+  if (a.includes(b) || b.includes(a)) return true;
+  return false;
+};
+
 function getWorstStatus(interactions: NormalizedInteraction[]): "none" | "caution" | "avoid" {
   let worst: "none" | "caution" | "avoid" = "none";
   for (const i of interactions) {
@@ -86,15 +95,7 @@ export default function Interactions() {
     let hasDirectNegative = false;
     const addedPairs = new Set<string>();
 
-    // Helper: fuzzy match interaction name against peptide name
-    const namesMatch = (interactionName: string, peptideName: string): boolean => {
-      const a = interactionName.toLowerCase().trim();
-      const b = peptideName.toLowerCase().trim();
-      if (a === b) return true;
-      // Check if peptide name is contained in the interaction name (e.g. "Outros agonistas GLP-1 (Semaglutide, Tirzepatide)" contains "Semaglutide")
-      if (a.includes(b) || b.includes(a)) return true;
-      return false;
-    };
+    // namesMatch is now a module-level function
 
     // Check pairwise direct interactions (bidirectional)
     for (let i = 0; i < selectedPeptides.length; i++) {
@@ -147,6 +148,36 @@ export default function Interactions() {
       prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
     );
   };
+
+  // Compute which peptides are blocked (would create EVITAR interaction with any selected peptide)
+  const blockedSlugs = useMemo(() => {
+    if (tab !== "cross" || selectedPeptides.length === 0) return new Set<string>();
+
+    const blocked = new Set<string>();
+    const selectedData = selectedPeptides
+      .map((slug) => allPeptides.find((p) => p.slug === slug))
+      .filter(Boolean) as PeptideWithInteractions[];
+
+    for (const candidate of allPeptides) {
+      if (selectedPeptides.includes(candidate.slug)) continue;
+
+      for (const sel of selectedData) {
+        // Check sel → candidate
+        const matchAB = sel.interactions.find(
+          (int) => namesMatch(int.nome, candidate.name) && getStatusInfo(int.status).label === "EVITAR"
+        );
+        if (matchAB) { blocked.add(candidate.slug); break; }
+
+        // Check candidate → sel
+        const matchBA = candidate.interactions.find(
+          (int) => namesMatch(int.nome, sel.name) && getStatusInfo(int.status).label === "EVITAR"
+        );
+        if (matchBA) { blocked.add(candidate.slug); break; }
+      }
+    }
+
+    return blocked;
+  }, [tab, allPeptides, selectedPeptides]);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-5">
@@ -226,11 +257,14 @@ export default function Interactions() {
               const isSelected = tab === "individual"
                 ? selectedPeptide === p.slug
                 : selectedPeptides.includes(p.slug);
+              const isBlocked = tab === "cross" && !isSelected && blockedSlugs.has(p.slug);
 
               return (
                 <button
                   key={p.slug}
+                  disabled={isBlocked}
                   onClick={() => {
+                    if (isBlocked) return;
                     if (tab === "individual") {
                       setSelectedPeptide(selectedPeptide === p.slug ? null : p.slug);
                     } else {
@@ -240,15 +274,19 @@ export default function Interactions() {
                   className={`inline-flex items-center gap-1 text-xs font-medium py-1 px-1.5 transition-all rounded ${
                     isSelected
                       ? "bg-primary/20 text-primary font-bold ring-1 ring-primary/40"
-                      : "text-muted-foreground hover:text-foreground"
+                      : isBlocked
+                        ? "text-muted-foreground/30 line-through cursor-not-allowed opacity-40"
+                        : "text-muted-foreground hover:text-foreground"
                   }`}
+                  title={isBlocked ? "Combinação não segura com os peptídeos selecionados" : undefined}
                 >
                   {isSelected && <span className="text-primary">✓</span>}
+                  {isBlocked && <ShieldAlert className="h-3 w-3 text-red-400/50" />}
                   <span>{p.name}</span>
-                  {worst === "caution" && (
+                  {!isBlocked && worst === "caution" && (
                     <AlertTriangle className="h-3 w-3 text-amber-400" />
                   )}
-                  {worst === "avoid" && (
+                  {!isBlocked && worst === "avoid" && (
                     <AlertTriangle className="h-3 w-3 text-red-400" />
                   )}
                 </button>
