@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import type { Json } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Tag, Activity, Clock, RotateCcw, Zap, CheckCircle2,
@@ -46,7 +47,11 @@ function normalizeInteractions(data: Json | null | undefined): Array<{ nome: str
 
 /* ─── Reusable section wrapper ─── */
 function Section({ id, children }: { id?: string; children: React.ReactNode }) {
-  return <section id={id} className="rounded-xl border border-border bg-card p-4 sm:p-5 card-line">{children}</section>;
+  return (
+    <ScrollReveal>
+      <section id={id} className="rounded-xl border border-border bg-card p-4 sm:p-5 card-line">{children}</section>
+    </ScrollReveal>
+  );
 }
 
 function STitle({ icon: Icon, children, iconColor = "text-primary", action }: { icon: React.ElementType; children: React.ReactNode; iconColor?: string; action?: React.ReactNode }) {
