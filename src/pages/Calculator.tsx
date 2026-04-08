@@ -702,12 +702,12 @@ function ResultCard({ label, value, sub, color, highlight }: {
   label: string; value: string; sub?: string; color: string; highlight?: boolean;
 }) {
   return (
-    <div className={`rounded-lg border border-border/30 p-3 ${highlight ? "bg-primary/5 border-primary/20" : ""}`}>
-      <p className="text-[9px] text-muted-foreground mb-0.5">{label}</p>
-      <p className={`text-sm font-bold ${highlight ? "text-primary" : "text-foreground"}`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+    <div className={`rounded-lg border p-3.5 ${highlight ? "bg-primary/10 border-primary/30 shadow-sm shadow-primary/10" : "border-border/30 bg-card/60"}`}>
+      <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium mb-1">{label}</p>
+      <p className={`text-base font-black tracking-tight ${color}`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
         {value}
       </p>
-      {sub && <p className="text-[9px] text-muted-foreground/70 mt-0.5">{sub}</p>}
+      {sub && <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{sub}</p>}
     </div>
   );
 }
