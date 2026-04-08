@@ -292,15 +292,16 @@ export default function Interactions() {
               const isSelected = tab === "individual"
                 ? selectedPeptide === p.slug
                 : selectedPeptides.includes(p.slug);
-              const isBlocked = tab === "cross" && !isSelected && blockedSlugs.has(p.slug);
-              const blockLevel = isBlocked ? blockedSlugs.get(p.slug) : null;
+              const blockLevel = tab === "cross" && !isSelected ? blockedSlugs.get(p.slug) ?? null : null;
+              const isHardBlocked = blockLevel === "evitar";
+              const isCaution = blockLevel === "monitorar";
 
               return (
                 <button
                   key={p.slug}
-                  disabled={isBlocked}
+                  disabled={isHardBlocked}
                   onClick={() => {
-                    if (isBlocked) return;
+                    if (isHardBlocked) return;
                     if (tab === "individual") {
                       setSelectedPeptide(selectedPeptide === p.slug ? null : p.slug);
                     } else {
@@ -310,22 +311,22 @@ export default function Interactions() {
                   className={`inline-flex items-center gap-1 text-xs font-medium py-1 px-1.5 transition-all rounded ${
                     isSelected
                       ? "bg-primary/20 text-primary font-bold ring-1 ring-primary/40"
-                      : blockLevel === "evitar"
+                      : isHardBlocked
                         ? "text-muted-foreground/30 line-through cursor-not-allowed opacity-30"
-                        : blockLevel === "monitorar"
-                          ? "text-muted-foreground/40 cursor-not-allowed opacity-40"
+                        : isCaution
+                          ? "text-amber-400/80 hover:text-amber-300 ring-1 ring-amber-500/20 bg-amber-500/5"
                           : "text-muted-foreground hover:text-foreground"
                   }`}
-                  title={blockLevel === "evitar" ? "Interação EVITAR com peptídeos selecionados" : blockLevel === "monitorar" ? "Interação MONITORAR com peptídeos selecionados" : undefined}
+                  title={isHardBlocked ? "Interação EVITAR — bloqueado" : isCaution ? "⚠️ Monitorar: requer acompanhamento" : undefined}
                 >
                   {isSelected && <span className="text-primary">✓</span>}
-                  {blockLevel === "evitar" && <ShieldAlert className="h-3 w-3 text-red-400/60" />}
-                  {blockLevel === "monitorar" && <AlertTriangle className="h-3 w-3 text-amber-400/60" />}
+                  {isHardBlocked && <ShieldAlert className="h-3 w-3 text-red-400/60" />}
+                  {isCaution && <AlertTriangle className="h-3 w-3 text-amber-400" />}
                   <span>{p.name}</span>
-                  {!isBlocked && worst === "caution" && (
+                  {!isHardBlocked && !isCaution && worst === "caution" && (
                     <AlertTriangle className="h-3 w-3 text-amber-400" />
                   )}
-                  {!isBlocked && worst === "avoid" && (
+                  {!isHardBlocked && !isCaution && worst === "avoid" && (
                     <AlertTriangle className="h-3 w-3 text-red-400" />
                   )}
                 </button>
