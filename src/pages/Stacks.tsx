@@ -71,10 +71,10 @@ function StackModal({ stack, onClose }: { stack: Stack; onClose: () => void }) {
   }, [peptideRows, peptideNames]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 animate-fade-in" onClick={onClose}>
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-xl max-h-[88vh] overflow-y-auto rounded-2xl border border-border/40 bg-card shadow-2xl"
+        className="relative w-full max-w-xl max-h-[88vh] overflow-y-auto rounded-2xl border border-border/40 bg-card shadow-2xl animate-scale-in"
         onClick={e => e.stopPropagation()}
       >
         {/* Close */}
