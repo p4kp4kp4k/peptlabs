@@ -94,11 +94,17 @@ function normalizeInteractions(data: Json | null): NormalizedInteraction[] {
       nome: i.nome || "",
       status: (i.status || "").toUpperCase(),
       descricao: i.descricao || "",
+      mecanismo: i.mecanismo || undefined,
+      consequencias: i.consequencias || undefined,
+      fonte: i.fonte || undefined,
     })),
     ...(old.outras_substancias || []).map((i: any) => ({
       nome: i.nome || "",
       status: (i.status || "").toUpperCase(),
       descricao: i.descricao || "",
+      mecanismo: i.mecanismo || undefined,
+      consequencias: i.consequencias || undefined,
+      fonte: i.fonte || undefined,
     })),
   ];
 }
