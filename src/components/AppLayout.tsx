@@ -3,12 +3,14 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Syringe, Search, ArrowLeftRight,
   Calculator, Layers, MapPin, History, Settings, CreditCard,
-  Shield, Menu, X, LogOut, FlaskConical, Zap, BookOpen
+  Shield, Menu, X, LogOut, FlaskConical, Zap, BookOpen, Palette
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useThemeColor, themeOptions } from "@/hooks/useThemeColor";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const mainNav = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/app/dashboard" },
@@ -33,6 +35,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { profile, signOut, user, isAdmin } = useAuth();
+  const { theme, setTheme } = useThemeColor();
 
   const handleSignOut = async () => {
     await signOut();
@@ -93,7 +96,43 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           )}
         </nav>
 
-        <div className="border-t border-border p-2.5">
+        <div className="border-t border-border p-2.5 space-y-1">
+          {/* Theme switcher */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+                <Palette className="h-3 w-3" />
+                <span>Tema</span>
+                <div className="ml-auto flex gap-0.5">
+                  {themeOptions.find(t => t.value === theme)?.colors.map((c, i) => (
+                    <div key={i} className="h-2.5 w-2.5 rounded-full border border-border" style={{ background: c }} />
+                  ))}
+                </div>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="right" align="end" className="w-44 p-1.5">
+              <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Cores</p>
+              {themeOptions.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => setTheme(t.value)}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors",
+                    theme === t.value ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  <div className="flex gap-0.5">
+                    {t.colors.map((c, i) => (
+                      <div key={i} className="h-3 w-3 rounded-full border border-border" style={{ background: c }} />
+                    ))}
+                  </div>
+                  <span>{t.label}</span>
+                  {theme === t.value && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+
           <div className="flex items-center gap-2 px-2.5 py-1.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
               {(profile?.display_name || user?.email || "U")[0].toUpperCase()}
@@ -105,7 +144,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
           <button
             onClick={handleSignOut}
-            className="mt-0.5 flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
           >
             <LogOut className="h-3 w-3" /> Sair
           </button>
