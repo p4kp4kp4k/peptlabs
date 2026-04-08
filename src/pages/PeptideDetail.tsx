@@ -611,6 +611,12 @@ export default function PeptideDetail() {
           </div>
         </aside>
       </div>{/* end two-column */}
+
+      <CalculatorModal
+        open={calcOpen}
+        onOpenChange={setCalcOpen}
+        peptideName={p.name}
+      />
     </div>
   );
 }
