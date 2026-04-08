@@ -33,6 +33,7 @@ export const STACK_CATEGORIES = [
   "Hormonal",
   "Neuroproteção",
   "Sono / Recuperação",
+  "Definição",
 ] as const;
 
 export type StackCategory = (typeof STACK_CATEGORIES)[number];
