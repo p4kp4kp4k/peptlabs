@@ -132,6 +132,7 @@ export default function PeptideDetail() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<string>("");
   const [collapseSignal, setCollapseSignal] = useState(0);
+  const [calcOpen, setCalcOpen] = useState(false);
   const hasScrolledDown = useRef(false);
   const hasAutoCollapsed = useRef(false);
 
