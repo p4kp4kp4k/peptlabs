@@ -311,6 +311,7 @@ export default function Interactions() {
               );
             })}
           </div>
+          </>
         )}
       </div>
 
