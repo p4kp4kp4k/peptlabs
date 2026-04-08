@@ -7,7 +7,7 @@ import { useUserProtocolCount, useUserProtocols } from "@/hooks/useProtocols";
 import {
   Layers, Search, Calculator, Sparkles, ArrowRight,
   Activity, Target, Clock, FlaskConical, Syringe,
-  ArrowLeftRight, History, TrendingUp, Zap
+  ArrowLeftRight, History, TrendingUp
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -18,10 +18,10 @@ export default function Dashboard() {
   const { data: protocols = [] } = useUserProtocols();
 
   const quickActions = [
-    { icon: Search, label: "Finder", desc: "Gerar protocolo", path: "/app/finder", gradient: "from-primary/20 to-primary/5", iconColor: "text-primary" },
-    { icon: Layers, label: "Biblioteca", desc: `${peptideCount} peptídeos`, path: "/app/peptides", gradient: "from-success/20 to-success/5", iconColor: "text-success" },
-    { icon: ArrowLeftRight, label: "Comparador", desc: "Comparar 2+", path: "/app/compare", gradient: "from-accent/20 to-accent/5", iconColor: "text-accent" },
-    { icon: Calculator, label: "Calculadora", desc: "Doses e reconstituição", path: "/app/calculator", gradient: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+    { icon: Search, label: "Finder", desc: "Gerar protocolo", path: "/app/finder", color: "text-primary" },
+    { icon: Layers, label: "Biblioteca", desc: `${peptideCount} peptídeos`, path: "/app/peptides", color: "text-success" },
+    { icon: ArrowLeftRight, label: "Comparador", desc: "Comparar 2+", path: "/app/compare", color: "text-accent" },
+    { icon: Calculator, label: "Calculadora", desc: "Doses e reconstituição", path: "/app/calculator", color: "text-warning" },
   ];
 
   const daysSinceJoined = user?.created_at
@@ -29,95 +29,67 @@ export default function Dashboard() {
     : 1;
 
   const stats = [
-    { icon: FlaskConical, label: "Peptídeos", value: String(peptideCount), sub: "no banco de dados", color: "primary" },
-    { icon: Layers, label: "Protocolos", value: String(protocolCount), sub: protocolCount > 0 ? "salvos" : "crie o primeiro", color: "accent" },
-    { icon: Target, label: "Recomendações", value: "0", sub: "use o Finder", color: "blue" },
-    { icon: Clock, label: "Dias Ativos", value: String(daysSinceJoined), sub: daysSinceJoined === 1 ? "bem-vindo!" : "na plataforma", color: "success" },
+    { icon: FlaskConical, label: "Peptídeos", value: String(peptideCount), sub: "no banco de dados" },
+    { icon: Layers, label: "Protocolos", value: String(protocolCount), sub: protocolCount > 0 ? "salvos" : "crie o primeiro" },
+    { icon: Target, label: "Recomendações", value: "0", sub: "use o Finder" },
+    { icon: Clock, label: "Dias Ativos", value: String(daysSinceJoined), sub: daysSinceJoined === 1 ? "bem-vindo!" : "na plataforma" },
   ];
 
-  const getGlowClass = (color: string) => {
-    switch (color) {
-      case "primary": return "from-primary/15 to-primary/5 border-primary/10";
-      case "accent": return "from-accent/15 to-accent/5 border-accent/10";
-      case "blue": return "from-blue-500/15 to-blue-500/5 border-blue-500/10";
-      case "success": return "from-success/15 to-success/5 border-success/10";
-      default: return "from-primary/15 to-primary/5 border-primary/10";
-    }
-  };
-
-  const getIconColor = (color: string) => {
-    switch (color) {
-      case "primary": return "text-primary";
-      case "accent": return "text-accent";
-      case "blue": return "text-blue-400";
-      case "success": return "text-success";
-      default: return "text-primary";
-    }
-  };
-
   return (
-    <div className="p-6 sm:p-8 space-y-8 max-w-7xl mx-auto animate-fade-in">
+    <div className="p-4 sm:p-5 space-y-5 max-w-6xl mx-auto">
       {/* Welcome */}
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-display">
+      <div>
+        <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
           Olá, {profile?.display_name || user?.email?.split("@")[0] || "Usuário"} 👋
         </h1>
-        <p className="text-sm text-muted-foreground/70">Seu painel de peptídeos personalizado</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Seu painel de peptídeos personalizado</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {stats.map((s, i) => (
-          <div
-            key={s.label}
-            className="group relative rounded-xl border border-white/[0.06] bg-card/60 p-5 backdrop-blur-sm transition-all duration-300 hover:border-white/[0.1] hover:bg-card/80 card-holographic"
-            style={{ animationDelay: `${i * 80}ms` }}
-          >
-            <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${getGlowClass(s.color)} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-            <div className="relative z-10">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${getGlowClass(s.color)} border mb-4`}>
-                <s.icon className={`h-5 w-5 ${getIconColor(s.color)}`} />
+      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+        {stats.map((s) => (
+          <Card key={s.label} className="hover:border-primary/20 transition-colors">
+            <CardContent className="p-3.5">
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/8">
+                  <s.icon className="h-3.5 w-3.5 text-primary" />
+                </div>
               </div>
-              <p className="text-3xl font-bold tracking-tight text-foreground font-display">{s.value}</p>
-              <p className="text-xs font-medium text-foreground/80 mt-1">{s.label}</p>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{s.value}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{s.label}</p>
               <p className="text-[10px] text-muted-foreground/50 mt-0.5">{s.sub}</p>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-sm font-semibold text-foreground/80 mb-4 uppercase tracking-wider font-display">Acesso Rápido</h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Acesso Rápido</h2>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           {quickActions.map((a) => (
-            <button
+            <Card
               key={a.label}
-              className="group relative rounded-xl border border-white/[0.06] bg-card/40 p-5 backdrop-blur-sm transition-all duration-300 hover:border-primary/20 hover:bg-card/60 text-left card-holographic"
+              className="group cursor-pointer transition-colors hover:border-primary/20"
               onClick={() => navigate(a.path)}
             >
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative z-10 flex flex-col items-center gap-3 text-center">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${a.gradient} border border-white/[0.06] transition-transform duration-300 group-hover:scale-110`}>
-                  <a.icon className={`h-5 w-5 ${a.iconColor} transition-all duration-300 group-hover:drop-shadow-[0_0_8px_currentColor]`} />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold text-foreground">{a.label}</span>
-                  <p className="text-[11px] text-muted-foreground/60 mt-0.5">{a.desc}</p>
-                </div>
-              </div>
-            </button>
+              <CardContent className="flex flex-col items-center gap-1.5 p-3.5">
+                <a.icon className={`h-4.5 w-4.5 ${a.color} transition-transform duration-150 group-hover:scale-110`} />
+                <span className="text-xs font-medium text-foreground">{a.label}</span>
+                <span className="text-[10px] text-muted-foreground">{a.desc}</span>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
 
       {/* Recent Protocols */}
-      <Card className="border-white/[0.04] bg-card/40">
-        <CardHeader className="pb-4">
+      <Card>
+        <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-display">Protocolos Recentes</CardTitle>
+            <CardTitle>Protocolos Recentes</CardTitle>
             {protocols.length > 0 && (
-              <Button variant="ghost" size="sm" className="text-[11px] text-primary gap-1.5 h-7 hover:bg-primary/[0.06]" onClick={() => navigate("/app/history")}>
+              <Button variant="ghost" size="sm" className="text-[10px] text-primary gap-1 h-6" onClick={() => navigate("/app/history")}>
                 Ver todos <ArrowRight className="h-3 w-3" />
               </Button>
             )}
@@ -125,33 +97,29 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent>
           {protocols.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {protocols.slice(0, 5).map((p) => (
-                <div key={p.id} className="flex items-center justify-between rounded-xl bg-white/[0.02] border border-white/[0.04] p-4 hover:bg-white/[0.04] hover:border-white/[0.06] transition-all duration-200">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/[0.08] border border-primary/[0.1]">
-                      <Syringe className="h-3.5 w-3.5 text-primary" />
-                    </div>
+                <div key={p.id} className="flex items-center justify-between rounded-md bg-secondary/40 p-3 hover:bg-secondary/60 transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <Syringe className="h-3.5 w-3.5 text-primary" />
                     <div>
-                      <p className="text-sm font-medium text-foreground">{p.name}</p>
-                      <p className="text-[11px] text-muted-foreground/50">
+                      <p className="text-xs font-medium text-foreground">{p.name}</p>
+                      <p className="text-[10px] text-muted-foreground">
                         {new Date(p.created_at).toLocaleDateString("pt-BR")}
                       </p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-primary/[0.08] border border-primary/[0.12] px-2.5 py-1 text-[10px] font-medium text-primary capitalize">{p.status}</span>
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] text-primary capitalize">{p.status}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center py-14 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.02] border border-white/[0.04] mb-4">
-                <Activity className="h-7 w-7 text-muted-foreground/20" />
-              </div>
-              <p className="text-sm font-medium text-muted-foreground/60">Nenhum protocolo salvo</p>
-              <p className="text-xs text-muted-foreground/40 mt-1 max-w-xs">Use o Finder para gerar seu primeiro protocolo personalizado</p>
-              <Button size="sm" className="mt-5 gap-2" onClick={() => navigate("/app/finder")}>
-                <Sparkles className="h-3.5 w-3.5" /> Gerar Protocolo
+            <div className="flex flex-col items-center py-10 text-center">
+              <Activity className="h-7 w-7 text-muted-foreground/15 mb-3" />
+              <p className="text-xs text-muted-foreground">Nenhum protocolo salvo</p>
+              <p className="text-[10px] text-muted-foreground/50 mt-1">Use o Finder para gerar seu primeiro protocolo</p>
+              <Button size="sm" className="mt-3 gap-1.5 text-xs" onClick={() => navigate("/app/finder")}>
+                <Sparkles className="h-3 w-3" /> Gerar Protocolo
               </Button>
             </div>
           )}
