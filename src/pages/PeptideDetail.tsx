@@ -6,12 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import type { Json } from "@/integrations/supabase/types";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import type { Json } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Tag, Activity, Clock, RotateCcw, Zap, CheckCircle2,
   AlertTriangle, Syringe, ListChecks, Beaker, BookOpen, GitMerge,
