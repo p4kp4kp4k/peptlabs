@@ -62,7 +62,21 @@ export default function Interactions() {
 
   // Cross-check: gather all interactions from selected peptides
   const crossData = useMemo(() => {
-    if (selectedPeptides.length < 2) return { safe: false, interactions: [] };
+    if (selectedPeptides.length === 0) return { safe: false, interactions: [] };
+
+    // With 1 peptide, show all its interactions (same as individual)
+    if (selectedPeptides.length === 1) {
+      const p = allPeptides.find((pp) => pp.slug === selectedPeptides[0]);
+      if (!p) return { safe: false, interactions: [] };
+      return {
+        safe: false,
+        interactions: p.interactions.map((int) => ({
+          peptideA: p.name,
+          peptideB: int.nome,
+          interaction: int,
+        })),
+      };
+    }
 
     const selectedNames = selectedPeptides.map(
       (slug) => allPeptides.find((p) => p.slug === slug)?.name ?? ""
@@ -275,7 +289,7 @@ function CrossResults({
   interactions: { peptideA: string; peptideB: string; interaction: NormalizedInteraction }[];
   selectedCount: number;
 }) {
-  if (selectedCount < 2) {
+  if (selectedCount < 1) {
     return (
       <div className="rounded-xl border border-border/25 bg-card/70 py-16 text-center">
         <Shield className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
@@ -290,7 +304,7 @@ function CrossResults({
   return (
     <div className="space-y-4">
       {/* Safe combination banner */}
-      {safe && (
+      {safe && selectedCount >= 2 && (
         <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 py-6 text-center">
           <CheckCircle2 className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
           <p className="text-sm font-bold text-emerald-400">🟢 Combinação segura</p>
