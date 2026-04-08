@@ -304,7 +304,7 @@ function CrossResults({
   return (
     <div className="space-y-4">
       {/* Safe combination banner */}
-      {safe && (
+      {safe && selectedCount >= 2 && (
         <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 py-6 text-center">
           <CheckCircle2 className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
           <p className="text-sm font-bold text-emerald-400">🟢 Combinação segura</p>
