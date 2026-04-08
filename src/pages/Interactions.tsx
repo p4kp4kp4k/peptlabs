@@ -151,7 +151,7 @@ export default function Interactions() {
 
   // Compute which peptides are blocked (would create EVITAR interaction with any selected peptide)
   const blockedSlugs = useMemo(() => {
-    if (tab !== "cross" || selectedPeptides.length === 0) return new Set<string>();
+    if (tab !== "cross" || selectedPeptides.length === 0) return new Map<string, "evitar" | "monitorar">();
 
     const blocked = new Map<string, "evitar" | "monitorar">();
     const selectedData = selectedPeptides
