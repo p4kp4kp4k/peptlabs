@@ -110,9 +110,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
               </button>
             </PopoverTrigger>
-            <PopoverContent side="right" align="end" className="w-44 p-1.5">
-              <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Cores</p>
-              {themeOptions.map((t) => (
+            <PopoverContent side="right" align="end" className="w-48 p-1.5">
+              <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Dark</p>
+              {themeOptions.filter(t => t.mode === "dark").map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => setTheme(t.value)}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors",
+                    theme === t.value ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  <div className="flex gap-0.5">
+                    {t.colors.map((c, i) => (
+                      <div key={i} className="h-3 w-3 rounded-full border border-border" style={{ background: c }} />
+                    ))}
+                  </div>
+                  <span>{t.label}</span>
+                  {theme === t.value && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
+                </button>
+              ))}
+              <div className="my-1 border-t border-border" />
+              <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Light</p>
+              {themeOptions.filter(t => t.mode === "light").map((t) => (
                 <button
                   key={t.value}
                   onClick={() => setTheme(t.value)}
