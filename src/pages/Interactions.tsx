@@ -269,10 +269,16 @@ export default function Interactions() {
                   <ShieldCheck className="h-3 w-3" />
                   {filteredPeptides.filter(p => !selectedPeptides.includes(p.slug) && !blockedSlugs.has(p.slug)).length} disponíveis
                 </span>
-                {blockedSlugs.size > 0 && (
+                {[...blockedSlugs.values()].filter(v => v === "evitar").length > 0 && (
                   <span className="flex items-center gap-1 text-red-400/70 font-semibold">
                     <ShieldAlert className="h-3 w-3" />
-                    {blockedSlugs.size} bloqueados
+                    {[...blockedSlugs.values()].filter(v => v === "evitar").length} evitar
+                  </span>
+                )}
+                {[...blockedSlugs.values()].filter(v => v === "monitorar").length > 0 && (
+                  <span className="flex items-center gap-1 text-amber-400/70 font-semibold">
+                    <AlertTriangle className="h-3 w-3" />
+                    {[...blockedSlugs.values()].filter(v => v === "monitorar").length} monitorar
                   </span>
                 )}
                 <span className="text-muted-foreground/50">
