@@ -251,6 +251,24 @@ export default function Interactions() {
             ))}
           </div>
         ) : (
+          <>
+            {tab === "cross" && selectedPeptides.length > 0 && (
+              <div className="flex items-center gap-3 text-[11px] mb-1">
+                <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                  <ShieldCheck className="h-3 w-3" />
+                  {filteredPeptides.filter(p => !selectedPeptides.includes(p.slug) && !blockedSlugs.has(p.slug)).length} disponíveis
+                </span>
+                {blockedSlugs.size > 0 && (
+                  <span className="flex items-center gap-1 text-red-400/70 font-semibold">
+                    <ShieldAlert className="h-3 w-3" />
+                    {blockedSlugs.size} bloqueados
+                  </span>
+                )}
+                <span className="text-muted-foreground/50">
+                  {selectedPeptides.length} selecionado(s)
+                </span>
+              </div>
+            )}
           <div className="flex flex-wrap gap-x-3 gap-y-2 max-h-[220px] overflow-y-auto pr-1">
             {filteredPeptides.map((p) => {
               const worst = getWorstStatus(p.interactions);
