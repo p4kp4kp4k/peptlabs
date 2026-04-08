@@ -330,11 +330,17 @@ export default function Stacks() {
                     </div>
                   ))}
                 </div>
-                {stack.duration && (
-                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
-                    <Clock className="h-3 w-3" /> {stack.duration}
+                <div className="flex items-center justify-between mt-1">
+                  {stack.duration && (
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
+                      <Clock className="h-3 w-3" /> {stack.duration}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 text-[9px] font-semibold text-emerald-400">
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>Sinergia Verificada</span>
                   </div>
-                )}
+                </div>
               </button>
             );
           })}
