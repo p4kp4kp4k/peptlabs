@@ -50,7 +50,7 @@ function normalizeInteractions(data: Json | null | undefined): Array<{ nome: str
 function Section({ id, children }: { id?: string; children: React.ReactNode }) {
   return (
     <ScrollReveal>
-      <section id={id} className="rounded-xl border border-border bg-card p-4 sm:p-5 card-line">{children}</section>
+      <section id={id} data-section-id={id} className="rounded-xl border border-border bg-card p-4 sm:p-5 card-line">{children}</section>
     </ScrollReveal>
   );
 }
