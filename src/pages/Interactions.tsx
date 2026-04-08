@@ -153,7 +153,7 @@ export default function Interactions() {
   const blockedSlugs = useMemo(() => {
     if (tab !== "cross" || selectedPeptides.length === 0) return new Set<string>();
 
-    const blocked = new Set<string>();
+    const blocked = new Map<string, "evitar" | "monitorar">();
     const selectedData = selectedPeptides
       .map((slug) => allPeptides.find((p) => p.slug === slug))
       .filter(Boolean) as PeptideWithInteractions[];
@@ -162,17 +162,28 @@ export default function Interactions() {
       if (selectedPeptides.includes(candidate.slug)) continue;
 
       for (const sel of selectedData) {
+        const checkInteraction = (int: NormalizedInteraction) => {
+          const label = getStatusInfo(int.status).label;
+          return label === "EVITAR" ? "evitar" : label === "MONITORAR" ? "monitorar" : null;
+        };
+
         // Check sel → candidate
-        const matchAB = sel.interactions.find(
-          (int) => namesMatch(int.nome, candidate.name) && getStatusInfo(int.status).label === "EVITAR"
-        );
-        if (matchAB) { blocked.add(candidate.slug); break; }
+        for (const int of sel.interactions) {
+          if (!namesMatch(int.nome, candidate.name)) continue;
+          const level = checkInteraction(int);
+          if (level === "evitar") { blocked.set(candidate.slug, "evitar"); break; }
+          if (level === "monitorar" && !blocked.has(candidate.slug)) blocked.set(candidate.slug, "monitorar");
+        }
+        if (blocked.get(candidate.slug) === "evitar") break;
 
         // Check candidate → sel
-        const matchBA = candidate.interactions.find(
-          (int) => namesMatch(int.nome, sel.name) && getStatusInfo(int.status).label === "EVITAR"
-        );
-        if (matchBA) { blocked.add(candidate.slug); break; }
+        for (const int of candidate.interactions) {
+          if (!namesMatch(int.nome, sel.name)) continue;
+          const level = checkInteraction(int);
+          if (level === "evitar") { blocked.set(candidate.slug, "evitar"); break; }
+          if (level === "monitorar" && !blocked.has(candidate.slug)) blocked.set(candidate.slug, "monitorar");
+        }
+        if (blocked.get(candidate.slug) === "evitar") break;
       }
     }
 
