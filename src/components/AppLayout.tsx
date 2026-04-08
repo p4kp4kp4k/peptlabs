@@ -46,102 +46,68 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       to={item.path}
       onClick={onClick}
       className={cn(
-        "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-200",
+        "group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150",
         isActive(item.path)
-          ? "text-primary"
-          : "text-muted-foreground hover:text-foreground"
+          ? "bg-primary/[0.08] text-primary"
+          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
       )}
     >
-      {/* Active indicator */}
-      {isActive(item.path) && (
-        <div className="absolute inset-0 rounded-lg bg-primary/[0.08] border border-primary/[0.12]" />
-      )}
-      {!isActive(item.path) && (
-        <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 bg-white/[0.03] transition-opacity duration-200" />
-      )}
-      <item.icon className={cn(
-        "relative z-10 h-4 w-4 shrink-0 transition-all duration-200",
-        isActive(item.path)
-          ? "text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.5)]"
-          : "text-muted-foreground group-hover:text-foreground"
-      )} />
-      <span className="relative z-10 truncate">{item.label}</span>
-      {isActive(item.path) && (
-        <div className="relative z-10 ml-auto h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)]" />
-      )}
+      <item.icon className={cn("h-[15px] w-[15px] shrink-0", isActive(item.path) ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+      <span className="truncate">{item.label}</span>
+      {isActive(item.path) && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
     </Link>
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background bg-cinematic">
-      {/* Ambient orbs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="orb orb-cyan w-[500px] h-[500px] -top-40 -right-40 animate-orb-drift opacity-40" />
-        <div className="orb orb-purple w-[400px] h-[400px] bottom-0 left-1/4 animate-orb-drift opacity-30" style={{ animationDelay: '-7s' }} />
-        <div className="orb orb-blue w-[300px] h-[300px] top-1/3 left-0 animate-orb-drift opacity-20" style={{ animationDelay: '-14s' }} />
-        <div className="bg-grid absolute inset-0 opacity-30" />
-      </div>
-
-      {/* Sidebar - Desktop */}
-      <aside className="hidden w-[260px] shrink-0 overflow-y-auto border-r border-white/[0.04] bg-background/60 backdrop-blur-2xl md:flex md:flex-col relative z-10">
-        {/* Logo */}
-        <div className="flex h-16 items-center gap-3 px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-[0_0_15px_hsl(var(--primary)/0.15)]">
-            <FlaskConical className="h-4 w-4 text-primary drop-shadow-[0_0_4px_hsl(var(--primary)/0.5)]" />
+    <div className="flex h-screen overflow-hidden bg-background bg-ambient">
+      {/* Sidebar Desktop */}
+      <aside className="hidden w-56 shrink-0 overflow-y-auto border-r border-border bg-sidebar md:flex md:flex-col">
+        <div className="flex h-12 items-center gap-2 px-4 border-b border-border">
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
+            <FlaskConical className="h-3.5 w-3.5 text-primary" />
           </div>
-          <span className="text-base font-bold tracking-tight text-foreground font-display">
-            Pepti<span className="text-gradient-primary">Lab</span>
+          <span className="text-sm font-semibold tracking-tight text-foreground">
+            Pepti<span className="text-primary">Lab</span>
           </span>
         </div>
 
-        {/* Main nav */}
-        <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 py-4 space-y-0.5">
-          <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/40">
+        <nav className="flex-1 overflow-y-auto scrollbar-thin px-2.5 py-3 space-y-px">
+          <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">
             Principal
           </p>
-          {mainNav.map((item) => (
-            <NavItem key={item.path} item={item} />
-          ))}
+          {mainNav.map((item) => <NavItem key={item.path} item={item} />)}
 
-          <div className="my-5 mx-3 border-t border-white/[0.04]" />
+          <div className="my-3 mx-2 border-t border-border" />
 
-          <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/40">
+          <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">
             Conta
           </p>
-          {bottomNav.map((item) => (
-            <NavItem key={item.path} item={item} />
-          ))}
+          {bottomNav.map((item) => <NavItem key={item.path} item={item} />)}
 
           {isAdmin && (
             <>
-              <div className="my-5 mx-3 border-t border-white/[0.04]" />
-              <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/40">
-                Admin
-              </p>
+              <div className="my-3 mx-2 border-t border-border" />
+              <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Admin</p>
               <NavItem item={{ label: "Painel Admin", icon: Shield, path: "/app/admin" }} />
             </>
           )}
         </nav>
 
-        {/* User */}
-        <div className="border-t border-white/[0.04] p-4">
-          <div className="flex items-center gap-3 rounded-xl glass-subtle p-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/15 text-xs font-bold text-primary shadow-[0_0_10px_hsl(var(--primary)/0.1)]">
+        <div className="border-t border-border p-2.5">
+          <div className="flex items-center gap-2 px-2.5 py-1.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
               {(profile?.display_name || user?.email || "U")[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="truncate text-xs font-semibold text-foreground">
-                {profile?.display_name || user?.email?.split("@")[0]}
-              </p>
-              <p className="truncate text-[10px] text-muted-foreground/60">{user?.email}</p>
+              <p className="truncate text-xs font-medium text-foreground">{profile?.display_name || user?.email?.split("@")[0]}</p>
+              <p className="truncate text-[10px] text-muted-foreground">{user?.email}</p>
             </div>
           </div>
           <button
             onClick={handleSignOut}
-            className="mt-2 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-muted-foreground/60 transition-all duration-200 hover:bg-white/[0.03] hover:text-foreground"
+            className="mt-0.5 flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
           >
-            <LogOut className="h-3.5 w-3.5" />
-            Sair
+            <LogOut className="h-3 w-3" /> Sair
           </button>
         </div>
       </aside>
@@ -149,43 +115,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile drawer */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-background/90 backdrop-blur-xl" onClick={() => setSidebarOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-[280px] animate-slide-in-left border-r border-white/[0.04] bg-background/95 backdrop-blur-2xl">
-            <div className="flex h-16 items-center justify-between px-6">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-                  <FlaskConical className="h-4 w-4 text-primary" />
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+          <aside className="absolute left-0 top-0 h-full w-64 border-r border-border bg-sidebar animate-slide-in-left">
+            <div className="flex h-12 items-center justify-between px-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
+                  <FlaskConical className="h-3.5 w-3.5 text-primary" />
                 </div>
-                <span className="text-base font-bold tracking-tight text-foreground font-display">
-                  Pepti<span className="text-gradient-primary">Lab</span>
-                </span>
+                <span className="text-sm font-semibold text-foreground">Pepti<span className="text-primary">Lab</span></span>
               </div>
-              <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-white/[0.04] hover:text-foreground transition-colors">
-                <X className="h-5 w-5" />
-              </button>
+              <button onClick={() => setSidebarOpen(false)} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
             </div>
-            <nav className="px-3 py-4 space-y-0.5">
-              {mainNav.map((item) => (
-                <NavItem key={item.path} item={item} onClick={() => setSidebarOpen(false)} />
-              ))}
-              <div className="my-5 mx-3 border-t border-white/[0.04]" />
-              {bottomNav.map((item) => (
-                <NavItem key={item.path} item={item} onClick={() => setSidebarOpen(false)} />
-              ))}
+            <nav className="px-2.5 py-3 space-y-px">
+              {mainNav.map((item) => <NavItem key={item.path} item={item} onClick={() => setSidebarOpen(false)} />)}
+              <div className="my-3 mx-2 border-t border-border" />
+              {bottomNav.map((item) => <NavItem key={item.path} item={item} onClick={() => setSidebarOpen(false)} />)}
               {isAdmin && (
                 <>
-                  <div className="my-5 mx-3 border-t border-white/[0.04]" />
+                  <div className="my-3 mx-2 border-t border-border" />
                   <NavItem item={{ label: "Painel Admin", icon: Shield, path: "/app/admin" }} onClick={() => setSidebarOpen(false)} />
                 </>
               )}
             </nav>
-            <div className="absolute bottom-0 left-0 right-0 border-t border-white/[0.04] p-4">
-              <button
-                onClick={handleSignOut}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs text-muted-foreground hover:bg-white/[0.04] hover:text-foreground transition-colors"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                Sair
+            <div className="absolute bottom-0 left-0 right-0 border-t border-border p-2.5">
+              <button onClick={handleSignOut} className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary">
+                <LogOut className="h-3 w-3" /> Sair
               </button>
             </div>
           </aside>
@@ -193,29 +147,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main */}
-      <div className="flex flex-1 flex-col min-w-0 relative z-10">
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-white/[0.04] bg-background/40 px-6 backdrop-blur-2xl">
-          <button className="md:hidden rounded-lg p-1.5 hover:bg-white/[0.04] transition-colors" onClick={() => setSidebarOpen(true)}>
-            <Menu className="h-5 w-5 text-muted-foreground" />
+      <div className="flex flex-1 flex-col min-w-0">
+        <header className="sticky top-0 z-40 flex h-12 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-xl">
+          <button className="md:hidden" onClick={() => setSidebarOpen(true)}>
+            <Menu className="h-4.5 w-4.5 text-muted-foreground" />
           </button>
-          <div className="hidden max-w-md flex-1 md:block">
+          <div className="hidden max-w-sm flex-1 md:block">
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/40" />
+              <Search className="absolute left-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/50" />
               <Input
                 placeholder="Buscar peptídeos, protocolos..."
-                className="h-9 pl-10 text-xs bg-white/[0.02] border-white/[0.04] placeholder:text-muted-foreground/30 focus-visible:bg-white/[0.04]"
+                className="h-8 pl-8 text-xs bg-secondary/50 border-border placeholder:text-muted-foreground/40"
               />
             </div>
           </div>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="hidden md:inline-flex gap-1.5 text-xs border-primary/20 text-primary hover:bg-primary/[0.06] hover:border-primary/30"
+              className="hidden md:inline-flex gap-1 text-[11px] text-primary hover:bg-primary/[0.06] h-7"
               onClick={() => navigate("/app/billing")}
             >
-              <Zap className="h-3.5 w-3.5" />
-              Upgrade
+              <Zap className="h-3 w-3" /> Upgrade
             </Button>
           </div>
         </header>
