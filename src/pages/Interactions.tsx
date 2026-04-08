@@ -151,9 +151,9 @@ export default function Interactions() {
 
   // Compute which peptides are blocked (would create EVITAR interaction with any selected peptide)
   const blockedSlugs = useMemo(() => {
-    if (tab !== "cross" || selectedPeptides.length === 0) return new Set<string>();
+    if (tab !== "cross" || selectedPeptides.length === 0) return new Map<string, "evitar" | "monitorar">();
 
-    const blocked = new Set<string>();
+    const blocked = new Map<string, "evitar" | "monitorar">();
     const selectedData = selectedPeptides
       .map((slug) => allPeptides.find((p) => p.slug === slug))
       .filter(Boolean) as PeptideWithInteractions[];
@@ -162,17 +162,28 @@ export default function Interactions() {
       if (selectedPeptides.includes(candidate.slug)) continue;
 
       for (const sel of selectedData) {
+        const checkInteraction = (int: NormalizedInteraction) => {
+          const label = getStatusInfo(int.status).label;
+          return label === "EVITAR" ? "evitar" : label === "MONITORAR" ? "monitorar" : null;
+        };
+
         // Check sel → candidate
-        const matchAB = sel.interactions.find(
-          (int) => namesMatch(int.nome, candidate.name) && getStatusInfo(int.status).label === "EVITAR"
-        );
-        if (matchAB) { blocked.add(candidate.slug); break; }
+        for (const int of sel.interactions) {
+          if (!namesMatch(int.nome, candidate.name)) continue;
+          const level = checkInteraction(int);
+          if (level === "evitar") { blocked.set(candidate.slug, "evitar"); break; }
+          if (level === "monitorar" && !blocked.has(candidate.slug)) blocked.set(candidate.slug, "monitorar");
+        }
+        if (blocked.get(candidate.slug) === "evitar") break;
 
         // Check candidate → sel
-        const matchBA = candidate.interactions.find(
-          (int) => namesMatch(int.nome, sel.name) && getStatusInfo(int.status).label === "EVITAR"
-        );
-        if (matchBA) { blocked.add(candidate.slug); break; }
+        for (const int of candidate.interactions) {
+          if (!namesMatch(int.nome, sel.name)) continue;
+          const level = checkInteraction(int);
+          if (level === "evitar") { blocked.set(candidate.slug, "evitar"); break; }
+          if (level === "monitorar" && !blocked.has(candidate.slug)) blocked.set(candidate.slug, "monitorar");
+        }
+        if (blocked.get(candidate.slug) === "evitar") break;
       }
     }
 
@@ -258,10 +269,16 @@ export default function Interactions() {
                   <ShieldCheck className="h-3 w-3" />
                   {filteredPeptides.filter(p => !selectedPeptides.includes(p.slug) && !blockedSlugs.has(p.slug)).length} disponíveis
                 </span>
-                {blockedSlugs.size > 0 && (
+                {[...blockedSlugs.values()].filter(v => v === "evitar").length > 0 && (
                   <span className="flex items-center gap-1 text-red-400/70 font-semibold">
                     <ShieldAlert className="h-3 w-3" />
-                    {blockedSlugs.size} bloqueados
+                    {[...blockedSlugs.values()].filter(v => v === "evitar").length} evitar
+                  </span>
+                )}
+                {[...blockedSlugs.values()].filter(v => v === "monitorar").length > 0 && (
+                  <span className="flex items-center gap-1 text-amber-400/70 font-semibold">
+                    <AlertTriangle className="h-3 w-3" />
+                    {[...blockedSlugs.values()].filter(v => v === "monitorar").length} monitorar
                   </span>
                 )}
                 <span className="text-muted-foreground/50">
@@ -276,6 +293,7 @@ export default function Interactions() {
                 ? selectedPeptide === p.slug
                 : selectedPeptides.includes(p.slug);
               const isBlocked = tab === "cross" && !isSelected && blockedSlugs.has(p.slug);
+              const blockLevel = isBlocked ? blockedSlugs.get(p.slug) : null;
 
               return (
                 <button
@@ -292,14 +310,17 @@ export default function Interactions() {
                   className={`inline-flex items-center gap-1 text-xs font-medium py-1 px-1.5 transition-all rounded ${
                     isSelected
                       ? "bg-primary/20 text-primary font-bold ring-1 ring-primary/40"
-                      : isBlocked
-                        ? "text-muted-foreground/30 line-through cursor-not-allowed opacity-40"
-                        : "text-muted-foreground hover:text-foreground"
+                      : blockLevel === "evitar"
+                        ? "text-muted-foreground/30 line-through cursor-not-allowed opacity-30"
+                        : blockLevel === "monitorar"
+                          ? "text-muted-foreground/40 cursor-not-allowed opacity-40"
+                          : "text-muted-foreground hover:text-foreground"
                   }`}
-                  title={isBlocked ? "Combinação não segura com os peptídeos selecionados" : undefined}
+                  title={blockLevel === "evitar" ? "Interação EVITAR com peptídeos selecionados" : blockLevel === "monitorar" ? "Interação MONITORAR com peptídeos selecionados" : undefined}
                 >
                   {isSelected && <span className="text-primary">✓</span>}
-                  {isBlocked && <ShieldAlert className="h-3 w-3 text-red-400/50" />}
+                  {blockLevel === "evitar" && <ShieldAlert className="h-3 w-3 text-red-400/60" />}
+                  {blockLevel === "monitorar" && <AlertTriangle className="h-3 w-3 text-amber-400/60" />}
                   <span>{p.name}</span>
                   {!isBlocked && worst === "caution" && (
                     <AlertTriangle className="h-3 w-3 text-amber-400" />
