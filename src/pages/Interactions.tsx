@@ -273,6 +273,9 @@ function IndividualResults({ peptide }: { peptide: PeptideWithInteractions | nul
           source={peptide.name}
           status={interaction.status}
           description={interaction.descricao}
+          mecanismo={interaction.mecanismo}
+          consequencias={interaction.consequencias}
+          fonte={interaction.fonte}
         />
       ))}
     </div>
@@ -326,6 +329,9 @@ function CrossResults({
               source={r.peptideA}
               status={r.interaction.status}
               description={r.interaction.descricao}
+              mecanismo={r.interaction.mecanismo}
+              consequencias={r.interaction.consequencias}
+              fonte={r.interaction.fonte}
             />
           ))}
         </div>
@@ -347,11 +353,17 @@ function InteractionCard({
   source,
   status,
   description,
+  mecanismo,
+  consequencias,
+  fonte,
 }: {
   substance: string;
   source: string;
   status: string;
   description: string;
+  mecanismo?: string;
+  consequencias?: string;
+  fonte?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const info = getStatusInfo(status);
@@ -363,16 +375,16 @@ function InteractionCard({
     : info.label === "COMPLEMENTAR" ? "bg-sky-500"
     : "bg-muted-foreground";
 
+  const hasDetails = mecanismo || consequencias || fonte;
+
   return (
-    <button
+    <div
       onClick={() => setExpanded(!expanded)}
-      className="w-full text-left rounded-xl border border-border/25 bg-card/70 hover:bg-card/90 transition-all overflow-hidden"
+      className="w-full text-left rounded-xl border border-border/25 bg-card/70 hover:bg-card/90 transition-all overflow-hidden cursor-pointer"
     >
       <div className="flex items-center gap-3 px-4 py-3.5">
-        {/* Status dot */}
         <span className={`h-3 w-3 rounded-full shrink-0 ${dotColor}`} />
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-bold text-foreground">{substance}</span>
@@ -385,7 +397,6 @@ function InteractionCard({
           )}
         </div>
 
-        {/* Action + Risk badges */}
         <div className="flex items-center gap-2 shrink-0">
           <Badge className={`text-[9px] border font-semibold px-2 ${info.color}`}>
             {action}
@@ -397,11 +408,44 @@ function InteractionCard({
         </div>
       </div>
 
-      {expanded && description && (
-        <div className="px-4 pb-3.5 pt-0">
-          <p className="text-xs text-muted-foreground leading-relaxed pl-6">{description}</p>
+      {expanded && (
+        <div className="px-4 pb-4 pt-1 space-y-3 border-t border-border/15 ml-6">
+          {description && (
+            <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+          )}
+
+          {mecanismo && (
+            <div>
+              <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                <span>⚙️</span> Mecanismo da Interação:
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{mecanismo}</p>
+            </div>
+          )}
+
+          {consequencias && (
+            <div>
+              <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                <span>⚡</span> Consequências Possíveis:
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{consequencias}</p>
+            </div>
+          )}
+
+          {fonte && (
+            <div>
+              <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                <span>📚</span> Fonte:
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{fonte}</p>
+            </div>
+          )}
+
+          {!hasDetails && !description && (
+            <p className="text-[11px] text-muted-foreground/50 italic">Detalhes não disponíveis.</p>
+          )}
         </div>
       )}
-    </button>
+    </div>
   );
 }

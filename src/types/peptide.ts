@@ -79,6 +79,9 @@ export interface NormalizedInteraction {
   nome: string;
   status: string;
   descricao: string;
+  mecanismo?: string;
+  consequencias?: string;
+  fonte?: string;
 }
 
 export interface PeptideWithInteractions {

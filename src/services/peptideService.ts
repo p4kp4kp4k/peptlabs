@@ -83,6 +83,9 @@ function normalizeInteractions(data: Json | null): NormalizedInteraction[] {
       nome: item.peptideo || item.nome || "",
       status: (item.tipo || item.status || "").toUpperCase(),
       descricao: item.descricao || "",
+      mecanismo: item.mecanismo || undefined,
+      consequencias: item.consequencias || undefined,
+      fonte: item.fonte || undefined,
     }));
   }
   const old = data as any;
@@ -91,11 +94,17 @@ function normalizeInteractions(data: Json | null): NormalizedInteraction[] {
       nome: i.nome || "",
       status: (i.status || "").toUpperCase(),
       descricao: i.descricao || "",
+      mecanismo: i.mecanismo || undefined,
+      consequencias: i.consequencias || undefined,
+      fonte: i.fonte || undefined,
     })),
     ...(old.outras_substancias || []).map((i: any) => ({
       nome: i.nome || "",
       status: (i.status || "").toUpperCase(),
       descricao: i.descricao || "",
+      mecanismo: i.mecanismo || undefined,
+      consequencias: i.consequencias || undefined,
+      fonte: i.fonte || undefined,
     })),
   ];
 }
