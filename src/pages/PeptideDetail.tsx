@@ -299,8 +299,7 @@ export default function PeptideDetail() {
         <div className="flex-1 min-w-0 space-y-4">
 
       {/* ── SCORE ── */}
-      <Section id="score">
-        <STitle icon={TrendingUp}>Score do Peptídeo</STitle>
+      <Section id="score" icon={TrendingUp} title="Score do Peptídeo">
         <div className="flex items-center gap-4">
           <div className="relative flex h-20 w-20 items-center justify-center">
             <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
