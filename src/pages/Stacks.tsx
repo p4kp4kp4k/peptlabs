@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Layers, Search, Clock } from "lucide-react";
@@ -8,9 +9,9 @@ import type { Stack } from "@/types";
 import { STACK_CATEGORIES } from "@/types";
 
 export default function Stacks() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
-  const [selectedStack, setSelectedStack] = useState<Stack | null>(null);
 
   const { data: stacks, isLoading } = useStacks();
 
