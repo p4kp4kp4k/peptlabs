@@ -84,21 +84,45 @@ export default function Interactions() {
 
     const allInteractions: { peptideA: string; peptideB: string; interaction: NormalizedInteraction }[] = [];
     let hasDirectNegative = false;
+    const addedPairs = new Set<string>();
 
-    // Check pairwise direct interactions
+    // Helper: fuzzy match interaction name against peptide name
+    const namesMatch = (interactionName: string, peptideName: string): boolean => {
+      const a = interactionName.toLowerCase().trim();
+      const b = peptideName.toLowerCase().trim();
+      if (a === b) return true;
+      // Check if peptide name is contained in the interaction name (e.g. "Outros agonistas GLP-1 (Semaglutide, Tirzepatide)" contains "Semaglutide")
+      if (a.includes(b) || b.includes(a)) return true;
+      return false;
+    };
+
+    // Check pairwise direct interactions (bidirectional)
     for (let i = 0; i < selectedPeptides.length; i++) {
       const pA = allPeptides.find((p) => p.slug === selectedPeptides[i]);
       if (!pA) continue;
       for (let j = i + 1; j < selectedPeptides.length; j++) {
         const pB = allPeptides.find((p) => p.slug === selectedPeptides[j]);
         if (!pB) continue;
-        const match = pA.interactions.find(
-          (int) => int.nome.toLowerCase() === pB.name.toLowerCase()
-        );
-        if (match) {
-          const info = getStatusInfo(match.status);
+        const pairKey = [pA.slug, pB.slug].sort().join("|");
+
+        // A → B
+        const matchAB = pA.interactions.find((int) => namesMatch(int.nome, pB.name));
+        if (matchAB && !addedPairs.has(pairKey)) {
+          const info = getStatusInfo(matchAB.status);
           if (info.label === "EVITAR" || info.label === "MONITORAR") hasDirectNegative = true;
-          allInteractions.push({ peptideA: pA.name, peptideB: pB.name, interaction: match });
+          allInteractions.push({ peptideA: pA.name, peptideB: pB.name, interaction: matchAB });
+          addedPairs.add(pairKey);
+        }
+
+        // B → A (if not already found)
+        if (!addedPairs.has(pairKey)) {
+          const matchBA = pB.interactions.find((int) => namesMatch(int.nome, pA.name));
+          if (matchBA) {
+            const info = getStatusInfo(matchBA.status);
+            if (info.label === "EVITAR" || info.label === "MONITORAR") hasDirectNegative = true;
+            allInteractions.push({ peptideA: pB.name, peptideB: pA.name, interaction: matchBA });
+            addedPairs.add(pairKey);
+          }
         }
       }
     }
