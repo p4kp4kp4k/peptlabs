@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Shield, AlertTriangle, ShieldCheck, ShieldAlert, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Search, Shield, AlertTriangle, ShieldCheck, ShieldAlert, ChevronDown, CheckCircle2, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePeptidesWithInteractions } from "@/hooks/usePeptides";
 import type { PeptideWithInteractions, NormalizedInteraction } from "@/types";
@@ -331,12 +331,22 @@ function CrossResults({
   return (
     <div className="space-y-4">
       {/* Safe combination banner */}
-      {safe && selectedCount >= 2 && (
+      {selectedCount >= 2 && safe && (
         <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 py-6 text-center">
           <CheckCircle2 className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
           <p className="text-sm font-bold text-emerald-400">🟢 Combinação segura</p>
           <p className="text-[11px] text-muted-foreground/70 mt-1">
             Nenhuma interação negativa direta encontrada entre os peptídeos selecionados.
+          </p>
+        </div>
+      )}
+
+      {selectedCount >= 2 && !safe && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/5 py-6 text-center">
+          <XCircle className="h-8 w-8 text-red-400 mx-auto mb-2" />
+          <p className="text-sm font-bold text-red-400">🔴 Combinação não segura</p>
+          <p className="text-[11px] text-muted-foreground/70 mt-1">
+            Foram encontradas interações negativas entre os peptídeos selecionados. Consulte os detalhes abaixo.
           </p>
         </div>
       )}
