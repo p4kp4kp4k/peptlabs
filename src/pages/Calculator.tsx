@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -444,16 +444,19 @@ export default function CalculatorPage() {
 
               {/* Result cards */}
               <div className="space-y-2">
-                <ResultCard label="Concentração" value={hasInput ? `${concentrationMcgPerMl.toFixed(1)} mcg/mL` : "—"} color="text-emerald-400" />
+                <ResultCard label="Concentração" value={hasInput ? `${concentrationMcgPerMl.toFixed(1)} mcg/mL` : "—"} color="text-emerald-400" numericValue={hasInput ? concentrationMcgPerMl : undefined} decimals={1} suffix="mcg/mL" />
                 <ResultCard
                   label="Volume a Injetar"
                   value={hasInput ? `${volumeToInjectMl.toFixed(3)} mL` : "—"}
                   sub={hasInput ? `≈ ${volumeToInjectUnits.toFixed(1)} UI (${selectedSyringe.label})` : undefined}
                   color="text-cyan-400"
                   highlight={hasInput}
+                  numericValue={hasInput ? volumeToInjectMl : undefined}
+                  decimals={3}
+                  suffix="mL"
                 />
-                <ResultCard label="Doses por Frasco" value={hasInput ? `${Math.floor(dosesPerVial)} doses` : "—"} color="text-violet-400" />
-                <ResultCard label="Total no Frasco" value={vial > 0 ? `${(vial * 1000).toLocaleString()} mcg` : "—"} color="text-amber-400" />
+                <ResultCard label="Doses por Frasco" value={hasInput ? `${Math.floor(dosesPerVial)} doses` : "—"} color="text-violet-400" numericValue={hasInput ? Math.floor(dosesPerVial) : undefined} decimals={0} suffix="doses" />
+                <ResultCard label="Total no Frasco" value={vial > 0 ? `${(vial * 1000).toLocaleString()} mcg` : "—"} color="text-amber-400" numericValue={vial > 0 ? vial * 1000 : undefined} decimals={0} suffix="mcg" />
               </div>
             </div>
           </div>
@@ -698,14 +701,43 @@ export default function CalculatorPage() {
   );
 }
 
-function ResultCard({ label, value, sub, color, highlight }: {
+function useCountUp(target: number, duration = 600) {
+  const [current, setCurrent] = useState(0);
+  const prevTarget = useRef(0);
+
+  useEffect(() => {
+    if (target === prevTarget.current) return;
+    const start = prevTarget.current;
+    prevTarget.current = target;
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      setCurrent(start + (target - start) * eased);
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [target, duration]);
+
+  return current;
+}
+
+function ResultCard({ label, value, sub, color, highlight, numericValue, decimals = 1, suffix = "" }: {
   label: string; value: string; sub?: string; color: string; highlight?: boolean;
+  numericValue?: number; decimals?: number; suffix?: string;
 }) {
+  const animated = useCountUp(numericValue ?? 0);
+  const displayValue = numericValue != null && numericValue > 0
+    ? `${animated.toFixed(decimals)} ${suffix}`.trim()
+    : value;
+
   return (
-    <div className={`rounded-lg border p-3.5 ${highlight ? "bg-primary/10 border-primary/30 shadow-sm shadow-primary/10" : "border-border/30 bg-card/60"}`}>
+    <div className={`rounded-lg border p-3.5 transition-all duration-300 ${highlight ? "bg-primary/10 border-primary/30 shadow-md shadow-primary/10" : "border-border/30 bg-card/60"}`}>
       <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium mb-1">{label}</p>
       <p className={`text-base font-black tracking-tight ${color}`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-        {value}
+        {displayValue}
       </p>
       {sub && <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{sub}</p>}
     </div>
@@ -713,11 +745,23 @@ function ResultCard({ label, value, sub, color, highlight }: {
 }
 
 function FormulaStep({ step, label, formula }: { step: string; label: string; formula: string }) {
+  // Extract the result (after the last "=")
+  const parts = formula.split("=");
+  const result = parts.length > 1 ? parts.pop()!.trim() : null;
+  const expression = parts.join("=").trim();
+
   return (
-    <div className="flex items-center gap-2">
-      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[9px] font-bold text-primary shrink-0">{step}</span>
-      <span className="text-[10px] font-semibold text-foreground w-20 shrink-0">{label}</span>
-      <code className="text-[10px] text-muted-foreground font-mono">{formula}</code>
+    <div className="flex items-center gap-2 py-1">
+      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-[9px] font-bold text-primary shrink-0">{step}</span>
+      <span className="text-[10px] font-bold text-foreground w-20 shrink-0">{label}</span>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <code className="text-[10px] text-muted-foreground font-mono">{expression} =</code>
+        {result && (
+          <span className="text-[11px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
+            {result}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
