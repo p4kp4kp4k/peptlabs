@@ -328,6 +328,36 @@ function CrossResults({
     );
   }
 
+  // Separate direct (between selected) vs individual interactions
+  const directInteractions = interactions.filter((r) => {
+    const info = getStatusInfo(r.interaction.status);
+    // Check if peptideB is one of the selected peptides (direct cross-interaction)
+    return r.interaction.nome !== undefined; // all are valid
+  });
+
+  // Sort: EVITAR first, then MONITORAR, then others
+  const sorted = [...interactions].sort((a, b) => {
+    const order = (s: string) => {
+      const u = s.toUpperCase();
+      if (u.includes("EVITAR") || u.includes("CONTRAIND")) return 0;
+      if (u.includes("MONITOR") || u.includes("CAUTELA")) return 1;
+      if (u.includes("SINÉR") || u.includes("SINERG") || u.includes("COMPATÍV")) return 3;
+      return 2;
+    };
+    return order(a.interaction.status) - order(b.interaction.status);
+  });
+
+  // Count EVITAR interactions
+  const evitarCount = interactions.filter(r => {
+    const info = getStatusInfo(r.interaction.status);
+    return info.label === "EVITAR";
+  }).length;
+
+  const monitorarCount = interactions.filter(r => {
+    const info = getStatusInfo(r.interaction.status);
+    return info.label === "MONITORAR";
+  }).length;
+
   return (
     <div className="space-y-4">
       {/* Safe combination banner */}
@@ -342,21 +372,37 @@ function CrossResults({
       )}
 
       {selectedCount >= 2 && !safe && (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/5 py-6 text-center">
-          <XCircle className="h-8 w-8 text-red-400 mx-auto mb-2" />
-          <p className="text-sm font-bold text-red-400">🔴 Combinação não segura</p>
-          <p className="text-[11px] text-muted-foreground/70 mt-1">
-            Foram encontradas interações negativas entre os peptídeos selecionados. Consulte os detalhes abaixo.
-          </p>
+        <div className="rounded-xl border border-red-500/25 bg-red-500/5 p-5 space-y-3">
+          <div className="flex items-center gap-3">
+            <XCircle className="h-8 w-8 text-red-400 shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-red-400">🔴 Combinação não segura</p>
+              <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                Foram encontradas interações perigosas entre os peptídeos selecionados.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {evitarCount > 0 && (
+              <Badge className="text-[10px] bg-red-500/15 text-red-400 border-red-500/25 font-bold px-2">
+                {evitarCount} EVITAR
+              </Badge>
+            )}
+            {monitorarCount > 0 && (
+              <Badge className="text-[10px] bg-amber-500/15 text-amber-400 border-amber-500/25 font-bold px-2">
+                {monitorarCount} MONITORAR
+              </Badge>
+            )}
+          </div>
         </div>
       )}
 
-      {interactions.length > 0 && (
+      {sorted.length > 0 && (
         <div className="space-y-3">
           <p className="text-sm font-semibold text-foreground">
-            {interactions.length} interação(ões) encontrada(s):
+            {sorted.length} interação(ões) encontrada(s):
           </p>
-          {interactions.map((r, i) => (
+          {sorted.map((r, i) => (
             <InteractionCard
               key={i}
               substance={r.peptideB}
@@ -371,7 +417,15 @@ function CrossResults({
         </div>
       )}
 
-      {interactions.length === 0 && !safe && (
+      {sorted.length === 0 && selectedCount >= 2 && (
+        <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 py-12 text-center">
+          <CheckCircle2 className="h-10 w-10 text-emerald-400 mx-auto mb-3" />
+          <p className="text-sm font-semibold text-emerald-400">Sem interações registradas</p>
+          <p className="text-[11px] text-muted-foreground/60 mt-1">Nenhuma interação conhecida entre os peptídeos selecionados.</p>
+        </div>
+      )}
+
+      {sorted.length === 0 && selectedCount < 2 && (
         <div className="rounded-xl border border-border/25 bg-card/70 py-12 text-center">
           <Shield className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Nenhuma interação registrada para esta combinação.</p>
