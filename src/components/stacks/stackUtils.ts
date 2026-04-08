@@ -22,6 +22,7 @@ export const categoryConfig: Record<string, { color: string; bgColor: string; bo
   "Sexual": { color: "text-red-400", bgColor: "bg-red-500/15", borderColor: "border-red-500/30" },
   "Antioxidante": { color: "text-lime-400", bgColor: "bg-lime-500/15", borderColor: "border-lime-500/30" },
   "Neuroproteção": { color: "text-violet-400", bgColor: "bg-violet-500/15", borderColor: "border-violet-500/30" },
+  "Definição": { color: "text-sky-400", bgColor: "bg-sky-500/15", borderColor: "border-sky-500/30" },
 };
 
 export function getCatConfig(cat: string) {
@@ -45,6 +46,7 @@ const categoryIcons: Record<string, React.ElementType> = {
   "Sono / Recuperação": Clock,
   "Biorregulador": Leaf,
   "Neuroproteção": Shield,
+  "Definição": Zap,
 };
 
 export function getCatIcon(cat: string) {
