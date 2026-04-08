@@ -52,26 +52,35 @@ function Section({ id, icon, title, iconColor = "text-primary", action, children
 }) {
   const ref = useRef<HTMLElement>(null);
   const [expanded, setExpanded] = useState(false);
-  const [hasBeenSeen, setHasBeenSeen] = useState(false);
+  const [manualToggle, setManualToggle] = useState(false);
   const Icon = icon;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setExpanded(true);
-          setHasBeenSeen(true);
-        } else if (hasBeenSeen) {
-          setExpanded(false);
-        }
-      },
-      { threshold: 0.15, rootMargin: "0px 0px -30% 0px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasBeenSeen]);
+    if (!el || manualToggle) return;
+
+    // Small delay so initial layout settles before observing
+    const timeout = setTimeout(() => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (manualToggle) return;
+          setExpanded(entry.isIntersecting);
+        },
+        { threshold: 0.2, rootMargin: "0px 0px -20% 0px" }
+      );
+      observer.observe(el);
+      return () => observer.disconnect();
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [manualToggle]);
+
+  const handleToggle = () => {
+    setManualToggle(true);
+    setExpanded(prev => !prev);
+    // Re-enable auto after 5s
+    setTimeout(() => setManualToggle(false), 5000);
+  };
 
   return (
     <ScrollReveal>
