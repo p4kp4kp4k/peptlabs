@@ -289,7 +289,7 @@ function CrossResults({
   interactions: { peptideA: string; peptideB: string; interaction: NormalizedInteraction }[];
   selectedCount: number;
 }) {
-  if (selectedCount < 2) {
+  if (selectedCount < 1) {
     return (
       <div className="rounded-xl border border-border/25 bg-card/70 py-16 text-center">
         <Shield className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
