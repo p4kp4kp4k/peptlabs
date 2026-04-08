@@ -3,12 +3,14 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Syringe, Search, ArrowLeftRight,
   Calculator, Layers, MapPin, History, Settings, CreditCard,
-  Shield, Menu, X, LogOut, FlaskConical, Zap, BookOpen
+  Shield, Menu, X, LogOut, FlaskConical, Zap, BookOpen, Palette
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useThemeColor, themeOptions } from "@/hooks/useThemeColor";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const mainNav = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/app/dashboard" },
