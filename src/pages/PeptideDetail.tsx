@@ -287,7 +287,7 @@ export default function PeptideDetail() {
 
             {/* Quick action buttons */}
             <div className="flex flex-wrap gap-2 mt-3">
-              <Button size="sm" variant="outline" className="text-[11px] gap-1.5 h-7" onClick={() => navigate("/app/calculator")}>
+              <Button size="sm" variant="outline" className="text-[11px] gap-1.5 h-7" onClick={() => setCalcOpen(true)}>
                 <Calculator className="h-3 w-3" /> Calcular Dose
               </Button>
               <Button size="sm" variant="outline" className="text-[11px] gap-1.5 h-7" onClick={() => navigate("/app/compare")}>
