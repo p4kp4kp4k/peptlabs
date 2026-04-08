@@ -52,37 +52,33 @@ function Section({ id, icon, title, iconColor = "text-primary", action, children
 }) {
   const ref = useRef<HTMLElement>(null);
   const [expanded, setExpanded] = useState(false);
-  const [manualToggle, setManualToggle] = useState(false);
+  const [autoUsed, setAutoUsed] = useState(false); // once auto-expanded & left, no more auto
   const Icon = icon;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || manualToggle) return;
+    if (!el || autoUsed) return;
 
-    let observer: IntersectionObserver | null = null;
-    const timeout = setTimeout(() => {
-      observer = new IntersectionObserver(
-        ([entry]) => {
-          // Only expand when entering the center band of the viewport
-          // Collapse immediately when leaving
-          setExpanded(entry.isIntersecting);
-        },
-        { threshold: 0.15, rootMargin: "-15% 0px -40% 0px" }
-      );
-      observer.observe(el);
-    }, 300);
-
-    return () => {
-      clearTimeout(timeout);
-      observer?.disconnect();
-    };
-  }, [manualToggle]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setExpanded(true);
+        } else {
+          // Only collapse after it was auto-opened once
+          setExpanded(prev => {
+            if (prev) setAutoUsed(true); // mark: from now on, only manual
+            return false;
+          });
+        }
+      },
+      { threshold: 0.15, rootMargin: "-10% 0px -35% 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [autoUsed]);
 
   const handleToggle = () => {
-    setManualToggle(true);
     setExpanded(prev => !prev);
-    // Re-enable auto after 5s
-    setTimeout(() => setManualToggle(false), 5000);
   };
 
   return (
