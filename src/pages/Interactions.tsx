@@ -95,15 +95,7 @@ export default function Interactions() {
     let hasDirectNegative = false;
     const addedPairs = new Set<string>();
 
-    // Helper: fuzzy match interaction name against peptide name
-    const namesMatch = (interactionName: string, peptideName: string): boolean => {
-      const a = interactionName.toLowerCase().trim();
-      const b = peptideName.toLowerCase().trim();
-      if (a === b) return true;
-      // Check if peptide name is contained in the interaction name (e.g. "Outros agonistas GLP-1 (Semaglutide, Tirzepatide)" contains "Semaglutide")
-      if (a.includes(b) || b.includes(a)) return true;
-      return false;
-    };
+    // namesMatch is now a module-level function
 
     // Check pairwise direct interactions (bidirectional)
     for (let i = 0; i < selectedPeptides.length; i++) {
