@@ -133,7 +133,7 @@ export default function Interactions() {
       if (!p) continue;
       for (const int of p.interactions) {
         // Skip if it's an interaction with another selected peptide (already covered above)
-        if (selectedNames.some((n) => n.toLowerCase() === int.nome.toLowerCase())) continue;
+        if (selectedNames.some((n) => namesMatch(int.nome, n))) continue;
         // Include all individual interactions
         allInteractions.push({ peptideA: p.name, peptideB: int.nome, interaction: int });
       }
