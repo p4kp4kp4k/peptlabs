@@ -15,7 +15,6 @@ import Library from "./pages/Library";
 import Finder from "./pages/Finder";
 import Calculator from "./pages/Calculator";
 import Stacks from "./pages/Stacks";
-import StackDetail from "./pages/StackDetail";
 import Interactions from "./pages/Interactions";
 import BodyMap from "./pages/BodyMap";
 import Admin from "./pages/Admin";
@@ -67,7 +66,6 @@ const App = () => (
             <Route path="/app/compare" element={<AppRoute><Compare /></AppRoute>} />
             <Route path="/app/calculator" element={<AppRoute><Calculator /></AppRoute>} />
             <Route path="/app/stacks" element={<AppRoute><Stacks /></AppRoute>} />
-            <Route path="/app/stacks/:stackId" element={<AppRoute><StackDetail /></AppRoute>} />
             <Route path="/app/interactions" element={<AppRoute><Interactions /></AppRoute>} />
             <Route path="/app/body-map" element={<AppRoute><BodyMap /></AppRoute>} />
             <Route path="/app/history" element={<AppRoute><HistoryPage /></AppRoute>} />
