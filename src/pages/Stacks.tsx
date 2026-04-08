@@ -115,7 +115,7 @@ export default function Stacks() {
             return (
               <button
                 key={stack.id}
-                onClick={() => setSelectedStack(stack)}
+                onClick={() => navigate(`/app/stacks/${stack.id}`)}
                 className="group text-left rounded-xl border border-border/20 bg-card/60 p-5 hover:border-border/40 hover:bg-card/80 transition-all duration-200"
               >
                 {/* Top row: icon + category badge */}
@@ -170,10 +170,8 @@ export default function Stacks() {
         </div>
       )}
 
-      {/* Detail Modal */}
-      {selectedStack && (
-        <StackDetailModal stack={selectedStack} onClose={() => setSelectedStack(null)} />
-      )}
+
+
     </div>
   );
 }
