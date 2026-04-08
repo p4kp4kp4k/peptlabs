@@ -698,14 +698,43 @@ export default function CalculatorPage() {
   );
 }
 
-function ResultCard({ label, value, sub, color, highlight }: {
+function useCountUp(target: number, duration = 600) {
+  const [current, setCurrent] = useState(0);
+  const prevTarget = useRef(0);
+
+  useEffect(() => {
+    if (target === prevTarget.current) return;
+    const start = prevTarget.current;
+    prevTarget.current = target;
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      setCurrent(start + (target - start) * eased);
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [target, duration]);
+
+  return current;
+}
+
+function ResultCard({ label, value, sub, color, highlight, numericValue, decimals = 1, suffix = "" }: {
   label: string; value: string; sub?: string; color: string; highlight?: boolean;
+  numericValue?: number; decimals?: number; suffix?: string;
 }) {
+  const animated = useCountUp(numericValue ?? 0);
+  const displayValue = numericValue != null && numericValue > 0
+    ? `${animated.toFixed(decimals)} ${suffix}`.trim()
+    : value;
+
   return (
-    <div className={`rounded-lg border p-3.5 ${highlight ? "bg-primary/10 border-primary/30 shadow-sm shadow-primary/10" : "border-border/30 bg-card/60"}`}>
+    <div className={`rounded-lg border p-3.5 transition-all duration-300 ${highlight ? "bg-primary/10 border-primary/30 shadow-md shadow-primary/10" : "border-border/30 bg-card/60"}`}>
       <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium mb-1">{label}</p>
       <p className={`text-base font-black tracking-tight ${color}`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-        {value}
+        {displayValue}
       </p>
       {sub && <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{sub}</p>}
     </div>
