@@ -293,6 +293,7 @@ export default function Interactions() {
                 ? selectedPeptide === p.slug
                 : selectedPeptides.includes(p.slug);
               const isBlocked = tab === "cross" && !isSelected && blockedSlugs.has(p.slug);
+              const blockLevel = isBlocked ? blockedSlugs.get(p.slug) : null;
 
               return (
                 <button
@@ -309,14 +310,17 @@ export default function Interactions() {
                   className={`inline-flex items-center gap-1 text-xs font-medium py-1 px-1.5 transition-all rounded ${
                     isSelected
                       ? "bg-primary/20 text-primary font-bold ring-1 ring-primary/40"
-                      : isBlocked
-                        ? "text-muted-foreground/30 line-through cursor-not-allowed opacity-40"
-                        : "text-muted-foreground hover:text-foreground"
+                      : blockLevel === "evitar"
+                        ? "text-muted-foreground/30 line-through cursor-not-allowed opacity-30"
+                        : blockLevel === "monitorar"
+                          ? "text-muted-foreground/40 cursor-not-allowed opacity-40"
+                          : "text-muted-foreground hover:text-foreground"
                   }`}
-                  title={isBlocked ? "Combinação não segura com os peptídeos selecionados" : undefined}
+                  title={blockLevel === "evitar" ? "Interação EVITAR com peptídeos selecionados" : blockLevel === "monitorar" ? "Interação MONITORAR com peptídeos selecionados" : undefined}
                 >
                   {isSelected && <span className="text-primary">✓</span>}
-                  {isBlocked && <ShieldAlert className="h-3 w-3 text-red-400/50" />}
+                  {blockLevel === "evitar" && <ShieldAlert className="h-3 w-3 text-red-400/60" />}
+                  {blockLevel === "monitorar" && <AlertTriangle className="h-3 w-3 text-amber-400/60" />}
                   <span>{p.name}</span>
                   {!isBlocked && worst === "caution" && (
                     <AlertTriangle className="h-3 w-3 text-amber-400" />
