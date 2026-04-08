@@ -87,7 +87,7 @@ function Section({ id, icon, title, iconColor = "text-primary", action, children
       <section ref={ref} id={id} data-section-id={id} className="rounded-xl border border-border bg-card card-line overflow-hidden">
         {/* Header — always visible, clickable */}
         <button
-          onClick={() => setExpanded(prev => !prev)}
+          onClick={handleToggle}
           className="w-full flex items-center justify-between p-4 sm:px-5 sm:py-3.5 text-left group hover:bg-secondary/20 transition-colors"
         >
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
