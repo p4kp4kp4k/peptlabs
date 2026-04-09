@@ -100,7 +100,7 @@ const Index = () => {
             <Button size="lg" className="gap-2 text-sm h-11" onClick={handleCTA}>
               Começar Grátis <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button size="lg" variant="outline" className="gap-2 text-sm h-11 border-border hover:border-primary/50">
+            <Button size="lg" variant="outline" className="gap-2 text-sm h-11 border-border hover:border-primary/50" onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}>
               Ver Planos
             </Button>
           </motion.div>
