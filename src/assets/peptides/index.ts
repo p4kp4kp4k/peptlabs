@@ -137,4 +137,7 @@ export const peptideImages: Record<string, string> = {
   "tirzepatide": imgTirzepatide,
   "vesugen": imgVesugen,
   "vilon": imgVilon,
+  "cerebrolysin-neurotrofico": imgCerebrolysinNeuro,
+  "selank-ansiolitico": imgSelankAnsiolitico,
+  "semax-nootropico": imgSemaxNootropico,
 };
