@@ -135,7 +135,10 @@ export default function Admin() {
             <Layers className="h-3.5 w-3.5" /> Stacks
           </TabsTrigger>
           <TabsTrigger value="sync" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <Database className="h-3.5 w-3.5" /> Sincronização
+            <Database className="h-3.5 w-3.5" /> Sync
+          </TabsTrigger>
+          <TabsTrigger value="security" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Shield className="h-3.5 w-3.5" /> Segurança
           </TabsTrigger>
         </TabsList>
 
