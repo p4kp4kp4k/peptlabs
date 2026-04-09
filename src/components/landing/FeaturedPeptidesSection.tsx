@@ -30,7 +30,8 @@ const FeaturedPeptidesSection = () => (
               whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
               className="group cursor-pointer overflow-hidden rounded-xl border border-border/20 bg-card/30 backdrop-blur-sm transition-all hover:border-primary/20"
             >
-              <div className={`relative h-24 bg-gradient-to-br ${p.gradient} opacity-70 group-hover:opacity-90 transition-opacity`}>
+              <div className="relative h-24 overflow-hidden">
+                <img src={peptideImages[p.slug]} alt={p.name} className="h-full w-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300" />
                 {p.free ? (
                   <span className="absolute left-1.5 top-1.5 rounded-full bg-primary/90 px-2 py-0.5 text-[8px] font-semibold text-primary-foreground">
                     Grátis
