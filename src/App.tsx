@@ -27,6 +27,7 @@ import Billing from "./pages/Billing";
 import Learn from "./pages/Learn";
 import GuideDetail from "./pages/GuideDetail";
 import NotFound from "./pages/NotFound";
+import Templates from "./pages/Templates";
 
 const queryClient = new QueryClient();
 
