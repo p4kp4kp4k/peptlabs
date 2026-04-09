@@ -65,6 +65,9 @@ import imgThymosinAlpha1 from "./thymosin-alpha-1.jpg";
 import imgTirzepatide from "./tirzepatide.jpg";
 import imgVesugen from "./vesugen.jpg";
 import imgVilon from "./vilon.jpg";
+import imgCerebrolysinNeuro from "./cerebrolysin-neurotrofico.jpg";
+import imgSelankAnsiolitico from "./selank-ansiolitico.jpg";
+import imgSemaxNootropico from "./semax-nootropico.jpg";
 
 export const peptideImages: Record<string, string> = {
   "5-amino-1mq": img5amino1mq,
@@ -134,4 +137,7 @@ export const peptideImages: Record<string, string> = {
   "tirzepatide": imgTirzepatide,
   "vesugen": imgVesugen,
   "vilon": imgVilon,
+  "cerebrolysin-neurotrofico": imgCerebrolysinNeuro,
+  "selank-ansiolitico": imgSelankAnsiolitico,
+  "semax-nootropico": imgSemaxNootropico,
 };
