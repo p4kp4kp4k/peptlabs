@@ -1,5 +1,5 @@
 import { LogIn, Target, Award } from "lucide-react";
-import ScrollReveal from "@/components/ScrollReveal";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 const steps = [
   { step: "1", icon: LogIn, title: "Crie sua conta grátis", desc: "Cadastre-se em menos de 30 segundos com email ou Google." },

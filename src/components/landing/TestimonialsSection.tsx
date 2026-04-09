@@ -1,6 +1,6 @@
 import { Star } from "lucide-react";
 import { motion } from "framer-motion";
-import ScrollReveal from "@/components/ScrollReveal";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 const testimonials = [
   {

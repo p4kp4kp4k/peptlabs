@@ -3,7 +3,7 @@ import { Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import ScrollReveal from "@/components/ScrollReveal";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 const FinalCTASection = () => {
   const navigate = useNavigate();

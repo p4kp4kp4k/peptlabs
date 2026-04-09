@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import ScrollReveal from "@/components/ScrollReveal";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 const faqs = [
   { q: "O que é a PeptiLab?", a: "A PeptiLab é a plataforma #1 de peptídeos no Brasil, com biblioteca completa, protocolos clínicos baseados em evidências, calculadora de doses e guias práticos." },

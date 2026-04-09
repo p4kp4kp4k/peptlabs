@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Stethoscope, Activity, Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import ScrollReveal from "@/components/ScrollReveal";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 const cards = [
   {

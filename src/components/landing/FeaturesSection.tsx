@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { BookOpen, Shield, Calculator, Layers, Brain, Zap } from "lucide-react";
-import ScrollReveal from "@/components/ScrollReveal";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 const features = [
   { icon: BookOpen, title: "Biblioteca Completa", desc: "80+ peptídeos catalogados com fichas técnicas detalhadas e referências científicas." },

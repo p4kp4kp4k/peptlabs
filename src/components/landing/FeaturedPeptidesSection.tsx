@@ -1,6 +1,6 @@
 import { ChevronRight, Lock } from "lucide-react";
 import { motion } from "framer-motion";
-import ScrollReveal from "@/components/ScrollReveal";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 const peptides = [
   { name: "BPC-157", category: "Recuperação", desc: "Cicatrização acelerada", free: false, gradient: "from-teal-400 to-cyan-600" },
