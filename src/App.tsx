@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { useAutoUpdate } from "@/hooks/useAutoUpdate";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
@@ -10,24 +11,26 @@ import AppLayout from "@/components/AppLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
-import Library from "./pages/Library";
-import Finder from "./pages/Finder";
-import Calculator from "./pages/Calculator";
-import Stacks from "./pages/Stacks";
-import Interactions from "./pages/Interactions";
-import BodyMap from "./pages/BodyMap";
-import Admin from "./pages/Admin";
-import PeptideDetail from "./pages/PeptideDetail";
-import Compare from "./pages/Compare";
-import HistoryPage from "./pages/History";
-import SettingsPage from "./pages/Settings";
-import Billing from "./pages/Billing";
-import Learn from "./pages/Learn";
-import GuideDetail from "./pages/GuideDetail";
 import NotFound from "./pages/NotFound";
-import Templates from "./pages/Templates";
+
+// Lazy-loaded pages
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Library = lazy(() => import("./pages/Library"));
+const Finder = lazy(() => import("./pages/Finder"));
+const Calculator = lazy(() => import("./pages/Calculator"));
+const Stacks = lazy(() => import("./pages/Stacks"));
+const Interactions = lazy(() => import("./pages/Interactions"));
+const BodyMap = lazy(() => import("./pages/BodyMap"));
+const Admin = lazy(() => import("./pages/Admin"));
+const PeptideDetail = lazy(() => import("./pages/PeptideDetail"));
+const Compare = lazy(() => import("./pages/Compare"));
+const HistoryPage = lazy(() => import("./pages/History"));
+const SettingsPage = lazy(() => import("./pages/Settings"));
+const Billing = lazy(() => import("./pages/Billing"));
+const Learn = lazy(() => import("./pages/Learn"));
+const GuideDetail = lazy(() => import("./pages/GuideDetail"));
+const Templates = lazy(() => import("./pages/Templates"));
 
 const queryClient = new QueryClient();
 
@@ -36,9 +39,19 @@ function AutoUpdater() {
   return null;
 }
 
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+  </div>
+);
+
 const AppRoute = ({ children, requireAdmin }: { children: React.ReactNode; requireAdmin?: boolean }) => (
   <ProtectedRoute requireAdmin={requireAdmin}>
-    <AppLayout>{children}</AppLayout>
+    <AppLayout>
+      <Suspense fallback={<PageLoader />}>
+        {children}
+      </Suspense>
+    </AppLayout>
   </ProtectedRoute>
 );
 
@@ -55,7 +68,7 @@ const App = () => (
             {/* Public */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
 
             {/* Legacy redirects */}
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
