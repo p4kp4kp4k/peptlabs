@@ -10,8 +10,8 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 export default function GuideDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { isPremium, isAdmin } = useEntitlements();
-  const hasFullAccess = isPremium || isAdmin;
+  const { isPro, isAdmin } = useEntitlements();
+  const hasFullAccess = isPro || isAdmin;
 
   const guide = guides.find((g) => g.slug === slug);
 

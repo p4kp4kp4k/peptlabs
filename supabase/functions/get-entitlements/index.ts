@@ -1,0 +1,81 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const PLAN_LIMITS: Record<string, object> = {
+  free: { max_protocols_month: 0, compare_limit: 0, history_days: 0, export_level: "none" },
+  starter: { max_protocols_month: 3, compare_limit: 5, history_days: 7, export_level: "basic" },
+  pro: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro" },
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    const userId = payload.sub as string;
+    if (!userId) throw new Error("No user id");
+
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Get entitlements
+    const { data: ent } = await admin
+      .from("entitlements")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    // Check admin
+    const { data: roles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
+
+    const plan = ent?.plan ?? "free";
+    const isActive = ent?.is_active ?? false;
+    const limits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
+
+    // Get current month usage
+    const month = new Date().toISOString().slice(0, 7);
+    const { data: usage } = await admin
+      .from("usage_counters")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("month", month)
+      .single();
+
+    return new Response(JSON.stringify({
+      plan,
+      isActive,
+      isAdmin,
+      isPro: plan === "pro" && isActive,
+      isStarter: plan === "starter" && isActive,
+      limits,
+      currentPeriodEnd: ent?.current_period_end ?? null,
+      usage: usage ? {
+        protocolsCreated: usage.protocols_created,
+        comparisonsMade: usage.comparisons_made,
+        exportsMade: usage.exports_made,
+      } : { protocolsCreated: 0, comparisonsMade: 0, exportsMade: 0 },
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

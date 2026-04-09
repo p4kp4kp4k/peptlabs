@@ -41,6 +41,36 @@ export type Database = {
         }
         Relationships: []
       }
+      entitlements: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          is_active: boolean
+          limits: Json
+          plan: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          is_active?: boolean
+          limits?: Json
+          plan?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          is_active?: boolean
+          limits?: Json
+          plan?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       history: {
         Row: {
           created_at: string
@@ -119,10 +149,18 @@ export type Database = {
             referencedRelation: "peptides"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "peptide_references_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "v_peptides_visible"
+            referencedColumns: ["id"]
+          },
         ]
       }
       peptides: {
         Row: {
+          access_level: string
           alternative_names: string[] | null
           apd_id: string | null
           application: string | null
@@ -159,10 +197,12 @@ export type Database = {
           source_origins: string[] | null
           stacks: Json | null
           structure_info: Json | null
+          tier: string
           timeline: Json | null
           updated_at: string
         }
         Insert: {
+          access_level?: string
           alternative_names?: string[] | null
           apd_id?: string | null
           application?: string | null
@@ -199,10 +239,12 @@ export type Database = {
           source_origins?: string[] | null
           stacks?: Json | null
           structure_info?: Json | null
+          tier?: string
           timeline?: Json | null
           updated_at?: string
         }
         Update: {
+          access_level?: string
           alternative_names?: string[] | null
           apd_id?: string | null
           application?: string | null
@@ -239,6 +281,7 @@ export type Database = {
           source_origins?: string[] | null
           stacks?: Json | null
           structure_info?: Json | null
+          tier?: string
           timeline?: Json | null
           updated_at?: string
         }
@@ -308,6 +351,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      protocol_templates: {
+        Row: {
+          access_level: string
+          category: string | null
+          content: Json
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          access_level?: string
+          category?: string | null
+          content?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          access_level?: string
+          category?: string | null
+          content?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       protocols: {
         Row: {
@@ -495,6 +571,33 @@ export type Database = {
         }
         Relationships: []
       }
+      usage_counters: {
+        Row: {
+          comparisons_made: number
+          exports_made: number
+          month: string
+          protocols_created: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comparisons_made?: number
+          exports_made?: number
+          month: string
+          protocols_created?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comparisons_made?: number
+          exports_made?: number
+          month?: string
+          protocols_created?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -542,6 +645,135 @@ export type Database = {
         }
         Relationships: []
       }
+      v_peptides_visible: {
+        Row: {
+          access_level: string | null
+          alternative_names: string[] | null
+          apd_id: string | null
+          application: string | null
+          benefits: string[] | null
+          biological_activity: string[] | null
+          category: string | null
+          classification: string | null
+          confidence_score: number | null
+          created_at: string | null
+          description: string | null
+          dosage_info: string | null
+          dosage_table: Json | null
+          dramp_id: string | null
+          evidence_level: string | null
+          goals: string[] | null
+          half_life: string | null
+          id: string | null
+          interactions: Json | null
+          last_synced_at: string | null
+          mechanism: string | null
+          mechanism_points: string[] | null
+          name: string | null
+          ncbi_protein_id: string | null
+          organism: string | null
+          peptipedia_id: string | null
+          protocol_phases: Json | null
+          reconstitution: string | null
+          reconstitution_steps: string[] | null
+          scientific_references: Json | null
+          sequence: string | null
+          sequence_length: number | null
+          side_effects: string | null
+          slug: string | null
+          source_origins: string[] | null
+          stacks: Json | null
+          structure_info: Json | null
+          tier: string | null
+          timeline: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_level?: string | null
+          alternative_names?: string[] | null
+          apd_id?: string | null
+          application?: string | null
+          benefits?: string[] | null
+          biological_activity?: string[] | null
+          category?: string | null
+          classification?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          description?: string | null
+          dosage_info?: string | null
+          dosage_table?: Json | null
+          dramp_id?: string | null
+          evidence_level?: string | null
+          goals?: string[] | null
+          half_life?: string | null
+          id?: string | null
+          interactions?: Json | null
+          last_synced_at?: string | null
+          mechanism?: string | null
+          mechanism_points?: string[] | null
+          name?: string | null
+          ncbi_protein_id?: string | null
+          organism?: string | null
+          peptipedia_id?: string | null
+          protocol_phases?: Json | null
+          reconstitution?: string | null
+          reconstitution_steps?: string[] | null
+          scientific_references?: Json | null
+          sequence?: string | null
+          sequence_length?: number | null
+          side_effects?: string | null
+          slug?: string | null
+          source_origins?: string[] | null
+          stacks?: Json | null
+          structure_info?: Json | null
+          tier?: string | null
+          timeline?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_level?: string | null
+          alternative_names?: string[] | null
+          apd_id?: string | null
+          application?: string | null
+          benefits?: string[] | null
+          biological_activity?: string[] | null
+          category?: string | null
+          classification?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          description?: string | null
+          dosage_info?: string | null
+          dosage_table?: Json | null
+          dramp_id?: string | null
+          evidence_level?: string | null
+          goals?: string[] | null
+          half_life?: string | null
+          id?: string | null
+          interactions?: Json | null
+          last_synced_at?: string | null
+          mechanism?: string | null
+          mechanism_points?: string[] | null
+          name?: string | null
+          ncbi_protein_id?: string | null
+          organism?: string | null
+          peptipedia_id?: string | null
+          protocol_phases?: Json | null
+          reconstitution?: string | null
+          reconstitution_steps?: string[] | null
+          scientific_references?: Json | null
+          sequence?: string | null
+          sequence_length?: number | null
+          side_effects?: string | null
+          slug?: string | null
+          source_origins?: string[] | null
+          stacks?: Json | null
+          structure_info?: Json | null
+          tier?: string | null
+          timeline?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role:
@@ -556,9 +788,13 @@ export type Database = {
             }
             Returns: boolean
           }
+      is_pro: { Args: never; Returns: boolean }
+      is_starter_or_above: { Args: never; Returns: boolean }
     }
     Enums: {
+      access_level: "starter" | "pro"
       app_role: "admin" | "user"
+      content_tier: "essential" | "advanced"
       history_kind:
         | "protocol"
         | "stack"
@@ -567,6 +803,7 @@ export type Database = {
         | "ai"
         | "premium_gate"
         | "security"
+      plan_tier: "free" | "starter" | "pro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -694,7 +931,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      access_level: ["starter", "pro"],
       app_role: ["admin", "user"],
+      content_tier: ["essential", "advanced"],
       history_kind: [
         "protocol",
         "stack",
@@ -704,6 +943,7 @@ export const Constants = {
         "premium_gate",
         "security",
       ],
+      plan_tier: ["free", "starter", "pro"],
     },
   },
 } as const

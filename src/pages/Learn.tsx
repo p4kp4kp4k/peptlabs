@@ -46,8 +46,8 @@ const categoryIcons: Record<string, typeof BookOpen> = {
 export default function Learn() {
   const { slug } = useParams<{ slug: string }>();
   const [activeTab, setActiveTab] = useState<TabKey>("todos");
-  const { isPremium, isAdmin } = useEntitlements();
-  const hasFullAccess = isPremium || isAdmin;
+  const { isPro, isAdmin } = useEntitlements();
+  const hasFullAccess = isPro || isAdmin;
   const navigate = useNavigate();
 
   const filtered = activeTab === "todos" ? guides : guides.filter((g) => g.tab === activeTab);

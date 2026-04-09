@@ -195,8 +195,8 @@ function RecommendationsBlock({ recommendations }: { recommendations: { title: s
 
 export default function GuideDetailInline({ slug }: Props) {
   const navigate = useNavigate();
-  const { isPremium, isAdmin } = useEntitlements();
-  const hasFullAccess = isPremium || isAdmin;
+  const { isPro, isAdmin } = useEntitlements();
+  const hasFullAccess = isPro || isAdmin;
 
   const guide = guides.find((g) => g.slug === slug);
 
