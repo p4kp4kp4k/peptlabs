@@ -271,8 +271,21 @@ export default function PeptideDetail() {
         </button>
 
         <div className="relative rounded-xl overflow-hidden border border-border card-line">
-          <div className="absolute inset-0 bg-gradient-to-br from-card via-card to-background" />
-          <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(circle at 85% 15%, hsl(var(--primary) / 0.08) 0%, transparent 50%), radial-gradient(circle at 15% 85%, hsl(var(--glow-accent) / 0.04) 0%, transparent 40%)` }} />
+          {slug === "adamax" ? (
+            <>
+              <video
+                autoPlay muted loop playsInline
+                className="absolute inset-0 w-full h-full object-cover opacity-30"
+                src="/videos/adamax-bg.mp4"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-card/90 via-card/70 to-transparent" />
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-br from-card via-card to-background" />
+              <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(circle at 85% 15%, hsl(var(--primary) / 0.08) 0%, transparent 50%), radial-gradient(circle at 15% 85%, hsl(var(--glow-accent) / 0.04) 0%, transparent 40%)` }} />
+            </>
+          )}
           <div className="absolute inset-0 flex items-center justify-end pr-6 sm:pr-10 pointer-events-none select-none overflow-hidden">
             <span className="text-[3.5rem] sm:text-[5rem] lg:text-[6rem] font-black text-white/[0.02] leading-none tracking-tighter whitespace-nowrap">{p.name}</span>
           </div>
