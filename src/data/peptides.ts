@@ -109,6 +109,14 @@ export const peptides: Peptide[] = [
   { id: 68, name: "Vilon", category: "Imunidade", description: "Imunomodulação · Função tímica", isPro: true, image: "" },
   { id: 69, name: "Tesamorelin + Ipamorelin (Blend 10mg)", category: "GH / Secretagogos", description: "Secreção pulsátil de GH · Redução de gordura visceral", isPro: true, isNew: true, image: "" },
   { id: 70, name: "SS-31 (Elamipretide)", category: "Anti-aging", description: "Otimização de ATP mitocondrial · Antioxidante mitocondrial", isPro: true, isNew: true, image: "" },
+  { id: 71, name: "Thymalin", category: "Imunidade", description: "Restauração tímica · Modulação de células T", isPro: true, isNew: true, image: "" },
+  { id: 72, name: "Hexarelin", category: "GH / Secretagogos", description: "Forte liberação de GH · Cardioproteção", isPro: true, isNew: true, image: "" },
+  { id: 73, name: "VIP (Peptídeo Vasoativo Intestinal)", category: "Imunidade", description: "Anti-inflamatório potente · Tratamento de CIRS", isPro: true, isNew: true, image: "" },
+  { id: 74, name: "Liraglutide (Saxenda)", category: "Emagrecimento", description: "Supressão de apetite · GLP-1 aprovado FDA", isPro: true, isNew: true, image: "" },
+  { id: 75, name: "Matrixyl (Palmitoyl Pentapeptide-4)", category: "Estética", description: "Estimulação de colágeno · Redução de rugas", isPro: true, isNew: true, image: "" },
+  { id: 76, name: "Argireline (Acetyl Hexapeptide-3)", category: "Estética", description: "Botox tópico · Inibidor SNARE", isPro: true, isNew: true, image: "" },
+  { id: 77, name: "Humanin", category: "Anti-aging", description: "Peptídeo mitocondrial · Citoproteção", isPro: true, isNew: true, image: "" },
+  { id: 78, name: "BPC-157 Oral", category: "Recuperação", description: "Proteção gástrica oral · Cicatrização GI", isPro: true, isNew: true, image: "" },
 ];
 
 export interface Guide {
