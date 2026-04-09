@@ -8,41 +8,8 @@ import { categories, categoryGradients } from "@/data/peptides";
 import { usePeptides } from "@/hooks/usePeptides";
 import type { PeptideListItem } from "@/types";
 
-import catAntiAging from "@/assets/categories/anti-aging.jpg";
-import catAntioxidante from "@/assets/categories/antioxidante.jpg";
-import catBiorregulador from "@/assets/categories/biorregulador.jpg";
-import catCardiovascular from "@/assets/categories/cardiovascular.jpg";
-import catEmagrecimento from "@/assets/categories/emagrecimento.jpg";
-import catEstetica from "@/assets/categories/estetica.jpg";
-import catGH from "@/assets/categories/gh-secretagogos.jpg";
-import catHormonal from "@/assets/categories/hormonal.jpg";
-import catImunidade from "@/assets/categories/imunidade.jpg";
-import catMetabolismo from "@/assets/categories/metabolismo.jpg";
-import catNeuroprotecao from "@/assets/categories/neuroprotecao.jpg";
-import catNootropicos from "@/assets/categories/nootropicos.jpg";
-import catPerformance from "@/assets/categories/performance.jpg";
-import catRecuperacao from "@/assets/categories/recuperacao.jpg";
-import catSexual from "@/assets/categories/sexual.jpg";
-import catSono from "@/assets/categories/sono-recuperacao.jpg";
-
-const categoryImages: Record<string, string> = {
-  "Anti-aging": catAntiAging,
-  "Antioxidante": catAntioxidante,
-  "Biorregulador": catBiorregulador,
-  "Cardiovascular": catCardiovascular,
-  "Emagrecimento": catEmagrecimento,
-  "Estética": catEstetica,
-  "GH / Secretagogos": catGH,
-  "Hormonal": catHormonal,
-  "Imunidade": catImunidade,
-  "Metabolismo": catMetabolismo,
-  "Neuroproteção": catNeuroprotecao,
-  "Nootrópicos": catNootropicos,
-  "Performance": catPerformance,
-  "Recuperação": catRecuperacao,
-  "Sexual": catSexual,
-  "Sono / Recuperação": catSono,
-};
+import { peptideImages } from "@/assets/peptides";
+import { categoryGradients as catGradients } from "@/data/peptides";
 
 export default function Library() {
   const navigate = useNavigate();
