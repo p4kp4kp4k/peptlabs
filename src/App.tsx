@@ -1,3 +1,4 @@
+import { useAutoUpdate } from "@/hooks/useAutoUpdate";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -35,7 +36,9 @@ const AppRoute = ({ children, requireAdmin }: { children: React.ReactNode; requi
   </ProtectedRoute>
 );
 
-const App = () => (
+const App = () => {
+  useAutoUpdate();
+  return (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
     <AuthProvider>
@@ -83,6 +86,7 @@ const App = () => (
     </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
