@@ -8,6 +8,42 @@ import { categories, categoryGradients } from "@/data/peptides";
 import { usePeptides } from "@/hooks/usePeptides";
 import type { PeptideListItem } from "@/types";
 
+import catAntiAging from "@/assets/categories/anti-aging.jpg";
+import catAntioxidante from "@/assets/categories/antioxidante.jpg";
+import catBiorregulador from "@/assets/categories/biorregulador.jpg";
+import catCardiovascular from "@/assets/categories/cardiovascular.jpg";
+import catEmagrecimento from "@/assets/categories/emagrecimento.jpg";
+import catEstetica from "@/assets/categories/estetica.jpg";
+import catGH from "@/assets/categories/gh-secretagogos.jpg";
+import catHormonal from "@/assets/categories/hormonal.jpg";
+import catImunidade from "@/assets/categories/imunidade.jpg";
+import catMetabolismo from "@/assets/categories/metabolismo.jpg";
+import catNeuroprotecao from "@/assets/categories/neuroprotecao.jpg";
+import catNootropicos from "@/assets/categories/nootropicos.jpg";
+import catPerformance from "@/assets/categories/performance.jpg";
+import catRecuperacao from "@/assets/categories/recuperacao.jpg";
+import catSexual from "@/assets/categories/sexual.jpg";
+import catSono from "@/assets/categories/sono-recuperacao.jpg";
+
+const categoryImages: Record<string, string> = {
+  "Anti-aging": catAntiAging,
+  "Antioxidante": catAntioxidante,
+  "Biorregulador": catBiorregulador,
+  "Cardiovascular": catCardiovascular,
+  "Emagrecimento": catEmagrecimento,
+  "Estética": catEstetica,
+  "GH / Secretagogos": catGH,
+  "Hormonal": catHormonal,
+  "Imunidade": catImunidade,
+  "Metabolismo": catMetabolismo,
+  "Neuroproteção": catNeuroprotecao,
+  "Nootrópicos": catNootropicos,
+  "Performance": catPerformance,
+  "Recuperação": catRecuperacao,
+  "Sexual": catSexual,
+  "Sono / Recuperação": catSono,
+};
+
 export default function Library() {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("Todos");
@@ -98,7 +134,17 @@ export default function Library() {
               onClick={() => navigate(`/peptide/${p.slug}`)}
               className="group cursor-pointer overflow-hidden rounded-xl border border-border/40 bg-card transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
             >
-              <div className={`relative h-28 bg-gradient-to-br ${categoryGradients[p.category] || "from-gray-500 to-gray-700"} opacity-80 transition-opacity group-hover:opacity-100`}>
+              <div className="relative h-28 overflow-hidden">
+                {categoryImages[p.category] ? (
+                  <img
+                    src={categoryImages[p.category]}
+                    alt={p.category}
+                    loading="lazy"
+                    className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-100"
+                  />
+                ) : (
+                  <div className={`h-full bg-gradient-to-br ${categoryGradients[p.category] || "from-gray-500 to-gray-700"} opacity-80 transition-opacity group-hover:opacity-100`} />
+                )}
                 <span className="absolute left-2 top-2 rounded-md bg-background/70 px-1.5 py-0.5 text-[9px] font-medium text-foreground backdrop-blur-sm">
                   {p.category}
                 </span>
