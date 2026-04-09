@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Sparkles, ChevronRight, BookOpen, Calculator, Users, Zap, Shield,
   Star, Check, ArrowRight, Beaker, Brain, Dumbbell, Lock,
-  ChevronDown, Stethoscope, Activity, Gift, FlaskConical, LogIn,
+  ChevronDown, Stethoscope, Activity, FlaskConical, LogIn,
   TrendingUp, Award, Clock, Target, Layers, Heart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
