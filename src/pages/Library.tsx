@@ -18,13 +18,15 @@ export default function Library() {
   const { data: peptides = [], isLoading } = usePeptides();
 
   const filtered = useMemo(() => {
-    return peptides.filter((p) => {
-      const matchCat = activeCategory === "Todos" || p.category === activeCategory;
-      const matchSearch = !searchTerm ||
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchCat && matchSearch;
-    });
+    return peptides
+      .filter((p) => {
+        const matchCat = activeCategory === "Todos" || p.category === activeCategory;
+        const matchSearch = !searchTerm ||
+          p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.category.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchCat && matchSearch;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   }, [activeCategory, searchTerm, peptides]);
 
   const freeCount = 2;
