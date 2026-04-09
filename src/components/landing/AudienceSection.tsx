@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
+
 const cards = [
   {
     icon: Stethoscope,
