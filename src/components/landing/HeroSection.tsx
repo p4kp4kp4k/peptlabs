@@ -1,9 +1,42 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, Users, FlaskConical, BookOpen, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+
+const useCountUp = (end: number, duration = 2000, prefix = "", suffix = "") => {
+  const [display, setDisplay] = useState(prefix + "0" + suffix);
+  const ref = useRef<HTMLDivElement>(null);
+  const counted = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !counted.current) {
+          counted.current = true;
+          const start = performance.now();
+          const step = (now: number) => {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = Math.round(eased * end);
+            setDisplay(prefix + current.toLocaleString("pt-BR") + suffix);
+            if (progress < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [end, duration, prefix, suffix]);
+
+  return { display, ref };
+};
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -14,12 +47,23 @@ const fadeUp = {
   }),
 };
 
-const stats = [
-  { value: "+3.000", label: "Profissionais ativos", icon: Users },
-  { value: "80+", label: "Peptídeos catalogados", icon: FlaskConical },
-  { value: "50+", label: "Protocolos clínicos", icon: BookOpen },
-  { value: "100%", label: "Baseado em PubMed", icon: Shield },
+const statsDef = [
+  { end: 3000, prefix: "+", suffix: "", label: "Profissionais ativos", icon: Users },
+  { end: 80, prefix: "", suffix: "+", label: "Peptídeos catalogados", icon: FlaskConical },
+  { end: 50, prefix: "", suffix: "+", label: "Protocolos clínicos", icon: BookOpen },
+  { end: 100, prefix: "", suffix: "%", label: "Baseado em PubMed", icon: Shield },
 ];
+
+const CountUpStat = ({ end, prefix, suffix, label, icon: Icon }: typeof statsDef[number]) => {
+  const { display, ref } = useCountUp(end, 2000, prefix, suffix);
+  return (
+    <div ref={ref} className="group rounded-xl border border-border/30 bg-card/40 p-4 text-center backdrop-blur-sm transition-all hover:border-primary/20 hover:bg-card/60">
+      <Icon className="h-4 w-4 text-primary mx-auto mb-2 transition-transform group-hover:scale-110" />
+      <p className="text-xl font-bold text-foreground font-display">{display}</p>
+      <p className="text-[10px] text-muted-foreground mt-0.5">{label}</p>
+    </div>
+  );
+};
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -101,15 +145,8 @@ const HeroSection = () => {
           variants={fadeUp}
           className="mt-16 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4"
         >
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="group rounded-xl border border-border/30 bg-card/40 p-4 text-center backdrop-blur-sm transition-all hover:border-primary/20 hover:bg-card/60"
-            >
-              <stat.icon className="h-4 w-4 text-primary mx-auto mb-2 transition-transform group-hover:scale-110" />
-              <p className="text-xl font-bold text-foreground font-display">{stat.value}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</p>
-            </div>
+          {statsDef.map((stat) => (
+            <CountUpStat key={stat.label} {...stat} />
           ))}
         </motion.div>
       </motion.div>
