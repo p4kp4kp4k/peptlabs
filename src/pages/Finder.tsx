@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { runEngine, getAvailableGoals, type GeneratedProtocol } from "@/engine";
 import { createProtocol } from "@/services/protocolService";
 import { saveRecommendation } from "@/services/userService";
-import { useEntitlements, checkEntitlement } from "@/hooks/useEntitlements";
+import { useEntitlements, checkFeature } from "@/hooks/useEntitlements";
 import PremiumGateModal from "@/components/PremiumGateModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
