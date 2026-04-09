@@ -27,6 +27,7 @@ import Billing from "./pages/Billing";
 import Learn from "./pages/Learn";
 import GuideDetail from "./pages/GuideDetail";
 import NotFound from "./pages/NotFound";
+import Templates from "./pages/Templates";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ const App = () => (
             <Route path="/app/learn" element={<AppRoute><Learn /></AppRoute>} />
             <Route path="/app/learn/:slug" element={<AppRoute><Learn /></AppRoute>} />
             <Route path="/app/admin" element={<AppRoute requireAdmin><Admin /></AppRoute>} />
+            <Route path="/app/templates" element={<AppRoute><Templates /></AppRoute>} />
             <Route path="/peptide/:slug" element={<AppRoute><PeptideDetail /></AppRoute>} />
 
             <Route path="*" element={<NotFound />} />
