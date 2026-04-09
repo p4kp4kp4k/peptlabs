@@ -103,7 +103,13 @@ export default function Library() {
               className="group cursor-pointer overflow-hidden rounded-xl border border-border/40 bg-card transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
             >
               <div className="relative h-28 overflow-hidden">
-                {peptideImages[p.slug] ? (
+                {p.slug === "adamax" ? (
+                  <video
+                    autoPlay muted loop playsInline
+                    className="h-full w-full object-cover opacity-80 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110"
+                    src="/videos/adamax-bg.mp4"
+                  />
+                ) : peptideImages[p.slug] ? (
                   <img
                     src={peptideImages[p.slug]}
                     alt={p.name}
