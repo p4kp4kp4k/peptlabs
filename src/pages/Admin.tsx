@@ -286,6 +286,11 @@ export default function Admin() {
         <TabsContent value="sync">
           <SyncPanel />
         </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security">
+          <SecurityPanel />
+        </TabsContent>
       </Tabs>
     </div>
   );
