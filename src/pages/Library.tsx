@@ -4,10 +4,9 @@ import { Search, Lock, Star, Sparkles, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { categories, categoryGradients } from "@/data/peptides";
+import { categories } from "@/data/peptides";
 import { usePeptides } from "@/hooks/usePeptides";
 import type { PeptideListItem } from "@/types";
-
 import { peptideImages } from "@/assets/peptides";
 import { categoryGradients as catGradients } from "@/data/peptides";
 
