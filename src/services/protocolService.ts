@@ -45,9 +45,21 @@ export async function updateProtocol(id: string, updates: Partial<Protocol>) {
   return data as unknown as Protocol;
 }
 
-/** Delete protocol */
+/** Soft delete protocol (archive) */
 export async function deleteProtocol(id: string) {
-  const { error } = await supabase.from("protocols").delete().eq("id", id);
+  const { error } = await supabase
+    .from("protocols")
+    .update({ deleted_at: new Date().toISOString() } as any)
+    .eq("id", id);
+  if (error) throw error;
+}
+
+/** Restore soft-deleted protocol */
+export async function restoreProtocol(id: string) {
+  const { error } = await supabase
+    .from("protocols")
+    .update({ deleted_at: null } as any)
+    .eq("id", id);
   if (error) throw error;
 }
 

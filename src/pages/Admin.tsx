@@ -135,7 +135,10 @@ export default function Admin() {
             <Layers className="h-3.5 w-3.5" /> Stacks
           </TabsTrigger>
           <TabsTrigger value="sync" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <Database className="h-3.5 w-3.5" /> Sincronização
+            <Database className="h-3.5 w-3.5" /> Sync
+          </TabsTrigger>
+          <TabsTrigger value="security" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Shield className="h-3.5 w-3.5" /> Segurança
           </TabsTrigger>
         </TabsList>
 
@@ -283,6 +286,11 @@ export default function Admin() {
         <TabsContent value="sync">
           <SyncPanel />
         </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security">
+          <SecurityPanel />
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -428,6 +436,143 @@ function SyncPanel() {
                     </TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ── Security Panel Component ──
+
+function SecurityPanel() {
+  const { data: events = [], isLoading } = useQuery({
+    queryKey: ["security-events"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("history")
+        .select("*")
+        .eq("kind", "security" as any)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  const { data: flaggedUsers = [] } = useQuery({
+    queryKey: ["flagged-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, flagged_at")
+        .not("flagged_at", "is", null)
+        .order("flagged_at", { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  const rateLimitEvents = events.filter((e: any) =>
+    e.metadata?.operation === "RATE_LIMIT_EXCEEDED"
+  );
+
+  const auditEvents = events.filter((e: any) =>
+    e.metadata?.operation !== "RATE_CHECK" && e.metadata?.operation !== "RATE_LIMIT_EXCEEDED"
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="border-border/40 bg-card/80">
+          <CardContent className="p-4">
+            <p className="text-lg font-bold text-foreground">{events.length}</p>
+            <p className="text-[10px] text-muted-foreground">Eventos Totais</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border/40 bg-card/80">
+          <CardContent className="p-4">
+            <p className="text-lg font-bold text-destructive">{rateLimitEvents.length}</p>
+            <p className="text-[10px] text-muted-foreground">Rate Limits</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border/40 bg-card/80">
+          <CardContent className="p-4">
+            <p className="text-lg font-bold text-foreground">{flaggedUsers.length}</p>
+            <p className="text-[10px] text-muted-foreground">Usuários Flagged</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Flagged Users */}
+      {flaggedUsers.length > 0 && (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-destructive">⚠️ Usuários Sinalizados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              {flaggedUsers.map((u: any) => (
+                <div key={u.user_id} className="flex items-center justify-between text-xs">
+                  <span>{u.display_name || u.user_id.slice(0, 8)}</span>
+                  <span className="text-muted-foreground">
+                    {new Date(u.flagged_at).toLocaleString("pt-BR")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Audit Log */}
+      <Card className="border-border/40 bg-card/80">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Trilha de Auditoria</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Operação</TableHead>
+                  <TableHead className="text-xs">Tabela</TableHead>
+                  <TableHead className="text-xs">Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {auditEvents.slice(0, 50).map((e: any) => (
+                  <TableRow key={e.id}>
+                    <TableCell className="text-xs">
+                      <Badge
+                        variant={
+                          e.metadata?.operation === "DELETE" || e.metadata?.operation?.startsWith("SOFT_DELETE")
+                            ? "destructive"
+                            : "outline"
+                        }
+                        className="text-[9px]"
+                      >
+                        {e.metadata?.operation || "—"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{e.metadata?.table || "—"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {new Date(e.created_at).toLocaleString("pt-BR")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {auditEvents.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-xs text-muted-foreground py-4">
+                      Nenhum evento de auditoria
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           )}
