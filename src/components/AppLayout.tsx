@@ -22,6 +22,7 @@ const mainNav = [
   { label: "Mapa Corporal", icon: MapPin, path: "/app/body-map" },
   { label: "Interações", icon: Zap, path: "/app/interactions" },
   { label: "Aprender", icon: BookOpen, path: "/app/learn" },
+  { label: "Templates", icon: FileText, path: "/app/templates" },
 ];
 
 const bottomNav = [
