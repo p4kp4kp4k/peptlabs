@@ -68,6 +68,14 @@ import imgVilon from "./vilon.jpg";
 import imgCerebrolysinNeuro from "./cerebrolysin-neurotrofico.jpg";
 import imgSelankAnsiolitico from "./selank-ansiolitico.jpg";
 import imgSemaxNootropico from "./semax-nootropico.jpg";
+import imgThymalin from "./thymalin.jpg";
+import imgHexarelin from "./hexarelin.jpg";
+import imgVip from "./vip.jpg";
+import imgLiraglutide from "./liraglutide.jpg";
+import imgMatrixyl from "./matrixyl.jpg";
+import imgArgireline from "./argireline.jpg";
+import imgHumanin from "./humanin.jpg";
+import imgBpc157Oral from "./bpc-157-oral.jpg";
 
 export const peptideImages: Record<string, string> = {
   "5-amino-1mq": img5amino1mq,
@@ -77,10 +85,12 @@ export const peptideImages: Record<string, string> = {
   "ara-290": imgAra290,
   "bpc-157": imgBpc157,
   "bpc-157-neuroprotecao": imgBpc157Neuro,
+  "bpc-157-oral": imgBpc157Oral,
   "cagrilintide": imgCagrilintide,
   "cardiogen": imgCardiogen,
   "cartalax": imgCartalax,
   "cerebrolysin": imgCerebrolysin,
+  "cerebrolysin-neurotrofico": imgCerebrolysinNeuro,
   "chonluten": imgChonluten,
   "cjc-1295-dac": imgCjc1295Dac,
   "cjc-1295-no-dac": imgCjc1295NoDac,
@@ -96,17 +106,21 @@ export const peptideImages: Record<string, string> = {
   "glutathione": imgGlutathione,
   "gonadorelin": imgGonadorelin,
   "hcg-5000iu": imgHcg,
+  "hexarelin": imgHexarelin,
   "hgh-191aa": imgHgh191aa,
   "hgh-fragment-176-191": imgHghFragment,
   "hmg-75iu": imgHmg,
+  "humanin": imgHumanin,
   "igf-1-lr3": imgIgf1Lr3,
   "ipamorelin": imgIpamorelin,
   "kisspeptin": imgKisspeptin,
   "klow": imgKlow,
   "kpv": imgKpv,
   "l-carnitine": imgLCarnitine,
+  "liraglutide": imgLiraglutide,
   "livagen": imgLivagen,
   "ll-37": imgLl37,
+  "matrixyl": imgMatrixyl,
   "mazdutide": imgMazdutide,
   "melanotan-ii": imgMelanotanIi,
   "mgf": imgMgf,
@@ -122,8 +136,10 @@ export const peptideImages: Record<string, string> = {
   "pt-141": imgPt141,
   "retatrutide": imgRetatrutide,
   "selank": imgSelank,
+  "selank-ansiolitico": imgSelankAnsiolitico,
   "semaglutide": imgSemaglutide,
   "semax": imgSemax,
+  "semax-nootropico": imgSemaxNootropico,
   "sermorelin": imgSermorelin,
   "slu-pp-332": imgSluPp332,
   "snap-8": imgSnap8,
@@ -133,11 +149,11 @@ export const peptideImages: Record<string, string> = {
   "tesamorelin": imgTesamorelin,
   "tesamorelin-ipamorelin-blend": imgTesamorelinBlend,
   "testagen": imgTestagen,
+  "thymalin": imgThymalin,
   "thymosin-alpha-1": imgThymosinAlpha1,
   "tirzepatide": imgTirzepatide,
+  "argireline": imgArgireline,
   "vesugen": imgVesugen,
   "vilon": imgVilon,
-  "cerebrolysin-neurotrofico": imgCerebrolysinNeuro,
-  "selank-ansiolitico": imgSelankAnsiolitico,
-  "semax-nootropico": imgSemaxNootropico,
+  "vip": imgVip,
 };
