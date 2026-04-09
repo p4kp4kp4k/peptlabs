@@ -1,15 +1,15 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Lock, Star, Sparkles, Loader2 } from "lucide-react";
+import { Search, Star, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { categories } from "@/data/peptides";
 import { usePeptides } from "@/hooks/usePeptides";
-import type { PeptideListItem } from "@/types";
 import { peptideImages } from "@/assets/peptides";
 import { peptideVideos } from "@/assets/videos";
 import { categoryGradients as catGradients } from "@/data/peptides";
+import { LazyVideo } from "@/components/LazyVideo";
 
 export default function Library() {
   const navigate = useNavigate();
@@ -43,7 +43,6 @@ export default function Library() {
           Biblioteca completa com protocolos e referências científicas
         </p>
       </div>
-
 
       {/* Access bar */}
       <div className="mb-5 flex items-center justify-between rounded-lg border border-border/40 bg-card px-4 py-2.5">
@@ -105,10 +104,10 @@ export default function Library() {
             >
               <div className="relative h-28 overflow-hidden">
                 {peptideVideos[p.slug] ? (
-                  <video
-                    autoPlay muted loop playsInline
-                    className="h-full w-full object-cover opacity-80 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110"
+                  <LazyVideo
                     src={peptideVideos[p.slug]}
+                    poster={peptideImages[p.slug]}
+                    className="h-full w-full object-cover opacity-80 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110"
                   />
                 ) : peptideImages[p.slug] ? (
                   <img
