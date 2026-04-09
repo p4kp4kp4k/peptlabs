@@ -28,7 +28,7 @@ export default function Library() {
   }, [activeCategory, searchTerm, peptides]);
 
   const freeCount = 2;
-  const totalCount = peptides.length || 67;
+  const totalCount = peptides.length || 70;
 
   return (
     <div className="p-4 sm:p-6">
