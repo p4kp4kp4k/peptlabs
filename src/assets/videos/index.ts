@@ -1,4 +1,5 @@
 export const peptideVideos: Record<string, string> = {
+  "adamax": "/videos/adamax-bg.mp4",
   "5-amino-1mq": "/__l5e/assets-v1/86236108-7c01-4995-a15d-fb9356af7bd4/5-amino-1mq.mp4",
   "aicar": "/__l5e/assets-v1/56d22475-c0ab-455e-8c10-f96e91c11964/aicar.mp4",
   "aod-9604": "/__l5e/assets-v1/0467b81f-06cc-4a26-96fb-008dbc1750ee/aod-9604.mp4",
