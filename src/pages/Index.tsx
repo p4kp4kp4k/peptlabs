@@ -268,7 +268,7 @@ const Index = () => {
       </section>
 
       {/* Pricing */}
-       <section className="border-y border-border/40 bg-card/20 px-4 py-10 sm:px-6">
+       <section id="pricing" className="border-y border-border/40 bg-card/20 px-4 py-10 sm:px-6">
         <div className="mx-auto max-w-4xl">
           <h2 className="mb-1.5 text-center text-xl font-bold text-foreground sm:text-2xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Escolha seu plano</h2>
           <p className="mb-6 text-center text-[11px] text-muted-foreground">Desbloqueie acesso completo à plataforma com o plano ideal para você.</p>
