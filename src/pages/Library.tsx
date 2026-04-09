@@ -8,6 +8,7 @@ import { categories } from "@/data/peptides";
 import { usePeptides } from "@/hooks/usePeptides";
 import type { PeptideListItem } from "@/types";
 import { peptideImages } from "@/assets/peptides";
+import { peptideVideos } from "@/assets/videos";
 import { categoryGradients as catGradients } from "@/data/peptides";
 
 export default function Library() {
@@ -103,11 +104,11 @@ export default function Library() {
               className="group cursor-pointer overflow-hidden rounded-xl border border-border/40 bg-card transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
             >
               <div className="relative h-28 overflow-hidden">
-                {p.slug === "adamax" ? (
+                {peptideVideos[p.slug] ? (
                   <video
                     autoPlay muted loop playsInline
                     className="h-full w-full object-cover opacity-80 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110"
-                    src="/videos/adamax-bg.mp4"
+                    src={peptideVideos[p.slug]}
                   />
                 ) : peptideImages[p.slug] ? (
                   <img

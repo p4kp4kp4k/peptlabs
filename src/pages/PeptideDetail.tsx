@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { peptideVideos } from "@/assets/videos";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -271,12 +272,12 @@ export default function PeptideDetail() {
         </button>
 
         <div className="relative rounded-xl overflow-hidden border border-border card-line">
-          {slug === "adamax" ? (
+          {slug && peptideVideos[slug] ? (
             <>
               <video
                 autoPlay muted loop playsInline
                 className="absolute inset-0 w-full h-full object-cover opacity-30"
-                src="/videos/adamax-bg.mp4"
+                src={peptideVideos[slug]}
               />
               <div className="absolute inset-0 bg-gradient-to-r from-card/90 via-card/70 to-transparent" />
             </>
