@@ -1,14 +1,15 @@
 import { ChevronRight, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { peptideImages } from "@/assets/peptides";
 
 const peptides = [
-  { name: "BPC-157", category: "Recuperação", desc: "Cicatrização acelerada", free: false, gradient: "from-teal-400 to-cyan-600" },
-  { name: "TB-500", category: "Recuperação", desc: "Reparo tecidual", free: false, gradient: "from-emerald-400 to-teal-600" },
-  { name: "CJC-1295", category: "GH / Secretagogos", desc: "Liberação pulsátil de GH", free: false, gradient: "from-blue-400 to-indigo-600" },
-  { name: "Ipamorelin", category: "GH / Secretagogos", desc: "Aumento de GH", free: false, gradient: "from-cyan-400 to-blue-600" },
-  { name: "Semaglutida", category: "Emagrecimento", desc: "Controle de apetite", free: true, gradient: "from-orange-400 to-amber-600" },
-  { name: "Tirzepatide", category: "Emagrecimento", desc: "Perda de peso", free: true, gradient: "from-rose-400 to-pink-600" },
+  { name: "BPC-157", slug: "bpc-157", category: "Recuperação", desc: "Cicatrização acelerada", free: false },
+  { name: "TB-500", slug: "tb-500", category: "Recuperação", desc: "Reparo tecidual", free: false },
+  { name: "CJC-1295", slug: "cjc-1295-no-dac", category: "GH / Secretagogos", desc: "Liberação pulsátil de GH", free: false },
+  { name: "Ipamorelin", slug: "ipamorelin", category: "GH / Secretagogos", desc: "Aumento de GH", free: false },
+  { name: "Semaglutida", slug: "semaglutide", category: "Emagrecimento", desc: "Controle de apetite", free: true },
+  { name: "Tirzepatide", slug: "tirzepatide", category: "Emagrecimento", desc: "Perda de peso", free: true },
 ];
 
 const FeaturedPeptidesSection = () => (
