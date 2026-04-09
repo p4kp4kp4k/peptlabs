@@ -35,7 +35,9 @@ const AppRoute = ({ children, requireAdmin }: { children: React.ReactNode; requi
   </ProtectedRoute>
 );
 
-const App = () => (
+const App = () => {
+  useAutoUpdate();
+  return (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
     <AuthProvider>
