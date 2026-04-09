@@ -217,7 +217,7 @@ export default function Finder() {
     }
     setSaving(true);
     try {
-      const check = await checkEntitlement("protocol");
+      const check = await checkFeature("create_protocol");
       if (!check.allowed) {
         setGateReason(check.reason || "Limite atingido.");
         setGateOpen(true);
