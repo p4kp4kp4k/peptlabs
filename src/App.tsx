@@ -30,19 +30,23 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function AutoUpdater() {
+  useAutoUpdate();
+  return null;
+}
+
 const AppRoute = ({ children, requireAdmin }: { children: React.ReactNode; requireAdmin?: boolean }) => (
   <ProtectedRoute requireAdmin={requireAdmin}>
     <AppLayout>{children}</AppLayout>
   </ProtectedRoute>
 );
 
-const App = () => {
-  useAutoUpdate();
-  return (
+const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
     <AuthProvider>
       <TooltipProvider>
+        <AutoUpdater />
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -86,7 +90,6 @@ const App = () => {
     </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
-  );
-};
+);
 
 export default App;
