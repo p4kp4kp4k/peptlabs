@@ -102,15 +102,15 @@ export default function Library() {
               className="group cursor-pointer overflow-hidden rounded-xl border border-border/40 bg-card transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
             >
               <div className="relative h-28 overflow-hidden">
-                {categoryImages[p.category] ? (
+                {peptideImages[p.slug] ? (
                   <img
-                    src={categoryImages[p.category]}
-                    alt={p.category}
+                    src={peptideImages[p.slug]}
+                    alt={p.name}
                     loading="lazy"
                     className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-100"
                   />
                 ) : (
-                  <div className={`h-full bg-gradient-to-br ${categoryGradients[p.category] || "from-gray-500 to-gray-700"} opacity-80 transition-opacity group-hover:opacity-100`} />
+                  <div className={`h-full bg-gradient-to-br ${catGradients[p.category] || "from-gray-500 to-gray-700"} opacity-80 transition-opacity group-hover:opacity-100`} />
                 )}
                 <span className="absolute left-2 top-2 rounded-md bg-background/70 px-1.5 py-0.5 text-[9px] font-medium text-foreground backdrop-blur-sm">
                   {p.category}
