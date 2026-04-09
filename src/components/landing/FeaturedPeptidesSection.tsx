@@ -1,14 +1,15 @@
 import { ChevronRight, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { peptideImages } from "@/assets/peptides";
 
 const peptides = [
-  { name: "BPC-157", category: "Recuperação", desc: "Cicatrização acelerada", free: false, gradient: "from-teal-400 to-cyan-600" },
-  { name: "TB-500", category: "Recuperação", desc: "Reparo tecidual", free: false, gradient: "from-emerald-400 to-teal-600" },
-  { name: "CJC-1295", category: "GH / Secretagogos", desc: "Liberação pulsátil de GH", free: false, gradient: "from-blue-400 to-indigo-600" },
-  { name: "Ipamorelin", category: "GH / Secretagogos", desc: "Aumento de GH", free: false, gradient: "from-cyan-400 to-blue-600" },
-  { name: "Semaglutida", category: "Emagrecimento", desc: "Controle de apetite", free: true, gradient: "from-orange-400 to-amber-600" },
-  { name: "Tirzepatide", category: "Emagrecimento", desc: "Perda de peso", free: true, gradient: "from-rose-400 to-pink-600" },
+  { name: "BPC-157", slug: "bpc-157", category: "Recuperação", desc: "Cicatrização acelerada", free: false },
+  { name: "TB-500", slug: "tb-500", category: "Recuperação", desc: "Reparo tecidual", free: false },
+  { name: "CJC-1295", slug: "cjc-1295-no-dac", category: "GH / Secretagogos", desc: "Liberação pulsátil de GH", free: false },
+  { name: "Ipamorelin", slug: "ipamorelin", category: "GH / Secretagogos", desc: "Aumento de GH", free: false },
+  { name: "Semaglutida", slug: "semaglutide", category: "Emagrecimento", desc: "Controle de apetite", free: true },
+  { name: "Tirzepatide", slug: "tirzepatide", category: "Emagrecimento", desc: "Perda de peso", free: true },
 ];
 
 const FeaturedPeptidesSection = () => (
@@ -29,7 +30,8 @@ const FeaturedPeptidesSection = () => (
               whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
               className="group cursor-pointer overflow-hidden rounded-xl border border-border/20 bg-card/30 backdrop-blur-sm transition-all hover:border-primary/20"
             >
-              <div className={`relative h-24 bg-gradient-to-br ${p.gradient} opacity-70 group-hover:opacity-90 transition-opacity`}>
+              <div className="relative h-24 overflow-hidden">
+                <img src={peptideImages[p.slug]} alt={p.name} className="h-full w-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300" />
                 {p.free ? (
                   <span className="absolute left-1.5 top-1.5 rounded-full bg-primary/90 px-2 py-0.5 text-[8px] font-semibold text-primary-foreground">
                     Grátis
