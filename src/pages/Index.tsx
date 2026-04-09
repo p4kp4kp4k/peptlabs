@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Sparkles, ChevronRight, BookOpen, Calculator, Users, Zap, Shield,
   Star, Check, ArrowRight, Beaker, Brain, Dumbbell, Lock,
-  ChevronDown, Stethoscope, Activity, Gift, FlaskConical, LogIn,
+  ChevronDown, Stethoscope, Activity, FlaskConical, LogIn,
   TrendingUp, Award, Clock, Target, Layers, Heart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -268,69 +268,53 @@ const Index = () => {
       </section>
 
       {/* Pricing */}
-      <section className="border-y border-border/40 bg-card/20 px-4 py-10 sm:px-6">
+       <section className="border-y border-border/40 bg-card/20 px-4 py-10 sm:px-6">
         <div className="mx-auto max-w-4xl">
           <h2 className="mb-1.5 text-center text-xl font-bold text-foreground sm:text-2xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Escolha seu plano</h2>
           <p className="mb-6 text-center text-[11px] text-muted-foreground">Desbloqueie acesso completo à plataforma com o plano ideal para você.</p>
           <div className="grid gap-4 lg:grid-cols-3">
-            {/* PRO Mensal */}
+            {/* Free */}
             <div className="rounded-xl border border-border/30 bg-card/60 p-5">
-              <h3 className="text-sm font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>PRO Mensal</h3>
-              <div className="mb-1"><span className="text-2xl font-bold text-foreground">R$ 147</span><span className="text-xs text-muted-foreground">/mês</span></div>
-              <p className="mb-1 text-[10px] text-muted-foreground">Cobrança mensal · Cancele quando quiser</p>
-              <p className="mb-3 text-[9px] text-muted-foreground/60">⚠ Equivale a R$ 1.764 por ano</p>
+              <h3 className="text-sm font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Gratuito</h3>
+              <div className="mb-1"><span className="text-2xl font-bold text-foreground">R$ 0</span><span className="text-xs text-muted-foreground">/sempre</span></div>
+              <p className="mb-3 text-[10px] text-muted-foreground">Para explorar a plataforma</p>
               <ul className="mb-4 space-y-1.5">
-                {["Acesso a toda a biblioteca de protocolos", "Calculadora de dose avançada", "Stacks sinérgicos exclusivos", "Guias práticos atualizados", "Suporte por e-mail em até 48h"].map(f => (
+                {["Visualizar biblioteca (essenciais)", "Consultar informações básicas", "Acesso limitado ao app"].map(f => (
                   <li key={f} className="flex items-start gap-1.5 text-[11px] text-muted-foreground"><Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />{f}</li>
                 ))}
               </ul>
-              <Button variant="outline" className="w-full text-[11px] h-9">Começar Agora</Button>
+              <Button variant="outline" className="w-full text-[11px] h-9" onClick={() => navigate("/auth")}>Começar Grátis</Button>
             </div>
-            {/* PRO Vitalício */}
+            {/* Starter */}
+            <div className="rounded-xl border border-border/30 bg-card/60 p-5">
+              <h3 className="text-sm font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Starter</h3>
+              <div className="mb-1"><span className="text-2xl font-bold text-foreground">R$ 39,90</span><span className="text-xs text-muted-foreground">/mês</span></div>
+              <p className="mb-3 text-[10px] text-muted-foreground">Para quem está começando</p>
+              <ul className="mb-4 space-y-1.5">
+                {["Biblioteca essencial de peptídeos", "Até 3 protocolos por mês", "Comparador (até 5 por comparação)", "Calculadora básica + salvar cálculo", "Histórico de 7 dias", "Templates essenciais", "Export básico (PDF simples)"].map(f => (
+                  <li key={f} className="flex items-start gap-1.5 text-[11px] text-muted-foreground"><Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />{f}</li>
+                ))}
+              </ul>
+              <Button variant="outline" className="w-full text-[11px] h-9" onClick={() => navigate("/auth")}>Começar Agora</Button>
+            </div>
+            {/* PRO */}
             <div className="relative rounded-xl border-2 border-primary bg-card/80 p-5">
               <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
                 <Badge className="border-0 bg-primary text-primary-foreground text-[9px]">🔥 Mais Escolhido</Badge>
               </div>
-              <h3 className="text-sm font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>PRO Vitalício</h3>
-              <div className="mb-1 flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold text-foreground">R$ 397</span>
-                <span className="text-xs text-muted-foreground">único</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground"><s>R$ 794</s> <span className="font-semibold text-primary">-50% OFF</span></p>
-              <p className="text-[10px] text-muted-foreground">ou 12x de R$ 41,06</p>
-              <p className="mb-3 text-[9px] text-primary/80">Acesso único. Para sempre.</p>
+              <h3 className="text-sm font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>PRO</h3>
+              <div className="mb-1"><span className="text-2xl font-bold text-foreground">R$ 59,90</span><span className="text-xs text-muted-foreground">/mês</span></div>
+              <p className="mb-3 text-[9px] text-primary/80">Acesso completo à plataforma</p>
               <ul className="mb-4 space-y-1.5">
-                {["Tudo do plano Mensal", "Acesso vitalício", "Acesso antecipado a novos protocolos", "Lives exclusivas com especialistas", "Consultoria em grupo quinzenal", "Certificado de conclusão"].map(f => (
+                {["Tudo do Starter", "Biblioteca completa (avançados inclusos)", "Protocolos ilimitados", "Comparador ilimitado", "Stack Builder PRO completo", "Calculadora avançada + presets", "Histórico ilimitado", "Templates premium + recomendações IA", "Export PRO (PDF premium c/ timeline)", "Suporte prioritário"].map(f => (
                   <li key={f} className="flex items-start gap-1.5 text-[11px] text-muted-foreground"><Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />{f}</li>
                 ))}
               </ul>
-              <Button className="w-full text-[11px] h-9">Garantir Acesso Vitalício</Button>
-            </div>
-            {/* Premium */}
-            <div className="rounded-xl border border-border/30 bg-card/60 p-5">
-              <h3 className="text-sm font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Vitalício Premium</h3>
-              <div className="mb-1 flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold text-foreground">R$ 997</span>
-                <span className="text-xs text-muted-foreground">único</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground"><s>R$ 1.997</s> <span className="font-semibold text-primary">-50% OFF</span></p>
-              <p className="mb-3 text-[9px] text-primary/80">Acesso vitalício + comunidade + fornecedores</p>
-              <ul className="mb-4 space-y-1.5">
-                {["Tudo do plano Vitalício incluído", "Contato direto com fornecedores verificados", "Comunidade exclusiva com +700 membros", "Suporte prioritário via WhatsApp em até 4h", "Consultoria clínica exclusiva"].map(f => (
-                  <li key={f} className="flex items-start gap-1.5 text-[11px] text-muted-foreground"><Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />{f}</li>
-                ))}
-              </ul>
-              <div className="mb-3 rounded-lg border border-primary/20 bg-primary/5 p-2.5">
-                <p className="flex items-center gap-1 text-[10px] font-semibold text-primary"><Gift className="h-3 w-3" /> BRINDE EXCLUSIVO</p>
-                <p className="mt-0.5 text-[9px] text-muted-foreground">E-book "A Era dos Peptídeos" — 81 páginas com protocolos de elite.</p>
-              </div>
-              <Button variant="outline" className="w-full border-primary text-primary text-[11px] h-9 hover:bg-primary hover:text-primary-foreground">
-                Pagar Uma Única Vez
-              </Button>
+              <Button className="w-full text-[11px] h-9" onClick={() => navigate("/auth")}>Fazer Upgrade</Button>
             </div>
           </div>
         </div>
-      </section>
+       </section>
 
       {/* FAQ */}
       <section className="px-4 py-10 sm:px-6">
