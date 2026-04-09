@@ -17,6 +17,7 @@ export type Database = {
       calculations: {
         Row: {
           created_at: string
+          deleted_at: string | null
           id: string
           input: Json
           output: Json
@@ -24,6 +25,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
           input?: Json
           output?: Json
@@ -31,6 +33,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
           input?: Json
           output?: Json
@@ -246,6 +249,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          flagged_at: string | null
           id: string
           updated_at: string
           user_id: string
@@ -254,6 +258,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          flagged_at?: string | null
           id?: string
           updated_at?: string
           user_id: string
@@ -262,6 +267,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          flagged_at?: string | null
           id?: string
           updated_at?: string
           user_id?: string
@@ -306,6 +312,7 @@ export type Database = {
       protocols: {
         Row: {
           created_at: string
+          deleted_at: string | null
           description: string | null
           id: string
           name: string
@@ -316,6 +323,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: string
           name: string
@@ -326,6 +334,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: string
           name?: string
@@ -368,6 +377,7 @@ export type Database = {
           benefits: string[] | null
           category: string
           created_at: string
+          deleted_at: string | null
           description: string | null
           duration: string | null
           icon: string | null
@@ -383,6 +393,7 @@ export type Database = {
           benefits?: string[] | null
           category: string
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           duration?: string | null
           icon?: string | null
@@ -398,6 +409,7 @@ export type Database = {
           benefits?: string[] | null
           category?: string
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           duration?: string | null
           icon?: string | null
@@ -523,6 +535,7 @@ export type Database = {
         | "compare"
         | "ai"
         | "premium_gate"
+        | "security"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -658,6 +671,7 @@ export const Constants = {
         "compare",
         "ai",
         "premium_gate",
+        "security",
       ],
     },
   },
