@@ -28,7 +28,7 @@ export default function Library() {
   }, [activeCategory, searchTerm, peptides]);
 
   const freeCount = 2;
-  const totalCount = peptides.length;
+  const totalCount = peptides.length || 67;
 
   return (
     <div className="p-4 sm:p-6">
@@ -106,10 +106,10 @@ export default function Library() {
                     src={peptideImages[p.slug]}
                     alt={p.name}
                     loading="lazy"
-                    className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-100"
+                    className="h-full w-full object-cover opacity-80 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110"
                   />
                 ) : (
-                  <div className={`h-full bg-gradient-to-br ${catGradients[p.category] || "from-gray-500 to-gray-700"} opacity-80 transition-opacity group-hover:opacity-100`} />
+                  <div className={`h-full bg-gradient-to-br ${catGradients[p.category] || "from-gray-500 to-gray-700"} opacity-80 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110`} />
                 )}
                 <span className="absolute left-2 top-2 rounded-md bg-background/70 px-1.5 py-0.5 text-[9px] font-medium text-foreground backdrop-blur-sm">
                   {p.category}
