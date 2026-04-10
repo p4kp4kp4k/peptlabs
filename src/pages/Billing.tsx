@@ -241,9 +241,19 @@ export default function Billing() {
                       p.highlight ? "shadow-lg shadow-primary/20" : ""
                     }`}
                     variant={p.highlight ? "default" : "outline"}
-                    disabled={isCurrent && p.id === "free"}
+                    disabled={(isCurrent && p.id === "free") || isCheckingOut}
+                    onClick={() => {
+                      if (p.id === "free") return;
+                      if (isCurrent) return;
+                      const planId = p.id === "lifetime" ? "pro_lifetime" : "pro_monthly";
+                      checkout({ planId: planId as any });
+                    }}
                   >
-                    {isCurrent && p.id === "free" ? (
+                    {isCheckingOut ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : isCurrent && p.id === "free" ? (
+                      "Plano Atual"
+                    ) : isCurrent ? (
                       "Plano Atual"
                     ) : (
                       <>
