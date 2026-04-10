@@ -13,6 +13,14 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 import { useThemeColor, themeOptions } from "@/hooks/useThemeColor";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
+// Paths accessible to free users (no lock icon)
+const FREE_PATHS = new Set([
+  "/app/dashboard",
+  "/app/peptides",
+  "/app/settings",
+  "/app/billing",
+]);
+
 const mainNav = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/app/dashboard" },
   { label: "Biblioteca", icon: Syringe, path: "/app/peptides" },
