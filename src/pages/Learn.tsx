@@ -308,6 +308,7 @@ export default function Learn() {
           )}
         </>
       )}
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="A Central de Conhecimento completa é exclusiva para assinantes." />
     </div>
     </>
   );

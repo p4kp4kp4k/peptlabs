@@ -622,6 +622,7 @@ export default function Finder() {
         )}
       </div>
       <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason={gateReason} />
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="O PeptiLab Matcher é exclusivo para assinantes." />
     </div>
     </>
   );

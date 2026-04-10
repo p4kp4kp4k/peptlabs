@@ -308,6 +308,7 @@ export default function Interactions() {
                   disabled={isHardBlocked}
                   onClick={() => {
                     if (isHardBlocked) return;
+                    if (!hasAccess) { setGateOpen(true); return; }
                     if (tab === "individual") {
                       setSelectedPeptide(selectedPeptide === p.slug ? null : p.slug);
                     } else {
