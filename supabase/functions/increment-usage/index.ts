@@ -5,12 +5,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type CounterField = "protocols_created" | "comparisons_made" | "exports_made";
+type CounterField = "protocols_created" | "comparisons_made" | "exports_made" | "calcs_made" | "stacks_viewed" | "templates_used" | "interactions_checked";
 
 const FEATURE_MAP: Record<string, CounterField> = {
   create_protocol: "protocols_created",
   compare: "comparisons_made",
   export: "exports_made",
+  calculator: "calcs_made",
+  stack_builder: "stacks_viewed",
+  template: "templates_used",
+  interaction_check: "interactions_checked",
 };
 
 Deno.serve(async (req) => {
@@ -34,7 +38,7 @@ Deno.serve(async (req) => {
     const field = FEATURE_MAP[feature];
 
     if (!field) {
-      return new Response(JSON.stringify({ error: "Invalid feature" }), {
+      return new Response(JSON.stringify({ error: `Invalid feature: ${feature}` }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -57,7 +61,7 @@ Deno.serve(async (req) => {
     if (existing) {
       await admin
         .from("usage_counters")
-        .update({ [field]: (existing as any)[field] + 1, updated_at: new Date().toISOString() })
+        .update({ [field]: ((existing as any)[field] ?? 0) + 1, updated_at: new Date().toISOString() })
         .eq("user_id", userId)
         .eq("month", month);
     } else {

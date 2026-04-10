@@ -50,14 +50,74 @@ Deno.serve(async (req) => {
     const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", userId);
     const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
 
-    // Admins and PRO bypass all limits
-    if (isAdmin || (plan === "pro" && isActive)) {
+    // Admins bypass all limits
+    if (isAdmin) {
       return new Response(JSON.stringify({ allowed: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const limits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
+    // PRO with active subscription bypasses all limits
+    if (plan === "pro" && isActive) {
+      return new Response(JSON.stringify({ allowed: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Starter with active subscription — only protocol limits apply
+    if (plan === "starter" && isActive) {
+      const limits = PLAN_LIMITS.starter;
+      const month = new Date().toISOString().slice(0, 7);
+      const { data: usage } = await admin
+        .from("usage_counters")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("month", month)
+        .single();
+
+      const counters = {
+        protocols_created: usage?.protocols_created ?? 0,
+        comparisons_made: usage?.comparisons_made ?? 0,
+        exports_made: usage?.exports_made ?? 0,
+      };
+
+      let allowed = true;
+      let reason = "";
+
+      switch (feature) {
+        case "create_protocol":
+          if (counters.protocols_created >= limits.max_protocols_month) {
+            allowed = false;
+            reason = `Limite de ${limits.max_protocols_month} protocolos/mês atingido no plano Starter.`;
+          }
+          break;
+        case "compare":
+          // per-comparison limit enforced in UI
+          break;
+        case "advanced_peptide":
+          allowed = false;
+          reason = "Peptídeos avançados disponíveis apenas no plano PRO.";
+          break;
+        // Starter has unlimited: calculator, stacks, templates, interactions, export
+        default:
+          break;
+      }
+
+      if (!allowed) {
+        await admin.from("history").insert({
+          user_id: userId,
+          kind: "premium_gate",
+          metadata: { feature, plan, reason, usage: counters },
+        });
+      }
+
+      return new Response(JSON.stringify({ allowed, reason }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // FREE plan or inactive subscription — check limits with usage counters
+    const limits = PLAN_LIMITS.free;
     const month = new Date().toISOString().slice(0, 7);
     const { data: usage } = await admin
       .from("usage_counters")
@@ -70,9 +130,12 @@ Deno.serve(async (req) => {
       protocols_created: usage?.protocols_created ?? 0,
       comparisons_made: usage?.comparisons_made ?? 0,
       exports_made: usage?.exports_made ?? 0,
+      calcs_made: (usage as any)?.calcs_made ?? 0,
+      stacks_viewed: (usage as any)?.stacks_viewed ?? 0,
+      templates_used: (usage as any)?.templates_used ?? 0,
+      interactions_checked: (usage as any)?.interactions_checked ?? 0,
     };
 
-    // Starter with active sub or free user
     let allowed = true;
     let reason = "";
 
@@ -80,56 +143,49 @@ Deno.serve(async (req) => {
       case "create_protocol":
         if (counters.protocols_created >= limits.max_protocols_month) {
           allowed = false;
-          reason = plan === "free"
-            ? "Você atingiu o limite de 1 protocolo/mês no plano Gratuito. Faça upgrade para continuar."
-            : `Limite de ${limits.max_protocols_month} protocolos/mês atingido no plano Starter.`;
+          reason = "Você atingiu o limite de 1 protocolo/mês no plano Gratuito. Faça upgrade para continuar.";
         }
         break;
       case "compare":
-        if (limits.compare_limit !== -1 && counters.comparisons_made >= limits.compare_limit) {
+        if (counters.comparisons_made >= limits.compare_limit) {
           allowed = false;
-          reason = plan === "free"
-            ? "Você atingiu o limite de 1 comparação/mês no plano Gratuito."
-            : `Limite de ${limits.compare_limit} comparações/mês atingido.`;
+          reason = "Você atingiu o limite de 1 comparação/mês no plano Gratuito.";
         }
         break;
       case "export":
-        if (limits.export_level === "none") {
-          allowed = false;
-          reason = "Exportação não disponível no seu plano.";
-        } else if (plan === "free" && counters.exports_made >= 1) {
+        if (counters.exports_made >= 1) {
           allowed = false;
           reason = "Você atingiu o limite de 1 exportação/mês no plano Gratuito.";
         }
         break;
-      case "engine":
-      case "stack_builder":
-        if (plan === "free") {
-          // Free users get 1 stack view
-          if (limits.stack_limit !== -1) {
-            allowed = false;
-            reason = "Você atingiu o limite de 1 stack/mês no plano Gratuito.";
-          }
-        } else if (plan === "starter" && !isActive) {
+      case "calculator":
+        if (counters.calcs_made >= limits.calc_limit) {
           allowed = false;
-          reason = "Funcionalidade disponível apenas com plano ativo.";
+          reason = "Você atingiu o limite de 1 cálculo/mês no plano Gratuito.";
+        }
+        break;
+      case "stack_builder":
+      case "engine":
+        if (counters.stacks_viewed >= limits.stack_limit) {
+          allowed = false;
+          reason = "Você atingiu o limite de 1 stack/mês no plano Gratuito.";
+        }
+        break;
+      case "template":
+        if (counters.templates_used >= limits.template_limit) {
+          allowed = false;
+          reason = "Você atingiu o limite de 1 template/mês no plano Gratuito.";
+        }
+        break;
+      case "interaction_check":
+        if (counters.interactions_checked >= limits.interaction_limit) {
+          allowed = false;
+          reason = "Você atingiu o limite de 1 verificação/mês no plano Gratuito.";
         }
         break;
       case "advanced_peptide":
         allowed = false;
         reason = "Peptídeos avançados disponíveis apenas no plano PRO.";
-        break;
-      case "calculator":
-        if (plan === "free" && limits.calc_limit !== -1) {
-          allowed = false;
-          reason = "Você atingiu o limite de 1 cálculo/mês no plano Gratuito.";
-        }
-        break;
-      case "interaction_check":
-        if (plan === "free" && limits.interaction_limit !== -1) {
-          allowed = false;
-          reason = "Você atingiu o limite de 1 verificação/mês no plano Gratuito.";
-        }
         break;
       default:
         break;
@@ -139,7 +195,7 @@ Deno.serve(async (req) => {
       await admin.from("history").insert({
         user_id: userId,
         kind: "premium_gate",
-        metadata: { feature, plan, reason, usage: counters },
+        metadata: { feature, plan: plan || "free", reason, usage: counters },
       });
     }
 

@@ -7,6 +7,10 @@ export interface EntitlementLimits {
   compare_limit: number;
   history_days: number;
   export_level: string;
+  calc_limit?: number;
+  stack_limit?: number;
+  template_limit?: number;
+  interaction_limit?: number;
 }
 
 export interface EntitlementUsage {
@@ -28,11 +32,20 @@ export interface EntitlementData {
 
 const FREE_DEFAULTS: EntitlementData = {
   plan: "free",
-  isActive: false,
+  isActive: true,
   isAdmin: false,
   isPro: false,
   isStarter: false,
-  limits: { max_protocols_month: 0, compare_limit: 0, history_days: 0, export_level: "none" },
+  limits: {
+    max_protocols_month: 1,
+    compare_limit: 1,
+    history_days: 0,
+    export_level: "basic",
+    calc_limit: 1,
+    stack_limit: 1,
+    template_limit: 1,
+    interaction_limit: 1,
+  },
   currentPeriodEnd: null,
   usage: { protocolsCreated: 0, comparisonsMade: 0, exportsMade: 0 },
 };
@@ -82,9 +95,15 @@ export function useEntitlements() {
       }
       if (resource === "compare") {
         const limit = ent.limits.compare_limit;
-        return limit === -1 || true; // per-comparison limit enforced in UI
+        return limit === -1 || ent.usage.comparisonsMade < limit;
       }
-      return ent.isStarter;
+      if (resource === "export") {
+        return ent.limits.export_level !== "none";
+      }
+      // For starter, all other features are unlimited
+      if (ent.isStarter) return true;
+      // For free, check specific limits
+      return true; // Server-side enforcement via can-use-feature
     },
   };
 }

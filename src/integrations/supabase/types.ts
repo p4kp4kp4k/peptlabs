@@ -573,26 +573,38 @@ export type Database = {
       }
       usage_counters: {
         Row: {
+          calcs_made: number
           comparisons_made: number
           exports_made: number
+          interactions_checked: number
           month: string
           protocols_created: number
+          stacks_viewed: number
+          templates_used: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          calcs_made?: number
           comparisons_made?: number
           exports_made?: number
+          interactions_checked?: number
           month: string
           protocols_created?: number
+          stacks_viewed?: number
+          templates_used?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          calcs_made?: number
           comparisons_made?: number
           exports_made?: number
+          interactions_checked?: number
           month?: string
           protocols_created?: number
+          stacks_viewed?: number
+          templates_used?: number
           updated_at?: string
           user_id?: string
         }
