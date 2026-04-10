@@ -376,7 +376,6 @@ export default function BodyMap() {
     </div>
   </FreeGateOverlay>
   );
-  );
 }
 
 // ── Body Silhouette SVG with clickable dots ──
