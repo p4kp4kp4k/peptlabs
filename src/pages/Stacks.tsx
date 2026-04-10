@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import ProBadge from "@/components/ProBadge";
 import { getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
+import { stackImages } from "@/assets/stacks";
 import UsageBadge from "@/components/UsageBadge";
 import { useStacks } from "@/hooks/useStacks";
 import type { Stack } from "@/types";
@@ -340,24 +341,34 @@ export default function Stacks() {
               <button
                 key={stack.id}
                 onClick={() => handleOpenStack(stack)}
-                className={`group text-left rounded-xl border border-border/20 bg-card/60 p-5 hover:border-border/40 hover:bg-card/80 transition-all duration-200 relative`}
+                className={`group text-left rounded-xl border border-border/20 bg-card/60 overflow-hidden hover:border-border/40 hover:bg-card/80 transition-all duration-200 relative`}
               >
-                {/* PRO badge for non-premium users */}
-                {!hasAccess && (
-                  <div className="absolute top-3 right-3 z-10">
-                     <ProBadge />
-                  </div>
-                )}
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${config.bgColor}`}>
-                    <IconComp className={`h-5 w-5 ${config.color}`} />
-                  </div>
-                  {hasAccess && (
-                  <Badge variant="outline" className={`text-[10px] ${config.bgColor} ${config.color} ${config.borderColor} font-semibold px-2.5 py-0.5`}>
+                {/* Stack image */}
+                <div className="relative h-28 overflow-hidden">
+                  {stackImages[stack.category] ? (
+                    <img
+                      src={stackImages[stack.category]}
+                      alt={stack.category}
+                      loading="lazy"
+                      className="h-full w-full object-cover opacity-80 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className={`h-full ${config.bgColor}`} />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+                  {/* Category badge */}
+                  <span className="absolute left-2.5 top-2.5 rounded-md bg-background/70 px-1.5 py-0.5 text-[9px] font-medium text-foreground backdrop-blur-sm">
                     {stack.category}
-                  </Badge>
+                  </span>
+                  {/* PRO badge for non-premium users */}
+                  {!hasAccess && (
+                    <div className="absolute top-2.5 right-2.5 z-10">
+                      <ProBadge />
+                    </div>
                   )}
                 </div>
+
+                <div className="p-4">
                 <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors mb-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                   {stack.name}
                 </h3>
@@ -383,6 +394,7 @@ export default function Stacks() {
                     <CheckCircle2 className="h-3 w-3" />
                     <span>Sinergia Verificada</span>
                   </div>
+                </div>
                 </div>
               </button>
             );
