@@ -23,6 +23,7 @@ const Stacks = lazy(() => import("./pages/Stacks"));
 const Interactions = lazy(() => import("./pages/Interactions"));
 const BodyMap = lazy(() => import("./pages/BodyMap"));
 const Admin = lazy(() => import("./pages/Admin"));
+const AdminBilling = lazy(() => import("./pages/AdminBilling"));
 const PeptideDetail = lazy(() => import("./pages/PeptideDetail"));
 const Compare = lazy(() => import("./pages/Compare"));
 const HistoryPage = lazy(() => import("./pages/History"));
@@ -97,6 +98,7 @@ const App = () => (
             <Route path="/app/learn" element={<AppRoute><Learn /></AppRoute>} />
             <Route path="/app/learn/:slug" element={<AppRoute><Learn /></AppRoute>} />
             <Route path="/app/admin" element={<AppRoute requireAdmin><Admin /></AppRoute>} />
+            <Route path="/app/admin/billing" element={<AppRoute requireAdmin><AdminBilling /></AppRoute>} />
             <Route path="/app/templates" element={<AppRoute><Templates /></AppRoute>} />
             <Route path="/peptide/:slug" element={<AppRoute><PeptideDetail /></AppRoute>} />
 
