@@ -210,11 +210,9 @@ function StackModal({ stack, onClose }: { stack: Stack; onClose: () => void }) {
 
 /* ═══ Main Stacks Page ═══ */
 export default function Stacks() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
-  const [selectedStack, setSelectedStack] = useState<Stack | null>(null);
-  const [gateOpen, setGateOpen] = useState(false);
-  const [gateReason, setGateReason] = useState("");
   const { isAdmin, isPro, isStarter } = useEntitlements();
   const hasAccess = isAdmin || isPro || isStarter;
 
@@ -380,9 +378,10 @@ export default function Stacks() {
         </div>
       )}
 
-      {/* Modal */}
-      {selectedStack && <StackModal stack={selectedStack} onClose={() => setSelectedStack(null)} />}
-      <PremiumGateModal open={gateOpen} onClose={() => { setGateOpen(false); setGateReason(""); }} reason={gateReason || "Stacks sinérgicos são exclusivos para assinantes. Faça upgrade para acessar combinações otimizadas."} />
+    </div>
+    </>
+  );
+}
     </div>
     </>
   );
