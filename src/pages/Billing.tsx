@@ -18,8 +18,8 @@ const comparisonRows: { label: string; free: string; proMonthly: string; proLife
   { label: "Verificação de interações", free: "1 / mês", proMonthly: "Completa", proLifetime: "Completa" },
   { label: "Body Map interativo", free: "—", proMonthly: "✓", proLifetime: "✓" },
   { label: "Contato com fornecedores", free: "—", proMonthly: "✓", proLifetime: "✓" },
-  { label: "Acesso antecipado a novos protocolos", free: "—", proMonthly: "—", proLifetime: "✓" },
-  { label: "Lives exclusivas com especialistas", free: "—", proMonthly: "—", proLifetime: "✓" },
+  { label: "Atualizações e novos peptídeos", free: "—", proMonthly: "—", proLifetime: "✓" },
+  { label: "Prioridade em novas funcionalidades", free: "—", proMonthly: "—", proLifetime: "✓" },
   { label: "Suporte", free: "—", proMonthly: "Prioritário", proLifetime: "VIP dedicado" },
 ];
 
