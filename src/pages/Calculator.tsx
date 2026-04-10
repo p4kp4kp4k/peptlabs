@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger
 } from "@/components/ui/collapsible";
-
+import { useEntitlements } from "@/hooks/useEntitlements";
 // Parse dose strings like "250 mcg/dia", "2.5 mg/dia", "5mg" to mcg number
 function parseDoseToMcg(doseStr: string): number {
   const clean = doseStr.toLowerCase().replace(/[^\d.,a-z]/g, " ");
