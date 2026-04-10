@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, Mail, Lock, Eye, EyeOff, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,13 +15,9 @@ export default function AdminLogin() {
   const navigate = useNavigate();
 
   // If already logged in as admin, redirect
-  if (user && isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (user && isAdmin) navigate("/app/admin", { replace: true });
+  }, [user, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
