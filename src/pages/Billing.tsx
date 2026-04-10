@@ -7,15 +7,16 @@ import { useState } from "react";
 /* ─── Feature comparison rows ─── */
 const comparisonRows: { label: string; free: string; starter: string; pro: string }[] = [
   { label: "Biblioteca de peptídeos", free: "1 peptídeo", starter: "Essenciais", pro: "Completa (78+)" },
-  { label: "Protocolos por mês", free: "—", starter: "3", pro: "Ilimitados" },
-  { label: "Comparador", free: "—", starter: "Até 5 / comparação", pro: "Ilimitado" },
-  { label: "Calculadora de dosagem", free: "—", starter: "Básica", pro: "Avançada + presets" },
-  { label: "Stack Builder", free: "—", starter: "—", pro: "PRO completo" },
+  { label: "Protocolos por mês", free: "1", starter: "3", pro: "Ilimitados" },
+  { label: "Comparador", free: "1 / mês", starter: "Até 5 / comparação", pro: "Ilimitado" },
+  { label: "Calculadora de dosagem", free: "1 / mês", starter: "Ilimitada", pro: "Avançada + presets" },
+  { label: "Stack Builder", free: "1 / mês", starter: "Ilimitado", pro: "PRO completo" },
   { label: "Histórico", free: "—", starter: "7 dias", pro: "Ilimitado" },
-  { label: "Templates", free: "—", starter: "Essenciais", pro: "Premium + IA" },
-  { label: "Exportação (PDF)", free: "—", starter: "Básica", pro: "Premium c/ timeline" },
-  { label: "Verificação de interações", free: "—", starter: "Básica", pro: "Completa" },
+  { label: "Templates", free: "1 / mês", starter: "Essenciais", pro: "Premium + IA" },
+  { label: "Exportação (PDF)", free: "1 / mês", starter: "Ilimitada", pro: "Premium c/ timeline" },
+  { label: "Verificação de interações", free: "1 / mês", starter: "Ilimitada", pro: "Completa" },
   { label: "Body Map interativo", free: "—", starter: "—", pro: "✓" },
+  { label: "Contato com fornecedores", free: "—", starter: "—", pro: "✓" },
   { label: "Suporte", free: "—", starter: "E-mail (48h)", pro: "Prioritário" },
 ];
 
@@ -140,19 +141,27 @@ export default function Billing() {
                   <span className="text-xs text-muted-foreground ml-1">{p.period}</span>
                 </div>
 
-                {/* Key features (top 4-5 for each plan) */}
+                {/* Key features */}
                 <ul className="space-y-2 mb-5 flex-1">
                   {(p.id === "free" ? [
                     "Acesso a 1 peptídeo completo",
-                    "Visualizar biblioteca (bloqueada)",
-                    "Criar conta gratuita",
+                    "1 protocolo por mês",
+                    "1 comparação por mês",
+                    "1 cálculo de dosagem por mês",
+                    "1 stack por mês",
+                    "1 template por mês",
+                    "1 exportação PDF por mês",
+                    "1 verificação de interação por mês",
                   ] : p.id === "starter" ? [
                     "Biblioteca essencial de peptídeos",
                     "Até 3 protocolos por mês",
                     "Comparador (até 5 peptídeos)",
-                    "Calculadora básica",
+                    "Calculadora ilimitada",
+                    "Stacks ilimitados",
                     "Histórico de 7 dias",
                     "Templates essenciais",
+                    "Exportação ilimitada (PDF básico)",
+                    "Verificação de interações ilimitada",
                   ] : [
                     "Tudo do Starter, mais:",
                     "Biblioteca completa (78+ peptídeos)",
@@ -161,6 +170,8 @@ export default function Billing() {
                     "Calculadora avançada + presets",
                     "Histórico e export ilimitados",
                     "Templates premium + IA",
+                    "Body Map interativo",
+                    "Contato direto com fornecedores",
                     "Suporte prioritário",
                   ]).map((f) => (
                     <li key={f} className="flex items-start gap-2 text-[11px] text-muted-foreground">

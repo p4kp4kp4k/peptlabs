@@ -14,15 +14,16 @@ interface Props {
 }
 
 const DEFAULT_COMPARISON: [string, string, string][] = [
-  ["Peptídeos na biblioteca", "Resumo de 7", "80+ completos"],
-  ["Protocolos com dosagens", "✗", "✓"],
-  ["Mecanismo de ação", "Resumo", "Detalhado"],
-  ["Stacks sinérgicos", "✗", "✓"],
-  ["Calculadora de reconstituição", "✗", "✓"],
-  ["Verificador de interações", "✗", "✓"],
+  ["Peptídeos na biblioteca", "1 completo", "80+ completos"],
+  ["Protocolos por mês", "1", "Ilimitados"],
+  ["Comparações por mês", "1", "Ilimitadas"],
+  ["Calculadora de dosagem", "1 / mês", "Ilimitada"],
+  ["Stacks sinérgicos", "1 / mês", "Ilimitados"],
+  ["Templates", "1 / mês", "Todos"],
+  ["Exportação PDF", "1 / mês", "Ilimitada"],
+  ["Verificação de interações", "1 / mês", "Ilimitada"],
   ["Mapa de aplicação corporal", "✗", "✓"],
-  ["Cronograma personalizado", "✗", "✓"],
-  ["Novos artigos semanais", "✗", "✓"],
+  ["Histórico completo", "✗", "✓"],
   ["Referências PubMed", "✗", "✓"],
 ];
 
@@ -119,7 +120,7 @@ export default function FreeGateOverlay({
             ))}
           </div>
 
-          {/* Testimonial — hidden on very small screens */}
+          {/* Testimonial */}
           <div className="mx-4 sm:mx-6 mb-3 sm:mb-5 rounded-lg sm:rounded-xl border border-border/30 bg-secondary/10 p-3 sm:p-4 text-center hidden xs:block sm:block">
             <p className="text-[10px] sm:text-[11px] italic leading-relaxed text-muted-foreground">
               "Uso diariamente no consultório. A plataforma mais completa para protocolos de peptídeos."

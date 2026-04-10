@@ -6,9 +6,9 @@ const corsHeaders = {
 };
 
 const PLAN_LIMITS: Record<string, object> = {
-  free: { max_protocols_month: 0, compare_limit: 0, history_days: 0, export_level: "none" },
-  starter: { max_protocols_month: 3, compare_limit: 5, history_days: 7, export_level: "basic" },
-  pro: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro" },
+  free: { max_protocols_month: 1, compare_limit: 1, history_days: 0, export_level: "basic", calc_limit: 1, stack_limit: 1, template_limit: 1, interaction_limit: 1 },
+  starter: { max_protocols_month: 3, compare_limit: 5, history_days: 7, export_level: "basic", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
+  pro: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
 };
 
 Deno.serve(async (req) => {
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       plan,
-      isActive,
+      isActive: plan === "free" ? true : isActive,
       isAdmin,
       isPro: plan === "pro" && isActive,
       isStarter: plan === "starter" && isActive,
