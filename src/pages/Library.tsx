@@ -106,8 +106,17 @@ export default function Library() {
 
       {/* Loading */}
       {isLoading && (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="overflow-hidden rounded-xl border border-border/40 bg-card">
+              <Skeleton className="h-28 w-full" />
+              <div className="p-3 space-y-2">
+                <Skeleton className="h-3.5 w-3/4" />
+                <Skeleton className="h-2.5 w-full" />
+                <Skeleton className="h-2.5 w-2/3" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
