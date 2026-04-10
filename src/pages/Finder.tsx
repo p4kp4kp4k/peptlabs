@@ -16,7 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { runEngine, getAvailableGoals, type GeneratedProtocol } from "@/engine";
 import { createProtocol } from "@/services/protocolService";
 import { saveRecommendation } from "@/services/userService";
-import { useEntitlements, checkFeature } from "@/hooks/useEntitlements";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { checkFeatureAccess } from "@/modules/access";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -115,7 +116,7 @@ export default function Finder() {
   const [gateOpen, setGateOpen] = useState(false);
   const [gateReason, setGateReason] = useState("");
   const { user } = useAuth();
-  const { canCreate } = useEntitlements();
+  const { isAdmin, isPro } = useEntitlements();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -210,14 +211,14 @@ export default function Finder() {
 
   const handleSave = async () => {
     if (!user || !engineResult) return;
-    if (!canCreate("protocol")) {
-      setGateReason("Limite de 3 protocolos atingido no plano gratuito.");
+    if (!isAdmin && !isPro) {
+      setGateReason("Limite atingido no plano gratuito. Faça upgrade para continuar.");
       setGateOpen(true);
       return;
     }
     setSaving(true);
     try {
-      const check = await checkFeature("create_protocol");
+      const check = await checkFeatureAccess("create_protocol");
       if (!check.allowed) {
         setGateReason(check.reason || "Limite atingido.");
         setGateOpen(true);

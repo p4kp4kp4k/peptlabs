@@ -1,65 +1,32 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { handleCors, jsonResponse } from "../_shared/cors.ts";
+import { requireAuth } from "../_shared/auth-guard.ts";
+import { resolveLimits, normalizePlan } from "../_shared/plan-limits.ts";
+import type { BillingType } from "../_shared/plan-limits.ts";
+import {
+  isValidFeature,
+  METERED_FEATURES,
+  BOOLEAN_FEATURES_PRO,
+  LIFETIME_ONLY_FEATURES,
+} from "../_shared/feature-map.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const VALID_FEATURES = [
-  "create_protocol", "compare", "export", "calculator",
-  "stack_builder", "engine", "template", "interaction_check", "advanced_peptide",
-  "contact_suppliers",
-];
-
-const PLAN_LIMITS: Record<string, Record<string, any>> = {
-  free: {
-    monthly: { max_protocols_month: 1, compare_limit: 1, history_days: 0, export_level: "basic", calc_limit: 1, stack_limit: 1, template_limit: 1, interaction_limit: 1 },
-  },
-  pro: {
-    monthly: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro", calc_limit: -1, stack_limit: 10, template_limit: -1, interaction_limit: -1 },
-    lifetime: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro_timeline", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
-  },
-};
-
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const cors = handleCors(req);
+  if (cors) return cors;
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabaseAuth = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userId = user.id;
+    const { userId, adminClient: admin } = await requireAuth(req, corsHeaders);
 
     const body = await req.json().catch(() => ({}));
     const feature = body.feature as string;
 
-    if (!feature || typeof feature !== "string" || !VALID_FEATURES.includes(feature)) {
-      return new Response(JSON.stringify({ error: `Invalid feature. Must be one of: ${VALID_FEATURES.join(", ")}` }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!feature || !isValidFeature(feature)) {
+      return jsonResponse({ error: `Invalid feature: ${feature}` }, 400);
     }
-
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
 
     const month = new Date().toISOString().slice(0, 7);
     const [entRes, rolesRes, usageRes] = await Promise.all([
@@ -68,149 +35,80 @@ Deno.serve(async (req) => {
       admin.from("usage_counters").select("*").eq("user_id", userId).eq("month", month).single(),
     ]);
 
-    // Normalize legacy "starter" to "free"
-    const rawPlan = entRes.data?.plan ?? "free";
-    const plan = rawPlan === "starter" ? "free" : rawPlan;
-    const billingType = (entRes.data as any)?.billing_type ?? "monthly";
+    const plan = normalizePlan(entRes.data?.plan);
+    const billingType = ((entRes.data as any)?.billing_type ?? "monthly") as BillingType;
     const isActive = entRes.data?.is_active ?? false;
     const isAdmin = (rolesRes.data ?? []).some((r: any) => r.role === "admin");
     const isLifetime = plan === "pro" && billingType === "lifetime" && isActive;
+    const isPro = plan === "pro" && isActive;
 
-    // Admins bypass all limits
-    if (isAdmin) {
-      return new Response(JSON.stringify({ allowed: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // ── Admins bypass everything ──
+    if (isAdmin) return jsonResponse({ allowed: true });
+
+    // ── Lifetime-only features ──
+    if (LIFETIME_ONLY_FEATURES.includes(feature)) {
+      if (isLifetime) return jsonResponse({ allowed: true });
+      const reason = feature === "contact_suppliers"
+        ? "Contato com fornecedores é exclusivo do plano PRO Vitalício."
+        : `Recurso "${feature}" é exclusivo do plano PRO Vitalício.`;
+      await logGate(admin, userId, feature, plan, billingType, reason);
+      return jsonResponse({ allowed: false, reason });
     }
 
-    const usage = usageRes.data;
-    const planLimits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
-    const limits = planLimits[billingType] ?? planLimits["monthly"] ?? PLAN_LIMITS.free.monthly;
+    // ── PRO Lifetime: everything else unlimited ──
+    if (isLifetime) return jsonResponse({ allowed: true });
 
-    // ── PRO Lifetime: everything unlimited ──
-    if (isLifetime) {
-      return new Response(JSON.stringify({ allowed: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // ── PRO Monthly: boolean features allowed, metered unlimited ──
+    if (isPro) return jsonResponse({ allowed: true });
+
+    // ── Boolean features: blocked for free ──
+    if (BOOLEAN_FEATURES_PRO.includes(feature)) {
+      const reason = "Este recurso está disponível apenas no plano PRO.";
+      await logGate(admin, userId, feature, plan, billingType, reason);
+      return jsonResponse({ allowed: false, reason });
     }
 
-    // ── PRO Monthly ──
-    if (plan === "pro" && isActive) {
-      if (feature === "contact_suppliers") {
-        const reason = "Contato com fornecedores é exclusivo do plano PRO Vitalício.";
-        await admin.from("history").insert({
-          user_id: userId, kind: "premium_gate",
-          metadata: { feature, plan, billingType, reason },
-        });
-        return new Response(JSON.stringify({ allowed: false, reason }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+    // ── Metered features: check usage vs limit ──
+    const counterCol = METERED_FEATURES[feature];
+    if (counterCol) {
+      const limits = resolveLimits(plan, billingType);
+      const limitMap: Record<string, number> = {
+        protocols_created: limits.max_protocols_month,
+        comparisons_made: limits.compare_limit,
+        exports_made: 1, // free gets 1
+        calcs_made: limits.calc_limit,
+        stacks_viewed: limits.stack_limit,
+        templates_used: limits.template_limit,
+        interactions_checked: limits.interaction_limit,
+      };
+      const limit = limitMap[counterCol] ?? 0;
+      const used = (usageRes.data as any)?.[counterCol] ?? 0;
+
+      if (limit !== -1 && used >= limit) {
+        const reason = `Você atingiu o limite de ${limit} uso(s)/mês no plano Gratuito. Faça upgrade para continuar.`;
+        await logGate(admin, userId, feature, plan, billingType, reason);
+        return jsonResponse({ allowed: false, reason });
       }
-
-      if (feature === "stack_builder" || feature === "engine") {
-        const stacks = (usage as any)?.stacks_viewed ?? 0;
-        const limit = limits.stack_limit;
-        if (limit !== -1 && stacks >= limit) {
-          const reason = `Você atingiu o limite de ${limit} stacks/mês no PRO Mensal. Faça upgrade para o PRO Vitalício para acesso ilimitado.`;
-          await admin.from("history").insert({
-            user_id: userId, kind: "premium_gate",
-            metadata: { feature, plan, billingType, reason },
-          });
-          return new Response(JSON.stringify({ allowed: false, reason }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
-
-      return new Response(JSON.stringify({ allowed: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
     }
 
-    // ── FREE plan (or inactive subscription) ──
-    const freeLimits = PLAN_LIMITS.free.monthly;
-    const counters = {
-      protocols_created: usage?.protocols_created ?? 0,
-      comparisons_made: usage?.comparisons_made ?? 0,
-      exports_made: usage?.exports_made ?? 0,
-      calcs_made: (usage as any)?.calcs_made ?? 0,
-      stacks_viewed: (usage as any)?.stacks_viewed ?? 0,
-      templates_used: (usage as any)?.templates_used ?? 0,
-      interactions_checked: (usage as any)?.interactions_checked ?? 0,
-    };
-
-    let allowed = true;
-    let reason = "";
-
-    switch (feature) {
-      case "create_protocol":
-        if (counters.protocols_created >= freeLimits.max_protocols_month) {
-          allowed = false;
-          reason = "Você atingiu o limite de 1 protocolo/mês no plano Gratuito. Faça upgrade para continuar.";
-        }
-        break;
-      case "compare":
-        if (counters.comparisons_made >= freeLimits.compare_limit) {
-          allowed = false;
-          reason = "Você atingiu o limite de 1 comparação/mês no plano Gratuito.";
-        }
-        break;
-      case "export":
-        if (counters.exports_made >= 1) {
-          allowed = false;
-          reason = "Você atingiu o limite de 1 exportação/mês no plano Gratuito.";
-        }
-        break;
-      case "calculator":
-        if (counters.calcs_made >= freeLimits.calc_limit) {
-          allowed = false;
-          reason = "Você atingiu o limite de 1 cálculo/mês no plano Gratuito.";
-        }
-        break;
-      case "stack_builder":
-      case "engine":
-        if (counters.stacks_viewed >= freeLimits.stack_limit) {
-          allowed = false;
-          reason = "Você atingiu o limite de 1 stack/mês no plano Gratuito.";
-        }
-        break;
-      case "template":
-        if (counters.templates_used >= freeLimits.template_limit) {
-          allowed = false;
-          reason = "Você atingiu o limite de 1 template/mês no plano Gratuito.";
-        }
-        break;
-      case "interaction_check":
-        if (counters.interactions_checked >= freeLimits.interaction_limit) {
-          allowed = false;
-          reason = "Você atingiu o limite de 1 verificação/mês no plano Gratuito.";
-        }
-        break;
-      case "advanced_peptide":
-        allowed = false;
-        reason = "Peptídeos avançados disponíveis apenas no plano PRO.";
-        break;
-      case "contact_suppliers":
-        allowed = false;
-        reason = "Contato com fornecedores é exclusivo do plano PRO Vitalício.";
-        break;
-      default:
-        break;
-    }
-
-    if (!allowed) {
-      await admin.from("history").insert({
-        user_id: userId, kind: "premium_gate",
-        metadata: { feature, plan: plan || "free", reason, usage: counters },
-      });
-    }
-
-    return new Response(JSON.stringify({ allowed, reason }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ allowed: true });
   } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    if (err instanceof Response) return err;
+    return jsonResponse({ error: (err as Error).message }, 500);
   }
 });
+
+async function logGate(
+  admin: any,
+  userId: string,
+  feature: string,
+  plan: string,
+  billingType: string,
+  reason: string,
+) {
+  await admin.from("history").insert({
+    user_id: userId,
+    kind: "premium_gate",
+    metadata: { feature, plan, billingType, reason },
+  });
+}
