@@ -137,12 +137,9 @@ function getSiteById(id: string) {
 export default function BodyMap() {
   const [selectedSite, setSelectedSite] = useState<InjectionSite | null>(null);
   const [completedDays, setCompletedDays] = useState<Set<number>>(new Set());
-  const [gateOpen, setGateOpen] = useState(false);
-  const { isAdmin, isPro, isStarter } = useEntitlements();
-  const hasAccess = isAdmin || isPro || isStarter;
 
-  const todayIndex = new Date().getDay(); // 0=Sun, 1=Mon...
-  const scheduleIndex = todayIndex === 0 ? 6 : todayIndex - 1; // Map to our Mon-Sun array
+  const todayIndex = new Date().getDay();
+  const scheduleIndex = todayIndex === 0 ? 6 : todayIndex - 1;
   const todaySite = getSiteById(weeklySchedule[scheduleIndex].site);
   const todayName = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][todayIndex];
 
@@ -158,7 +155,6 @@ export default function BodyMap() {
   }, []);
 
   const toggleDay = (index: number) => {
-    if (!hasAccess) { setGateOpen(true); return; }
     setCompletedDays((prev) => {
       const next = new Set(prev);
       if (next.has(index)) next.delete(index);
@@ -167,15 +163,21 @@ export default function BodyMap() {
     });
   };
 
-  const resetDays = () => { if (!hasAccess) { setGateOpen(true); return; } setCompletedDays(new Set()); };
-
-  const handleSiteClick = (site: InjectionSite) => {
-    if (!hasAccess) { setGateOpen(true); return; }
-    setSelectedSite(site);
-  };
+  const resetDays = () => setCompletedDays(new Set());
 
   return (
-<>
+  <FreeGateOverlay
+    pageTitle="Mapa de Aplicação Corporal"
+    description="Assine para acessar o mapa interativo de locais de injeção com técnica detalhada e diário de rotação semanal."
+    comparisonRows={[
+      ["Mapa interativo de locais", "✗", "✓"],
+      ["Técnica detalhada por local", "✗", "✓"],
+      ["Diário de rotação semanal", "✗", "✓"],
+      ["Sugestão automática de próximo local", "✗", "✓"],
+      ["Ângulos e tipos de agulha", "✗", "✓"],
+      ["Prevenção de lipohipertrofia", "✗", "✓"],
+    ]}
+  >
     <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
       {/* Header */}
       <div>
