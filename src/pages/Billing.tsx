@@ -106,9 +106,9 @@ function CellValue({ value, isPro }: { value: string; isPro?: boolean }) {
 }
 
 export default function Billing() {
-  const { plan, isActive, isAdmin, currentPeriodEnd } = useEntitlements();
+  const { plan, billingType, isActive, isAdmin, isLifetime, currentPeriodEnd } = useEntitlements();
 
-  const currentPlan = isAdmin ? "pro" : (isActive ? plan : "free");
+  const currentPlan = isAdmin ? "lifetime" : (isLifetime ? "lifetime" : (isActive && plan === "pro" ? "pro" : (isActive ? plan : "free")));
 
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto">
