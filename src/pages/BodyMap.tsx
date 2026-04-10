@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   MapPin, Calendar, Check, RotateCcw, ChevronRight, X,
-  Syringe, AlertTriangle, Lightbulb, Info
+  Syringe, AlertTriangle, Lightbulb, Info, Lock
 } from "lucide-react";
 // ── Injection site data ──
 interface InjectionSite {
