@@ -60,8 +60,8 @@ export default function Interactions() {
   const [selectedPeptide, setSelectedPeptide] = useState<string | null>(null);
   const [selectedPeptides, setSelectedPeptides] = useState<string[]>([]);
   const [gateOpen, setGateOpen] = useState(false);
-  const { isAdmin, isPro, isStarter } = useEntitlements();
-  const hasAccess = isAdmin || isPro || isStarter;
+  const { isAdmin, isPro } = useEntitlements();
+  const hasAccess = isAdmin || isPro;
 
   const { data: allPeptides = [], isLoading } = usePeptidesWithInteractions();
 

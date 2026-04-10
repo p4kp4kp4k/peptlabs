@@ -19,8 +19,8 @@ export default function Stacks() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
-  const { isAdmin, isPro, isStarter } = useEntitlements();
-  const hasAccess = isAdmin || isPro || isStarter;
+  const { isAdmin, isPro } = useEntitlements();
+  const hasAccess = isAdmin || isPro;
 
   const handleOpenStack = useCallback((stack: Stack) => {
     navigate(`/app/stacks/${stack.id}`);

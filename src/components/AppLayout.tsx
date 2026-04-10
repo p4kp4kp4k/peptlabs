@@ -38,7 +38,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { profile, signOut, user, isAdmin: authIsAdmin } = useAuth();
   const { theme, setTheme } = useThemeColor();
-  const { isAdmin: entIsAdmin, isPro, isStarter } = useEntitlements();
+  const { isAdmin: entIsAdmin, isPro } = useEntitlements();
   const isAdmin = authIsAdmin || entIsAdmin;
 
   const handleSignOut = async () => {

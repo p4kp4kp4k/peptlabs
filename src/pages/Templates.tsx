@@ -3,7 +3,7 @@ import PremiumGateModal from "@/components/PremiumGateModal";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
-  FileText, Lock, Crown, Zap, Clock, Beaker, ChevronRight,
+  FileText, Lock, Crown, Clock, Beaker, ChevronRight,
   Shield, Brain, Flame, Heart, Moon, Dumbbell, Filter,
 } from "lucide-react";
 import ProBadge from "@/components/ProBadge";
@@ -37,7 +37,7 @@ interface Template {
 
 const CATEGORY_ICONS: Record<string, typeof Beaker> = {
   "Recuperação": Dumbbell,
-  "GH / Secretagogos": Zap,
+  "GH / Secretagogos": Crown,
   "Imunidade": Shield,
   "Emagrecimento": Flame,
   "Anti-aging": Heart,
@@ -45,11 +45,11 @@ const CATEGORY_ICONS: Record<string, typeof Beaker> = {
   "Nootrópicos": Brain,
 };
 
-const TABS = ["Todos", "Starter", "PRO"] as const;
+const TABS = ["Todos", "PRO"] as const;
 
 export default function Templates() {
   const navigate = useNavigate();
-  const { plan, isActive: planActive, isPro, isStarter, isAdmin } = useEntitlements();
+  const { plan, isActive: planActive, isPro, isAdmin } = useEntitlements();
   const [activeTab, setActiveTab] = useState<typeof TABS[number]>("Todos");
   const [gateOpen, setGateOpen] = useState(false);
   const [gateReason, setGateReason] = useState("");
@@ -69,28 +69,22 @@ export default function Templates() {
 
   const filtered = activeTab === "Todos"
     ? templates
-    : templates.filter((t) =>
-        activeTab === "Starter" ? t.access_level === "starter" : t.access_level === "pro"
-      );
+    : templates.filter((t) => t.access_level === "pro");
 
   const canAccess = (level: string) => {
     if (isAdmin) return true;
-    if (level === "starter") return (isStarter || isPro) && planActive;
     if (level === "pro") return isPro && planActive;
+    // starter-level templates are accessible to any PRO user
+    if (level === "starter") return isPro && planActive;
     return false;
   };
 
   const handleUseTemplate = (template: Template) => {
     if (!canAccess(template.access_level)) {
-      setGateReason(
-        template.access_level === "pro"
-          ? "Este template é exclusivo do plano PRO."
-          : "Você precisa do plano Starter ou superior para usar templates."
-      );
+      setGateReason("Este template é exclusivo do plano PRO.");
       setGateOpen(true);
       return;
     }
-    // Navigate to finder/protocols with template data
     navigate("/app/finder", { state: { template: template.content } });
   };
 
@@ -127,15 +121,12 @@ export default function Templates() {
             onClick={() => setActiveTab(tab)}
           >
             {tab === "PRO" && <Crown className="h-3 w-3 mr-1" />}
-            {tab === "Starter" && <Zap className="h-3 w-3 mr-1" />}
             {tab === "Todos" && <Filter className="h-3 w-3 mr-1" />}
             {tab}
             <Badge variant="secondary" className="ml-1.5 text-[9px] px-1.5 py-0">
               {tab === "Todos"
                 ? templates.length
-                : templates.filter((t) =>
-                    tab === "Starter" ? t.access_level === "starter" : t.access_level === "pro"
-                  ).length}
+                : templates.filter((t) => t.access_level === "pro").length}
             </Badge>
           </Button>
         ))}
@@ -154,7 +145,6 @@ export default function Templates() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((template) => {
             const locked = !canAccess(template.access_level);
-            const isPROTemplate = template.access_level === "pro";
             const peptides = template.content?.peptides ?? [];
 
             return (
@@ -162,18 +152,12 @@ export default function Templates() {
                 key={template.id}
                 className={`relative overflow-hidden border transition-all hover:shadow-md group cursor-pointer ${
                   locked ? "opacity-80" : ""
-                } ${isPROTemplate ? "border-primary/20" : "border-border/40"}`}
+                } border-border/40`}
                 onClick={() => handleUseTemplate(template)}
               >
                 {/* Plan badge */}
                 <div className="absolute top-3 right-3">
-                   {isPROTemplate ? (
-                     <ProBadge />
-                   ) : (
-                     <Badge variant="secondary" className="text-[9px] gap-1">
-                       <Zap className="h-2.5 w-2.5" /> Starter
-                     </Badge>
-                   )}
+                  <ProBadge />
                 </div>
 
                 {/* Lock overlay */}
@@ -181,7 +165,7 @@ export default function Templates() {
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
                     <Lock className="h-8 w-8 text-muted-foreground/50 mb-2" />
                     <p className="text-xs text-muted-foreground font-medium">
-                      {isPROTemplate ? "Exclusivo PRO" : "Requer Starter"}
+                      Exclusivo PRO
                     </p>
                     <Button
                       size="sm"

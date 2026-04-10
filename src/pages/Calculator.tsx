@@ -175,8 +175,8 @@ export default function CalculatorPage() {
   const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
   const [protocolSearch, setProtocolSearch] = useState("");
   const [gateOpen, setGateOpen] = useState(false);
-  const { isAdmin, isPro, isStarter } = useEntitlements();
-  const hasAccess = isAdmin || isPro || isStarter;
+  const { isAdmin, isPro } = useEntitlements();
+  const hasAccess = isAdmin || isPro;
 
   const filteredProtocols = protocolPresets.filter((p) =>
     p.label.toLowerCase().includes(protocolSearch.toLowerCase())

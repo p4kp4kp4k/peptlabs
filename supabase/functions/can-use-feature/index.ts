@@ -15,9 +15,6 @@ const PLAN_LIMITS: Record<string, Record<string, any>> = {
   free: {
     monthly: { max_protocols_month: 1, compare_limit: 1, history_days: 0, export_level: "basic", calc_limit: 1, stack_limit: 1, template_limit: 1, interaction_limit: 1 },
   },
-  starter: {
-    monthly: { max_protocols_month: 3, compare_limit: 5, history_days: 7, export_level: "basic", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
-  },
   pro: {
     monthly: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro", calc_limit: -1, stack_limit: 10, template_limit: -1, interaction_limit: -1 },
     lifetime: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro_timeline", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
@@ -71,7 +68,9 @@ Deno.serve(async (req) => {
       admin.from("usage_counters").select("*").eq("user_id", userId).eq("month", month).single(),
     ]);
 
-    const plan = entRes.data?.plan ?? "free";
+    // Normalize legacy "starter" to "free"
+    const rawPlan = entRes.data?.plan ?? "free";
+    const plan = rawPlan === "starter" ? "free" : rawPlan;
     const billingType = (entRes.data as any)?.billing_type ?? "monthly";
     const isActive = entRes.data?.is_active ?? false;
     const isAdmin = (rolesRes.data ?? []).some((r: any) => r.role === "admin");
@@ -85,12 +84,10 @@ Deno.serve(async (req) => {
     }
 
     const usage = usageRes.data;
-
-    // Get correct limits for plan + billing type
     const planLimits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
     const limits = planLimits[billingType] ?? planLimits["monthly"] ?? PLAN_LIMITS.free.monthly;
 
-    // ── PRO Lifetime: everything unlimited, no expiry ──
+    // ── PRO Lifetime: everything unlimited ──
     if (isLifetime) {
       return new Response(JSON.stringify({ allowed: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -99,7 +96,6 @@ Deno.serve(async (req) => {
 
     // ── PRO Monthly ──
     if (plan === "pro" && isActive) {
-      // Contact suppliers is lifetime-only
       if (feature === "contact_suppliers") {
         const reason = "Contato com fornecedores é exclusivo do plano PRO Vitalício.";
         await admin.from("history").insert({
@@ -111,7 +107,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Stack limit for monthly PRO
       if (feature === "stack_builder" || feature === "engine") {
         const stacks = (usage as any)?.stacks_viewed ?? 0;
         const limit = limits.stack_limit;
@@ -132,49 +127,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Starter ──
-    if (plan === "starter" && isActive) {
-      let allowed = true;
-      let reason = "";
-
-      switch (feature) {
-        case "create_protocol":
-          if ((usage?.protocols_created ?? 0) >= limits.max_protocols_month) {
-            allowed = false;
-            reason = `Limite de ${limits.max_protocols_month} protocolos/mês atingido no plano Starter.`;
-          }
-          break;
-        case "compare":
-          if ((usage?.comparisons_made ?? 0) >= limits.compare_limit) {
-            allowed = false;
-            reason = `Limite de ${limits.compare_limit} comparações/mês atingido no plano Starter.`;
-          }
-          break;
-        case "advanced_peptide":
-          allowed = false;
-          reason = "Peptídeos avançados disponíveis apenas no plano PRO.";
-          break;
-        case "contact_suppliers":
-          allowed = false;
-          reason = "Contato com fornecedores é exclusivo do plano PRO Vitalício.";
-          break;
-        default:
-          break;
-      }
-
-      if (!allowed) {
-        await admin.from("history").insert({
-          user_id: userId, kind: "premium_gate",
-          metadata: { feature, plan, reason },
-        });
-      }
-
-      return new Response(JSON.stringify({ allowed, reason }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // ── FREE plan or inactive subscription ──
+    // ── FREE plan (or inactive subscription) ──
     const freeLimits = PLAN_LIMITS.free.monthly;
     const counters = {
       protocols_created: usage?.protocols_created ?? 0,
