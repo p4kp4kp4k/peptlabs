@@ -6,6 +6,7 @@ import {
   FileText, Lock, Crown, Zap, Clock, Beaker, ChevronRight,
   Shield, Brain, Flame, Heart, Moon, Dumbbell, Filter,
 } from "lucide-react";
+import ProBadge from "@/components/ProBadge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -164,16 +165,13 @@ export default function Templates() {
               >
                 {/* Plan badge */}
                 <div className="absolute top-3 right-3">
-                  <Badge
-                    variant={isPROTemplate ? "default" : "secondary"}
-                    className="text-[9px] gap-1"
-                  >
-                    {isPROTemplate ? (
-                      <><Crown className="h-2.5 w-2.5" /> PRO</>
-                    ) : (
-                      <><Zap className="h-2.5 w-2.5" /> Starter</>
-                    )}
-                  </Badge>
+                   {isPROTemplate ? (
+                     <ProBadge />
+                   ) : (
+                     <Badge variant="secondary" className="text-[9px] gap-1">
+                       <Zap className="h-2.5 w-2.5" /> Starter
+                     </Badge>
+                   )}
                 </div>
 
                 {/* Lock overlay */}
