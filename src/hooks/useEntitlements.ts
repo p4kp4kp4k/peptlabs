@@ -25,9 +25,11 @@ export interface EntitlementUsage {
 
 export interface EntitlementData {
   plan: "free" | "starter" | "pro";
+  billingType: "monthly" | "lifetime";
   isActive: boolean;
   isAdmin: boolean;
   isPro: boolean;
+  isLifetime: boolean;
   isStarter: boolean;
   limits: EntitlementLimits;
   currentPeriodEnd: string | null;
@@ -36,9 +38,11 @@ export interface EntitlementData {
 
 const FREE_DEFAULTS: EntitlementData = {
   plan: "free",
+  billingType: "monthly",
   isActive: true,
   isAdmin: false,
   isPro: false,
+  isLifetime: false,
   isStarter: false,
   limits: {
     max_protocols_month: 1,
@@ -91,7 +95,15 @@ export function useEntitlements() {
     isLoading: query.isLoading,
     refetch: query.refetch,
     canCreate: (resource: "protocol" | "stack" | "calculation" | "compare" | "export") => {
-      if (ent.isAdmin || ent.isPro) return true;
+      if (ent.isAdmin || ent.isLifetime) return true;
+      if (ent.isPro) {
+        // PRO Monthly has stack limit of 10
+        if (resource === "stack") {
+          const limit = ent.limits.stack_limit;
+          return limit === undefined || limit === -1 || ent.usage.stacksViewed < limit;
+        }
+        return true;
+      }
       if (!ent.isActive) return false;
       if (resource === "protocol") {
         const limit = ent.limits.max_protocols_month;
@@ -104,10 +116,8 @@ export function useEntitlements() {
       if (resource === "export") {
         return ent.limits.export_level !== "none";
       }
-      // For starter, all other features are unlimited
       if (ent.isStarter) return true;
-      // For free, check specific limits
-      return true; // Server-side enforcement via can-use-feature
+      return true;
     },
   };
 }

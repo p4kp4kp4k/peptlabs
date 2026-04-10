@@ -106,9 +106,9 @@ function CellValue({ value, isPro }: { value: string; isPro?: boolean }) {
 }
 
 export default function Billing() {
-  const { plan, isActive, isAdmin, currentPeriodEnd } = useEntitlements();
+  const { plan, billingType, isActive, isAdmin, isLifetime, currentPeriodEnd } = useEntitlements();
 
-  const currentPlan = isAdmin ? "pro" : (isActive ? plan : "free");
+  const currentPlan = isAdmin ? "lifetime" : (isLifetime ? "lifetime" : (isActive && plan === "pro" ? "pro" : (isActive ? plan : "free")));
 
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto">
@@ -142,7 +142,7 @@ export default function Billing() {
       {/* ── Plan Cards ── */}
       <div className="grid gap-5 md:grid-cols-3 mb-12">
         {plans.map((p, idx) => {
-          const isCurrent = (p.id === "lifetime" && currentPlan === "pro") || (p.id === "pro" && currentPlan === "pro") || (p.id === "free" && currentPlan === "free");
+          const isCurrent = (p.id === "lifetime" && currentPlan === "lifetime") || (p.id === "pro" && currentPlan === "pro") || (p.id === "free" && currentPlan === "free");
           return (
             <ScrollReveal key={p.id} delay={idx * 0.1}>
               <motion.div
