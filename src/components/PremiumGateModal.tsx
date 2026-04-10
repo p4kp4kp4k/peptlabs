@@ -22,12 +22,12 @@ export default function PremiumGateModal({ open, onClose, reason, upgradeTo = "p
             {isPro ? <Crown className="h-7 w-7 text-accent" /> : <Zap className="h-7 w-7 text-accent" />}
           </div>
           <DialogTitle className="text-lg font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            {isPro ? "Funcionalidade PRO" : "Limite do Plano Starter"}
+            {isPro ? "Funcionalidade PRO" : "Limite do Plano Atingido"}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground mt-1">
             {reason || (isPro
               ? "Esta funcionalidade está disponível apenas no plano PRO."
-              : "Você atingiu o limite do plano Starter. Faça upgrade para PRO.")}
+              : "Você atingiu o limite do seu plano. Faça upgrade para continuar.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -45,14 +45,17 @@ export default function PremiumGateModal({ open, onClose, reason, upgradeTo = "p
                 <li>✓ Calculadora avançada + presets</li>
                 <li>✓ Histórico ilimitado</li>
                 <li>✓ Export PRO (PDF premium)</li>
+                <li>✓ Contato direto com fornecedores</li>
               </>
             ) : (
               <>
                 <li>✓ Biblioteca essencial de peptídeos</li>
                 <li>✓ Até 3 protocolos/mês</li>
                 <li>✓ Comparador (até 5 peptídeos)</li>
-                <li>✓ Calculadora básica</li>
+                <li>✓ Calculadora ilimitada</li>
+                <li>✓ Stacks ilimitados</li>
                 <li>✓ Histórico de 7 dias</li>
+                <li>✓ Verificação de interações ilimitada</li>
               </>
             )}
           </ul>
