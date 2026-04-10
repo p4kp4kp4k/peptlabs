@@ -43,6 +43,7 @@ export type Database = {
       }
       entitlements: {
         Row: {
+          billing_type: string
           created_at: string
           current_period_end: string | null
           is_active: boolean
@@ -52,6 +53,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          billing_type?: string
           created_at?: string
           current_period_end?: string | null
           is_active?: boolean
@@ -61,6 +63,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          billing_type?: string
           created_at?: string
           current_period_end?: string | null
           is_active?: boolean
