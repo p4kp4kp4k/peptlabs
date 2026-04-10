@@ -181,12 +181,16 @@ export default function CalculatorPage() {
   );
 
   const applyProtocol = (p: { label: string; vial: string; water: string; dose: string }) => {
+    if (!hasAccess) { setGateOpen(true); return; }
     setVialMg(p.vial);
     setDiluentMl(p.water);
     setDesiredDoseMcg(p.dose);
     setSelectedProtocol(p.label);
-
     setProtocolOpen(false);
+  };
+
+  const handleInputFocus = () => {
+    if (!hasAccess) { setGateOpen(true); }
   };
 
   const vial = parseFloat(vialMg) || 0;
