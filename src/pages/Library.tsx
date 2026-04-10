@@ -21,9 +21,9 @@ export default function Library() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data: peptides = [], isLoading } = usePeptides();
-  const { plan, isAdmin, isPro, isStarter } = useEntitlements();
+  const { plan, isAdmin, isPro } = useEntitlements();
 
-  const hasAccess = isAdmin || isPro || isStarter;
+  const hasAccess = isAdmin || isPro;
 
   const filtered = useMemo(() => {
     return peptides

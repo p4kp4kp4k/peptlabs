@@ -24,13 +24,12 @@ export interface EntitlementUsage {
 }
 
 export interface EntitlementData {
-  plan: "free" | "starter" | "pro";
+  plan: "free" | "pro";
   billingType: "monthly" | "lifetime";
   isActive: boolean;
   isAdmin: boolean;
   isPro: boolean;
   isLifetime: boolean;
-  isStarter: boolean;
   limits: EntitlementLimits;
   currentPeriodEnd: string | null;
   usage: EntitlementUsage;
@@ -43,7 +42,6 @@ const FREE_DEFAULTS: EntitlementData = {
   isAdmin: false,
   isPro: false,
   isLifetime: false,
-  isStarter: false,
   limits: {
     max_protocols_month: 1,
     compare_limit: 1,
@@ -116,7 +114,7 @@ export function useEntitlements() {
       if (resource === "export") {
         return ent.limits.export_level !== "none";
       }
-      if (ent.isStarter) return true;
+      // Free plan — rely on limits
       return true;
     },
   };

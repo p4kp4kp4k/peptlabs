@@ -143,9 +143,9 @@ export default function PeptideDetail() {
   const hasScrolledDown = useRef(false);
   const hasAutoCollapsed = useRef(false);
 
-  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const { isAdmin, isPro } = useEntitlements();
   const { user } = useAuth();
-  const hasAccess = isAdmin || isPro || isStarter;
+  const hasAccess = isAdmin || isPro;
   const { data: allPeptides = [] } = usePeptides();
 
   const { data: peptide, isLoading } = useQuery({
