@@ -58,6 +58,7 @@ const Index = () => {
   const { user, profile, signOut, isAdmin: authIsAdmin } = useAuth();
   const { theme, setTheme } = useThemeColor();
   const { isAdmin: entIsAdmin } = useEntitlements();
+  const isAdmin = authIsAdmin || entIsAdmin;
   const mainRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
