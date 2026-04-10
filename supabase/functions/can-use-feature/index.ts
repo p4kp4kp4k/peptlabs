@@ -57,8 +57,29 @@ Deno.serve(async (req) => {
       });
     }
 
-    // PRO with active subscription bypasses all limits
+    // PRO with active subscription — check stack limit (10/month)
     if (plan === "pro" && isActive) {
+      if (feature === "stack_builder" || feature === "engine") {
+        const limits = PLAN_LIMITS.pro;
+        const month = new Date().toISOString().slice(0, 7);
+        const { data: usage } = await admin
+          .from("usage_counters")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("month", month)
+          .single();
+        const stacks = (usage as any)?.stacks_viewed ?? 0;
+        if (stacks >= limits.stack_limit) {
+          const reason = `Você atingiu o limite de ${limits.stack_limit} stacks/mês no plano PRO.`;
+          await admin.from("history").insert({
+            user_id: userId, kind: "premium_gate",
+            metadata: { feature, plan, reason },
+          });
+          return new Response(JSON.stringify({ allowed: false, reason }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
       return new Response(JSON.stringify({ allowed: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
