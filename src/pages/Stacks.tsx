@@ -7,8 +7,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Layers, Search, Clock, X, Syringe, AlertTriangle,
-  CheckCircle2, Timer, GitMerge, ChevronRight, Crown, Lock
+  CheckCircle2, Timer, GitMerge, ChevronRight, Lock
 } from "lucide-react";
+import ProBadge from "@/components/ProBadge";
 import { getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
 import { useStacks } from "@/hooks/useStacks";
 import type { Stack } from "@/types";

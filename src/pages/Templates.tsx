@@ -3,9 +3,10 @@ import PremiumGateModal from "@/components/PremiumGateModal";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
-  FileText, Lock, Crown, Zap, Clock, Beaker, ChevronRight,
+  FileText, Lock, Zap, Clock, Beaker, ChevronRight,
   Shield, Brain, Flame, Heart, Moon, Dumbbell, Filter,
 } from "lucide-react";
+import ProBadge from "@/components/ProBadge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

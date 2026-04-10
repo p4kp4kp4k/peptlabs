@@ -8,8 +8,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Calculator as CalcIcon, Droplets, FlaskConical, Syringe, Info, RotateCcw,
   Table2, Beaker, AlertTriangle, CheckCircle2, Clock, Snowflake, ThermometerSun,
-  ClipboardList, ChevronDown, Crown
+  ClipboardList, ChevronDown
 } from "lucide-react";
+import ProBadge from "@/components/ProBadge";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger
