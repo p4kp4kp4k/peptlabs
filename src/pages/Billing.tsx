@@ -18,8 +18,8 @@ const comparisonRows: { label: string; free: string; proMonthly: string; proLife
   { label: "Verificação de interações", free: "1 / mês", proMonthly: "Completa", proLifetime: "Completa" },
   { label: "Body Map interativo", free: "—", proMonthly: "✓", proLifetime: "✓" },
   { label: "Contato com fornecedores", free: "—", proMonthly: "✓", proLifetime: "✓" },
-  { label: "Acesso antecipado a novos protocolos", free: "—", proMonthly: "—", proLifetime: "✓" },
-  { label: "Lives exclusivas com especialistas", free: "—", proMonthly: "—", proLifetime: "✓" },
+  { label: "Atualizações e novos peptídeos", free: "—", proMonthly: "—", proLifetime: "✓" },
+  { label: "Prioridade em novas funcionalidades", free: "—", proMonthly: "—", proLifetime: "✓" },
   { label: "Suporte", free: "—", proMonthly: "Prioritário", proLifetime: "VIP dedicado" },
 ];
 
@@ -83,11 +83,10 @@ const plans = [
     savings: "Você economiza R$ 321,80 comparado ao plano mensal no 1º ano.",
     features: [
       "Tudo do PRO Mensal, mais:",
-      "Acesso vitalício — sem mensalidade",
-      "Acesso antecipado a novos protocolos",
-      "Lives exclusivas com especialistas",
-      "Consultoria em grupo quinzenal",
-      "Certificado de conclusão dos módulos",
+      "Acesso vitalício — pague uma vez, use para sempre",
+      "Atualizações e novos peptídeos inclusos",
+      "Prioridade em novas funcionalidades",
+      "Export PRO com timeline visual",
       "Suporte VIP dedicado",
     ],
   },
