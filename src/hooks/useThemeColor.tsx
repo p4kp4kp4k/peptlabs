@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type ThemeColor = "cyan" | "green" | "blue" | "red" | "light" | "light-blue";
+export type ThemeColor = "cyan" | "green" | "blue" | "red" | "light-blue";
 
 interface ThemeContextType {
   theme: ThemeColor;
@@ -105,24 +105,6 @@ const themes: Record<ThemeColor, Record<string, string>> = {
     "--accent-foreground": "222 47% 2%",
     "--glow-accent": "25 95% 53%",
   },
-  light: {
-    ...lightBase,
-    "--primary": "222 47% 11%",
-    "--primary-foreground": "0 0% 100%",
-    "--ring": "222 47% 11%",
-    "--sidebar-primary": "222 47% 11%",
-    "--sidebar-primary-foreground": "0 0% 100%",
-    "--sidebar-ring": "222 47% 11%",
-    "--glow-primary": "222 47% 11%",
-    "--accent": "262 83% 58%",
-    "--accent-foreground": "0 0% 100%",
-    "--glow-accent": "262 83% 58%",
-    "--destructive": "0 84% 60%",
-    "--warning": "38 92% 50%",
-    "--warning-foreground": "222 47% 11%",
-    "--success": "142 71% 45%",
-    "--success-foreground": "0 0% 100%",
-  },
   "light-blue": {
     ...lightBase,
     "--primary": "217 91% 60%",
@@ -148,7 +130,6 @@ export const themeOptions: { value: ThemeColor; label: string; colors: [string, 
   { value: "green", label: "Verde + Dourado", colors: ["#22C55E", "#EAB308"], mode: "dark" },
   { value: "blue", label: "Azul + Rosa", colors: ["#3B82F6", "#EC4899"], mode: "dark" },
   { value: "red", label: "Vermelho + Laranja", colors: ["#EF4444", "#F97316"], mode: "dark" },
-  { value: "light", label: "Claro Clássico", colors: ["#1E293B", "#7C3AED"], mode: "light" },
   { value: "light-blue", label: "Claro Azul", colors: ["#3B82F6", "#06B6D4"], mode: "light" },
 ];
 
@@ -160,7 +141,9 @@ function applyTheme(theme: ThemeColor) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeColor>(() => {
-    return (localStorage.getItem("peptilab-theme") as ThemeColor) || "cyan";
+    const stored = localStorage.getItem("peptilab-theme") as string;
+    if (stored && stored in themes) return stored as ThemeColor;
+    return "cyan";
   });
 
   const setTheme = (t: ThemeColor) => {
