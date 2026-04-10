@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FlaskConical, ArrowRight, Sparkles, Home, Users, Zap,
-  Calculator, BookOpen, Layers, CreditCard, HelpCircle, ChevronRight
+  Calculator, BookOpen, Layers, CreditCard, HelpCircle, ChevronRight, Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/useAuth";
+import { useThemeColor, themeOptions } from "@/hooks/useThemeColor";
+import { cn } from "@/lib/utils";
 import ParticleBackground from "@/components/landing/ParticleBackground";
 import HeroSection from "@/components/landing/HeroSection";
 import AudienceSection from "@/components/landing/AudienceSection";
