@@ -167,7 +167,7 @@ export default function BodyMap() {
   const resetDays = () => setCompletedDays(new Set());
 
   return (
-    <FreeGateOverlay pageTitle="Mapa de Aplicação Premium" description="Assine para acessar o mapa interativo de injeção, técnicas detalhadas para cada local e o diário de rotação semanal." comparisonRows={[["Mapa interativo de locais", "✗", "✓"], ["Técnicas por ponto de injeção", "✗", "✓"], ["Diário de rotação semanal", "✗", "✓"], ["Ângulos e tipos de agulha", "✗", "✓"], ["Guia de assepsia", "✗", "✓"], ["Prevenção de lipohipertrofia", "✗", "✓"]]}>
+<>
     <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
       {/* Header */}
       <div>
