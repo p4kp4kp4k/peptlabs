@@ -1,13 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FlaskConical, ArrowRight, Sparkles, Home, Users, Zap,
-  Calculator, BookOpen, Layers, CreditCard, HelpCircle, ChevronRight, Palette
+  Calculator, BookOpen, Layers, CreditCard, HelpCircle, ChevronRight, Palette,
+  LayoutDashboard, Syringe, Search, ArrowLeftRight, MapPin, History, Settings,
+  FileText, Shield, LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/useAuth";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import { useThemeColor, themeOptions } from "@/hooks/useThemeColor";
 import { cn } from "@/lib/utils";
 import ParticleBackground from "@/components/landing/ParticleBackground";
