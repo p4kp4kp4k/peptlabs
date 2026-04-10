@@ -34,6 +34,7 @@ const Index = () => {
   const [active, setActive] = useState("hero");
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { theme, setTheme } = useThemeColor();
   const mainRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
