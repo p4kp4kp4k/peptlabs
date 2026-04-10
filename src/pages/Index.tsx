@@ -1,13 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FlaskConical, ArrowRight, Sparkles, Home, Users, Zap,
-  Calculator, BookOpen, Layers, CreditCard, HelpCircle, ChevronRight, Palette
+  Calculator, BookOpen, Layers, CreditCard, HelpCircle, ChevronRight, Palette,
+  LayoutDashboard, Syringe, Search, ArrowLeftRight, MapPin, History, Settings,
+  FileText, Shield, LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/useAuth";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import { useThemeColor, themeOptions } from "@/hooks/useThemeColor";
 import { cn } from "@/lib/utils";
 import ParticleBackground from "@/components/landing/ParticleBackground";
@@ -30,11 +33,32 @@ const navItems = [
   { id: "faq", label: "FAQ", icon: HelpCircle },
 ];
 
+const appMainNav = [
+  { label: "Dashboard", icon: LayoutDashboard, path: "/app/dashboard" },
+  { label: "Biblioteca", icon: Syringe, path: "/app/peptides" },
+  { label: "Finder", icon: Search, path: "/app/finder" },
+  { label: "Comparador", icon: ArrowLeftRight, path: "/app/compare" },
+  { label: "Calculadora", icon: Calculator, path: "/app/calculator" },
+  { label: "Stacks", icon: Layers, path: "/app/stacks" },
+  { label: "Mapa Corporal", icon: MapPin, path: "/app/body-map" },
+  { label: "Interações", icon: Zap, path: "/app/interactions" },
+  { label: "Aprender", icon: BookOpen, path: "/app/learn" },
+  { label: "Templates", icon: FileText, path: "/app/templates" },
+];
+
+const appBottomNav = [
+  { label: "Histórico", icon: History, path: "/app/history" },
+  { label: "Configurações", icon: Settings, path: "/app/settings" },
+  { label: "Assinatura", icon: CreditCard, path: "/app/billing" },
+];
+
 const Index = () => {
   const [active, setActive] = useState("hero");
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile, signOut, isAdmin: authIsAdmin } = useAuth();
   const { theme, setTheme } = useThemeColor();
+  const { isAdmin: entIsAdmin } = useEntitlements();
+  const isAdmin = authIsAdmin || entIsAdmin;
   const mainRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -103,35 +127,103 @@ const Index = () => {
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 py-4 px-3 space-y-0.5">
-          {navItems.map((item) => {
-            const isActive = active === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 group ${
-                  isActive
-                    ? "bg-primary/[0.08] text-primary border border-primary/15"
-                    : "text-muted-foreground hover:text-foreground hover:bg-card/50 border border-transparent"
-                }`}
-              >
-                <item.icon className={`h-3.5 w-3.5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
-                {item.label}
-                {isActive && (
-                  <ChevronRight className="h-3 w-3 ml-auto text-primary/60" />
-                )}
-              </button>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto scrollbar-thin py-3 px-3 space-y-px">
+          {user ? (
+            <>
+              {/* App navigation */}
+              <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Principal</p>
+              {appMainNav.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-card/50 hover:text-foreground transition-colors"
+                >
+                  <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              ))}
+
+              <div className="my-3 mx-2 border-t border-border/15" />
+              <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Conta</p>
+              {appBottomNav.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-card/50 hover:text-foreground transition-colors"
+                >
+                  <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              ))}
+
+              {isAdmin && (
+                <>
+                  <div className="my-3 mx-2 border-t border-border/15" />
+                  <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Admin</p>
+                  <Link
+                    to="/app/admin"
+                    className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-card/50 hover:text-foreground transition-colors"
+                  >
+                    <Shield className="h-[15px] w-[15px] shrink-0" />
+                    <span>Painel Admin</span>
+                  </Link>
+                </>
+              )}
+
+              <div className="my-3 mx-2 border-t border-border/15" />
+              <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Página</p>
+              {navItems.map((item) => {
+                const isActiveSection = active === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollTo(item.id)}
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all duration-200 group ${
+                      isActiveSection
+                        ? "bg-primary/[0.08] text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                    }`}
+                  >
+                    <item.icon className={`h-[15px] w-[15px] shrink-0 transition-colors ${isActiveSection ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
+                    {item.label}
+                    {isActiveSection && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
+                  </button>
+                );
+              })}
+            </>
+          ) : (
+            <>
+              {navItems.map((item) => {
+                const isActiveSection = active === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollTo(item.id)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 group ${
+                      isActiveSection
+                        ? "bg-primary/[0.08] text-primary border border-primary/15"
+                        : "text-muted-foreground hover:text-foreground hover:bg-card/50 border border-transparent"
+                    }`}
+                  >
+                    <item.icon className={`h-3.5 w-3.5 transition-colors ${isActiveSection ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
+                    {item.label}
+                    {isActiveSection && (
+                      <ChevronRight className="h-3 w-3 ml-auto text-primary/60" />
+                    )}
+                  </button>
+                );
+              })}
+            </>
+          )}
         </nav>
 
-        {/* Theme Picker */}
-        <div className="px-3 pb-2">
+        {/* Bottom section */}
+        <div className="border-t border-border/15 p-2.5 space-y-1">
+          {/* Theme Picker */}
           <Popover>
             <PopoverTrigger asChild>
-              <button className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-card/50 border border-transparent transition-all duration-200 group">
-                <Palette className="h-3.5 w-3.5" />
+              <button className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-card/50 hover:text-foreground transition-colors">
+                <Palette className="h-3 w-3" />
                 <span>Tema</span>
                 <div className="ml-auto flex gap-0.5">
                   {themeOptions.find(t => t.value === theme)?.colors.map((c, i) => (
@@ -182,16 +274,27 @@ const Index = () => {
               ))}
             </PopoverContent>
           </Popover>
-        </div>
 
-        {/* Sidebar CTA */}
-        <div className="p-4 border-t border-border/15">
           {user ? (
-            <Button size="sm" className="w-full gap-1.5 text-xs h-9 bg-primary hover:bg-primary/90" onClick={() => navigate("/app/dashboard")}>
-              Meu Painel <ArrowRight className="h-3 w-3" />
-            </Button>
+            <>
+              <div className="flex items-center gap-2 px-2.5 py-1.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                  {(profile?.display_name || user?.email || "U")[0].toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-xs font-medium text-foreground">{profile?.display_name || user?.email?.split("@")[0]}</p>
+                  <p className="truncate text-[10px] text-muted-foreground">{user?.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={async () => { await signOut(); navigate("/"); }}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-card/50 hover:text-foreground transition-colors"
+              >
+                <LogOut className="h-3 w-3" /> Sair
+              </button>
+            </>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 pt-1">
               <Button size="sm" className="w-full gap-1.5 text-xs h-9 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" onClick={() => navigate("/auth")}>
                 Criar Conta <ArrowRight className="h-3 w-3" />
               </Button>
