@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { usePeptides } from "@/hooks/usePeptides";
 import type { PeptideListItem } from "@/types";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import UsageBadge from "@/components/UsageBadge";
 
 export default function Compare() {
   const { data: peptides = [], isLoading } = usePeptides();
@@ -76,6 +77,7 @@ export default function Compare() {
         <div className="flex items-center gap-2 mb-1">
           <ArrowLeftRight className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-semibold tracking-tight text-foreground">Comparar Peptídeos</h1>
+          <UsageBadge feature="compare" className="ml-2" />
         </div>
         <p className="text-sm text-muted-foreground">Compare até 3 peptídeos lado a lado — mecanismos, dosagens, benefícios e compatibilidade.</p>
       </div>

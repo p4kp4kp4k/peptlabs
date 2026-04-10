@@ -67,11 +67,15 @@ Deno.serve(async (req) => {
       isStarter: plan === "starter" && isActive,
       limits,
       currentPeriodEnd: ent?.current_period_end ?? null,
-      usage: usage ? {
-        protocolsCreated: usage.protocols_created,
-        comparisonsMade: usage.comparisons_made,
-        exportsMade: usage.exports_made,
-      } : { protocolsCreated: 0, comparisonsMade: 0, exportsMade: 0 },
+      usage: {
+        protocolsCreated: usage?.protocols_created ?? 0,
+        comparisonsMade: usage?.comparisons_made ?? 0,
+        exportsMade: usage?.exports_made ?? 0,
+        calcsMade: (usage as any)?.calcs_made ?? 0,
+        stacksViewed: (usage as any)?.stacks_viewed ?? 0,
+        templatesUsed: (usage as any)?.templates_used ?? 0,
+        interactionsChecked: (usage as any)?.interactions_checked ?? 0,
+      },
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), {

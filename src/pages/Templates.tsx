@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import UsageBadge from "@/components/UsageBadge";
 
 interface TemplatePeptide {
   name: string;
@@ -112,6 +113,7 @@ export default function Templates() {
         <p className="text-sm text-muted-foreground">
           Protocolos prontos para usar. Escolha um template e personalize.
         </p>
+        <UsageBadge feature="template" className="mt-1" />
       </div>
 
       {/* Tabs */}

@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { usePeptidesWithInteractions } from "@/hooks/usePeptides";
 import type { PeptideWithInteractions, NormalizedInteraction } from "@/types";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import UsageBadge from "@/components/UsageBadge";
 
 function getStatusInfo(status: string) {
   const s = status.toUpperCase();
@@ -218,7 +219,8 @@ export default function Interactions() {
           </h1>
           {!hasAccess && (
              <ProBadge />
-          )}
+           )}
+          <UsageBadge feature="interaction" />
         </div>
         <p className="text-xs text-muted-foreground">
           Verifique interações medicamentosas e combinações perigosas
