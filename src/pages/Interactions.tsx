@@ -352,6 +352,7 @@ export default function Interactions() {
           selectedCount={selectedPeptides.length}
         />
       )}
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="O verificador de interações é exclusivo para assinantes." />
     </div>
     </>
   );

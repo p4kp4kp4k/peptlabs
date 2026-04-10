@@ -28,6 +28,9 @@ export default function HistoryPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<string>("all");
+  const [gateOpen, setGateOpen] = useState(false);
+  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const hasAccess = isAdmin || isPro || isStarter;
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["history", user?.id],
@@ -123,6 +126,7 @@ export default function HistoryPage() {
           })}
         </div>
       )}
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="O histórico completo é exclusivo para assinantes." />
     </div>
     </>
   );

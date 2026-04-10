@@ -366,6 +366,7 @@ export default function BodyMap() {
       {selectedSite && (
         <SiteDetailModal site={selectedSite} onClose={() => setSelectedSite(null)} />
       )}
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="O mapa de aplicação corporal é exclusivo para assinantes." />
     </div>
     </>
   );
