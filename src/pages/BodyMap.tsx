@@ -756,7 +756,11 @@ function BodySilhouette({
         <ellipse cx="144" cy="308" rx="4" ry="3"
           fill="hsl(var(--primary))"
           opacity="0.04"
-        />
+            />
+            {/* Lock icon */}
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-card border border-border/50 shadow-sm">
+              <Lock className="h-2 w-2 text-muted-foreground" />
+            </span>
 
         {/* Quadriceps muscle lines (frontal) */}
         {side === "frontal" && (
