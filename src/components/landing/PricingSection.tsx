@@ -55,8 +55,10 @@ const plans = [
     features: [
       "Tudo do PRO Mensal, mais:",
       "Acesso vitalício — pague uma vez, use para sempre",
+      "Contato direto com fornecedores parceiros",
       "Atualizações e novos peptídeos inclusos",
-      "Prioridade em novas funcionalidades",
+      "Guias práticos atualizados mensalmente",
+      "Stacks ilimitados (sem cap de 10/mês)",
       "Export PRO com timeline visual",
       "Suporte VIP dedicado",
     ],
