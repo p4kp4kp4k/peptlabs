@@ -246,7 +246,7 @@ export default function BodyMap() {
                         .map((s) => s.site)
                     )}
                     selectedSiteId={selectedSite?.id || null}
-                    onSiteClick={handleSiteClick}
+                    onSiteClick={setSelectedSite}
                   />
                 </div>
                 {/* DORSAL */}
@@ -261,7 +261,7 @@ export default function BodyMap() {
                         .map((s) => s.site)
                     )}
                     selectedSiteId={selectedSite?.id || null}
-                    onSiteClick={handleSiteClick}
+                    onSiteClick={setSelectedSite}
                   />
                 </div>
               </div>
@@ -325,7 +325,7 @@ export default function BodyMap() {
               return (
                 <button
                   key={i}
-                  onClick={() => site && handleSiteClick(site)}
+                  onClick={() => site && setSelectedSite(site)}
                   className={`w-full flex items-center gap-3 rounded-xl border p-3.5 text-left transition-all ${
                     isToday
                       ? "border-primary/40 bg-primary/5"
