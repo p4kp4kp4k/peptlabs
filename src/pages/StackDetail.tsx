@@ -12,7 +12,7 @@ import {
 import { getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
 import { stackImages } from "@/assets/stacks";
 import { useEntitlements } from "@/hooks/useEntitlements";
-import ScrollReveal from "@/components/ScrollReveal";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import type { Stack } from "@/types";
 
 function StatusBadge({ status }: { status: string }) {
