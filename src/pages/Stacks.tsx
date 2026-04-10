@@ -1,13 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import PremiumGateModal from "@/components/PremiumGateModal";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
-  Layers, Search, Clock, X, Syringe, AlertTriangle,
-  CheckCircle2, Timer, GitMerge, ChevronRight, Lock
+  Layers, Search, Clock, Syringe,
+  CheckCircle2, ChevronRight
 } from "lucide-react";
 import ProBadge from "@/components/ProBadge";
 import { getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
@@ -16,8 +13,7 @@ import UsageBadge from "@/components/UsageBadge";
 import { useStacks } from "@/hooks/useStacks";
 import type { Stack } from "@/types";
 import { STACK_CATEGORIES } from "@/types";
-import { useEntitlements, checkFeature, incrementUsage } from "@/hooks/useEntitlements";
-import { toast } from "sonner";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 /* ─── Status badge ─── */
 function StatusBadge({ status }: { status: string }) {
@@ -222,27 +218,9 @@ export default function Stacks() {
   const { isAdmin, isPro, isStarter } = useEntitlements();
   const hasAccess = isAdmin || isPro || isStarter;
 
-  const handleOpenStack = useCallback(async (stack: Stack) => {
-    if (!hasAccess) {
-      setGateOpen(true);
-      return;
-    }
-    // Check usage limit (PRO has 10/month, free has 1/month)
-    if (!isAdmin) {
-      try {
-        const { allowed, reason } = await checkFeature("stack_builder");
-        if (!allowed) {
-          setGateReason(reason || "Limite de stacks atingido neste mês.");
-          setGateOpen(true);
-          return;
-        }
-        await incrementUsage("stack_builder");
-      } catch {
-        // If check fails, allow access gracefully
-      }
-    }
-    setSelectedStack(stack);
-  }, [hasAccess, isAdmin]);
+  const handleOpenStack = useCallback((stack: Stack) => {
+    navigate(`/app/stacks/${stack.id}`);
+  }, [navigate]);
 
   const { data: stacks, isLoading } = useStacks();
 
