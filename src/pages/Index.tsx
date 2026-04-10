@@ -130,6 +130,20 @@ const Index = () => {
         <nav className="flex-1 overflow-y-auto scrollbar-thin py-3 px-3 space-y-px">
           {user ? (
             <>
+              {/* Início (scroll to top) */}
+              <button
+                onClick={() => scrollTo("hero")}
+                className={`w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all duration-200 group mb-1 ${
+                  active === "hero"
+                    ? "bg-primary/[0.08] text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                }`}
+              >
+                <Home className="h-[15px] w-[15px] shrink-0" />
+                <span>Início</span>
+                {active === "hero" && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
+              </button>
+
               {/* App navigation */}
               <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Principal</p>
               {appMainNav.map((item) => (
@@ -169,27 +183,6 @@ const Index = () => {
                   </Link>
                 </>
               )}
-
-              <div className="my-3 mx-2 border-t border-border/15" />
-              <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Página</p>
-              {navItems.map((item) => {
-                const isActiveSection = active === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => scrollTo(item.id)}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all duration-200 group ${
-                      isActiveSection
-                        ? "bg-primary/[0.08] text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-card/50"
-                    }`}
-                  >
-                    <item.icon className={`h-[15px] w-[15px] shrink-0 transition-colors ${isActiveSection ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
-                    {item.label}
-                    {isActiveSection && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
-                  </button>
-                );
-              })}
             </>
           ) : (
             <>
