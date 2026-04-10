@@ -1,5 +1,5 @@
 import { useState } from "react";
-import FreeGateOverlay from "@/components/FreeGateOverlay";
+import PremiumGateModal from "@/components/PremiumGateModal";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BookOpen,
