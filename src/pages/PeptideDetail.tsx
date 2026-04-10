@@ -284,7 +284,7 @@ export default function PeptideDetail() {
   ].filter(Boolean) as { id: string; label: string; icon: React.ElementType }[];
 
   return (
-    <div className="p-3 sm:p-5 max-w-5xl mx-auto">
+    <div className={`p-3 sm:p-5 max-w-5xl mx-auto ${isLocked ? "pointer-events-none select-none blur-[6px] brightness-[0.4] saturate-[0.2]" : ""}`}>
       {/* ── TOP AREA (full width) ── */}
       <div className="space-y-4 mb-4">
 
