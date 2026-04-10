@@ -1,5 +1,5 @@
 import { useState } from "react";
-import FreeGateOverlay from "@/components/FreeGateOverlay";
+import PremiumGateModal from "@/components/PremiumGateModal";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntitlements } from "@/hooks/useEntitlements";
-import PremiumGateModal from "@/components/PremiumGateModal";
 
 interface TemplatePeptide {
   name: string;
@@ -99,7 +98,7 @@ export default function Templates() {
   };
 
   return (
-    <FreeGateOverlay pageTitle="Templates Premium" description="Assine para acessar templates de protocolos validados por especialistas com dosagens e durações otimizadas." comparisonRows={[["Templates por categoria", "✗", "✓"], ["Protocolos validados", "✗", "✓"], ["Dosagens otimizadas", "✗", "✓"], ["Templates com IA", "✗", "✓"]]}>
+    <>
     <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
@@ -267,6 +266,6 @@ export default function Templates() {
         upgradeTo="pro"
       />
     </div>
-    </FreeGateOverlay>
+    </>
   );
 }

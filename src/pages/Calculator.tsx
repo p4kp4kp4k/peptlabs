@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import FreeGateOverlay from "@/components/FreeGateOverlay";
+import PremiumGateModal from "@/components/PremiumGateModal";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger
 } from "@/components/ui/collapsible";
-
+import { useEntitlements } from "@/hooks/useEntitlements";
 // Parse dose strings like "250 mcg/dia", "2.5 mg/dia", "5mg" to mcg number
 function parseDoseToMcg(doseStr: string): number {
   const clean = doseStr.toLowerCase().replace(/[^\d.,a-z]/g, " ");
@@ -172,18 +172,25 @@ export default function CalculatorPage() {
   const [protocolOpen, setProtocolOpen] = useState(false);
   const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
   const [protocolSearch, setProtocolSearch] = useState("");
+  const [gateOpen, setGateOpen] = useState(false);
+  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const hasAccess = isAdmin || isPro || isStarter;
 
   const filteredProtocols = protocolPresets.filter((p) =>
     p.label.toLowerCase().includes(protocolSearch.toLowerCase())
   );
 
   const applyProtocol = (p: { label: string; vial: string; water: string; dose: string }) => {
+    if (!hasAccess) { setGateOpen(true); return; }
     setVialMg(p.vial);
     setDiluentMl(p.water);
     setDesiredDoseMcg(p.dose);
     setSelectedProtocol(p.label);
-
     setProtocolOpen(false);
+  };
+
+  const handleInputFocus = () => {
+    if (!hasAccess) { setGateOpen(true); }
   };
 
   const vial = parseFloat(vialMg) || 0;
@@ -201,7 +208,7 @@ export default function CalculatorPage() {
   const reset = () => { setVialMg(""); setDiluentMl(""); setDesiredDoseMcg(""); setSelectedProtocol(null); };
 
   return (
-    <FreeGateOverlay pageTitle="Calculadora de Reconstituição" description="Assine para acessar a calculadora precisa de reconstituição com presets de peptídeos e guia visual de seringas." comparisonRows={[["Cálculo de reconstituição", "✗", "✓"], ["Presets de peptídeos", "✗", "80+ peptídeos"], ["Guia visual de seringas", "✗", "✓"], ["Tabela de referência rápida", "✗", "✓"], ["Armazenamento e estabilidade", "✗", "✓"]]}>
+    <>
     <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
@@ -702,8 +709,9 @@ export default function CalculatorPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="A calculadora de reconstituição é exclusiva para assinantes." />
     </div>
-    </FreeGateOverlay>
+    </>
   );
 }
 

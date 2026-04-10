@@ -1,17 +1,21 @@
 import { useState, useMemo } from "react";
-import FreeGateOverlay from "@/components/FreeGateOverlay";
+import PremiumGateModal from "@/components/PremiumGateModal";
 import { ArrowLeftRight, Plus, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { usePeptides } from "@/hooks/usePeptides";
 import type { PeptideListItem } from "@/types";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 export default function Compare() {
   const { data: peptides = [], isLoading } = usePeptides();
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [showPicker, setShowPicker] = useState(false);
+  const [gateOpen, setGateOpen] = useState(false);
+  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const hasAccess = isAdmin || isPro || isStarter;
 
   const selectedPeptides = useMemo(
     () => peptides.filter((p) => selected.includes(p.id)),
@@ -27,6 +31,7 @@ export default function Compare() {
   );
 
   const addPeptide = (id: string) => {
+    if (!hasAccess) { setGateOpen(true); return; }
     if (selected.length < 4) {
       setSelected((s) => [...s, id]);
       setShowPicker(false);
@@ -64,7 +69,7 @@ export default function Compare() {
   };
 
   return (
-    <FreeGateOverlay pageTitle="Comparador Premium" description="Assine para comparar peptídeos lado a lado com mecanismos, dosagens, benefícios e compatibilidade." comparisonRows={[["Comparação lado a lado", "✗", "Até 4 peptídeos"], ["Dosagens comparativas", "✗", "✓"], ["Compatibilidade cruzada", "✗", "✓"], ["Mecanismos de ação", "Resumo", "Detalhado"], ["Exportação de comparações", "✗", "✓"]]}>
+    <>
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
@@ -85,7 +90,7 @@ export default function Compare() {
           </Badge>
         ))}
         {selected.length < 4 && (
-          <Button variant="outline" size="sm" className="gap-1 text-xs h-7" onClick={() => setShowPicker(true)}>
+          <Button variant="outline" size="sm" className="gap-1 text-xs h-7" onClick={() => hasAccess ? setShowPicker(true) : setGateOpen(true)}>
             <Plus className="h-3 w-3" /> Adicionar Peptídeo
           </Button>
         )}
@@ -190,7 +195,8 @@ export default function Compare() {
           </div>
         </div>
       )}
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="O comparador de peptídeos é exclusivo para assinantes." />
     </div>
-    </FreeGateOverlay>
+    </>
   );
 }

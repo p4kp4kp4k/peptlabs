@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import FreeGateOverlay from "@/components/FreeGateOverlay";
 import { useNavigate } from "react-router-dom";
+import PremiumGateModal from "@/components/PremiumGateModal";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import { getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
 import { useStacks } from "@/hooks/useStacks";
 import type { Stack } from "@/types";
 import { STACK_CATEGORIES } from "@/types";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 /* ─── Status badge ─── */
 function StatusBadge({ status }: { status: string }) {
@@ -212,6 +213,9 @@ export default function Stacks() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedStack, setSelectedStack] = useState<Stack | null>(null);
+  const [gateOpen, setGateOpen] = useState(false);
+  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const hasAccess = isAdmin || isPro || isStarter;
 
   const { data: stacks, isLoading } = useStacks();
 
@@ -235,7 +239,7 @@ export default function Stacks() {
   }, [stacks, selectedCategory, search]);
 
   return (
-    <FreeGateOverlay pageTitle="Biblioteca de Stacks Premium" description="Assine para acessar stacks sinérgicos pré-montados com verificação de interações e protocolos combinados." comparisonRows={[["Stacks pré-montados", "✗", "✓"], ["Verificação de interações", "✗", "✓"], ["Dosagens otimizadas", "✗", "✓"], ["Timing e duração", "✗", "✓"], ["Alertas de segurança", "✗", "✓"]]}>
+    <>
     <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -306,8 +310,8 @@ export default function Stacks() {
             return (
               <button
                 key={stack.id}
-                onClick={() => setSelectedStack(stack)}
-                className="group text-left rounded-xl border border-border/20 bg-card/60 p-5 hover:border-border/40 hover:bg-card/80 transition-all duration-200"
+                onClick={() => hasAccess ? setSelectedStack(stack) : setGateOpen(true)}
+                className={`group text-left rounded-xl border border-border/20 bg-card/60 p-5 hover:border-border/40 hover:bg-card/80 transition-all duration-200 ${!hasAccess ? "relative" : ""}`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${config.bgColor}`}>
@@ -351,7 +355,8 @@ export default function Stacks() {
 
       {/* Modal */}
       {selectedStack && <StackModal stack={selectedStack} onClose={() => setSelectedStack(null)} />}
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="Stacks sinérgicos são exclusivos para assinantes. Faça upgrade para acessar combinações otimizadas." />
     </div>
-    </FreeGateOverlay>
+    </>
   );
 }

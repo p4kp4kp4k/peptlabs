@@ -1,11 +1,12 @@
 import { useState } from "react";
-import FreeGateOverlay from "@/components/FreeGateOverlay";
+import PremiumGateModal from "@/components/PremiumGateModal";
 import { History as HistoryIcon, Loader2, Trash2, FlaskConical, Layers, Calculator, ArrowLeftRight, Sparkles } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 const kindIcons: Record<string, any> = {
   protocol: FlaskConical,
@@ -27,6 +28,9 @@ export default function HistoryPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<string>("all");
+  const [gateOpen, setGateOpen] = useState(false);
+  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const hasAccess = isAdmin || isPro || isStarter;
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["history", user?.id],
@@ -53,7 +57,7 @@ export default function HistoryPage() {
   const filtered = filter === "all" ? items : items.filter((i) => i.kind === filter);
 
   return (
-    <FreeGateOverlay pageTitle="Histórico Premium" description="Assine para acessar o histórico completo de protocolos, comparações, cálculos e toda a sua atividade." comparisonRows={[["Histórico de protocolos", "✗", "Ilimitado"], ["Registro de comparações", "✗", "✓"], ["Rastreamento de atividade", "✗", "✓"], ["Exportação de dados", "✗", "✓"]]}>
+    <>
     <div className="p-4 sm:p-6 max-w-4xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
@@ -122,7 +126,8 @@ export default function HistoryPage() {
           })}
         </div>
       )}
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="O histórico completo é exclusivo para assinantes." />
     </div>
-    </FreeGateOverlay>
+    </>
   );
 }

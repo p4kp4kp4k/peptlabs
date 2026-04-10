@@ -1,5 +1,5 @@
 import { useState } from "react";
-import FreeGateOverlay from "@/components/FreeGateOverlay";
+import PremiumGateModal from "@/components/PremiumGateModal";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BookOpen,
@@ -47,6 +47,7 @@ const categoryIcons: Record<string, typeof BookOpen> = {
 export default function Learn() {
   const { slug } = useParams<{ slug: string }>();
   const [activeTab, setActiveTab] = useState<TabKey>("todos");
+  const [gateOpen, setGateOpen] = useState(false);
   const { isPro, isAdmin } = useEntitlements();
   const hasFullAccess = isPro || isAdmin;
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ export default function Learn() {
   };
 
   return (
-    <FreeGateOverlay pageTitle="Central de Conhecimento Premium" description="Assine para acessar guias completos, estudos científicos curados e protocolos de segurança com referências PubMed." comparisonRows={[["Guias práticos", "Resumo", "Completos"], ["Estudos científicos", "✗", "✓"], ["Referências PubMed", "✗", "✓"], ["Protocolos de segurança", "✗", "✓"], ["Novos artigos semanais", "✗", "✓"]]}>
+    <>
     <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
@@ -308,7 +309,8 @@ export default function Learn() {
           )}
         </>
       )}
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="A Central de Conhecimento completa é exclusiva para assinantes." />
     </div>
-    </FreeGateOverlay>
+    </>
   );
 }

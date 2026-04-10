@@ -1,5 +1,5 @@
 import { useState } from "react";
-import FreeGateOverlay from "@/components/FreeGateOverlay";
+import PremiumGateModal from "@/components/PremiumGateModal";
 import {
   Crosshair, ArrowRight, ArrowLeft, Check, Sparkles, Zap,
   AlertTriangle, Star, Timer, Save, RotateCcw, ChevronRight,
@@ -17,7 +17,6 @@ import { runEngine, getAvailableGoals, type GeneratedProtocol } from "@/engine";
 import { createProtocol } from "@/services/protocolService";
 import { saveRecommendation } from "@/services/userService";
 import { useEntitlements, checkFeature } from "@/hooks/useEntitlements";
-import PremiumGateModal from "@/components/PremiumGateModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -255,7 +254,7 @@ export default function Finder() {
   };
 
   return (
-    <FreeGateOverlay pageTitle="PeptiLab Matcher" description="Assine para encontrar o peptídeo ideal com base nos seus objetivos, experiência e preferência de administração." comparisonRows={[["Quiz personalizado", "✗", "✓"], ["Recomendações por IA", "✗", "✓"], ["Score de compatibilidade", "✗", "0-100%"], ["Salvar protocolos", "✗", "✓"], ["Justificativa detalhada", "✗", "✓"]]}>
+    <>
     <div className="flex items-start justify-center p-4 sm:p-6">
       <div className="w-full max-w-2xl">
         {/* ── Header ── */}
@@ -623,8 +622,9 @@ export default function Finder() {
         )}
       </div>
       <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason={gateReason} />
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="O PeptiLab Matcher é exclusivo para assinantes." />
     </div>
-    </FreeGateOverlay>
+    </>
   );
 }
 

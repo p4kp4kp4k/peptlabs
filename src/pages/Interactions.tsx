@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
-import FreeGateOverlay from "@/components/FreeGateOverlay";
+import PremiumGateModal from "@/components/PremiumGateModal";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, Shield, AlertTriangle, ShieldCheck, ShieldAlert, ChevronDown, CheckCircle2, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePeptidesWithInteractions } from "@/hooks/usePeptides";
 import type { PeptideWithInteractions, NormalizedInteraction } from "@/types";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 function getStatusInfo(status: string) {
   const s = status.toUpperCase();
@@ -56,6 +57,9 @@ export default function Interactions() {
   const [search, setSearch] = useState("");
   const [selectedPeptide, setSelectedPeptide] = useState<string | null>(null);
   const [selectedPeptides, setSelectedPeptides] = useState<string[]>([]);
+  const [gateOpen, setGateOpen] = useState(false);
+  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const hasAccess = isAdmin || isPro || isStarter;
 
   const { data: allPeptides = [], isLoading } = usePeptidesWithInteractions();
 
@@ -192,7 +196,7 @@ export default function Interactions() {
   }, [tab, allPeptides, selectedPeptides]);
 
   return (
-    <FreeGateOverlay pageTitle="Verificador de Interações" description="Assine para verificar interações entre peptídeos com alertas de segurança, análise de risco e recomendações." comparisonRows={[["Verificação cruzada", "✗", "✓"], ["Alertas de segurança", "✗", "✓"], ["Análise de risco", "✗", "Detalhada"], ["Recomendações clínicas", "✗", "✓"], ["Contraindicações", "✗", "✓"]]}>
+    <>
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-5">
       {/* Warning banner */}
       <div className="flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-4 py-3">
@@ -304,6 +308,7 @@ export default function Interactions() {
                   disabled={isHardBlocked}
                   onClick={() => {
                     if (isHardBlocked) return;
+                    if (!hasAccess) { setGateOpen(true); return; }
                     if (tab === "individual") {
                       setSelectedPeptide(selectedPeptide === p.slug ? null : p.slug);
                     } else {
@@ -348,8 +353,9 @@ export default function Interactions() {
           selectedCount={selectedPeptides.length}
         />
       )}
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="O verificador de interações é exclusivo para assinantes." />
     </div>
-    </FreeGateOverlay>
+    </>
   );
 }
 
