@@ -395,6 +395,7 @@ export default function Stacks() {
                     <span>Sinergia Verificada</span>
                   </div>
                 </div>
+                </div>
               </button>
             );
           })}
