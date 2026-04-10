@@ -118,7 +118,7 @@ const PricingSection = () => {
                   className={`w-full text-xs h-10 transition-all ${
                     plan.highlight
                       ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30"
-                      : "border-border/40 hover:border-primary/30 hover:bg-primary/[0.04]"
+                      : "border-foreground/30 text-foreground hover:border-primary/40 hover:bg-primary/[0.08]"
                   }`}
                   onClick={() => navigate("/auth")}
                 >

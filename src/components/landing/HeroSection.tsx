@@ -121,7 +121,7 @@ const HeroSection = () => {
           <Button
             size="lg"
             variant="outline"
-            className="gap-2 text-sm h-12 px-8 border-border/50 hover:border-primary/40 hover:bg-primary/[0.04] transition-all"
+            className="gap-2 text-sm h-12 px-8 border-foreground/30 text-foreground hover:border-primary/60 hover:bg-primary/[0.08] transition-all"
             onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
           >
             Ver Planos
