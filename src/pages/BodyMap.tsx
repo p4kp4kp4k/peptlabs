@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   MapPin, Calendar, Check, RotateCcw, ChevronRight, X,
-  Syringe, AlertTriangle, Lightbulb, Info
+  Syringe, AlertTriangle, Lightbulb, Info, Lock
 } from "lucide-react";
 // ── Injection site data ──
 interface InjectionSite {
@@ -841,6 +841,10 @@ function BodySilhouette({
                     : "bg-primary/70 shadow-[0_0_4px_hsl(var(--primary)/0.2)]"
               }`}
             />
+            {/* Lock icon */}
+            <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-card border border-border/50 shadow-sm z-10">
+              <Lock className="h-2 w-2 text-muted-foreground" />
+            </span>
             {/* Hover label */}
             <span className="absolute left-1/2 -translate-x-1/2 -top-6 whitespace-nowrap rounded-md bg-card border border-border/50 px-2 py-1 text-[8px] font-medium text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl backdrop-blur-md">
               {site.name.replace("Abdômen ", "Abd. ").replace("Superior ", "Sup. ").replace("Inferior ", "Inf. ").replace("Direito", "Dir.").replace("Direita", "Dir.").replace("Esquerdo", "Esq.").replace("Esquerda", "Esq.").replace("Externa ", "Ext. ").replace("Lateral ", "Lat. ")}
