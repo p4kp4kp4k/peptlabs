@@ -246,62 +246,47 @@ export default function Learn() {
                   Desbloqueie todos os guias, estudos científicos e protocolos de segurança com evidência real.
                 </p>
 
-                <div className="grid gap-4 sm:grid-cols-3 max-w-3xl mx-auto">
+                <div className="grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto">
                   <div className="rounded-xl border border-border/30 bg-background p-5 text-left">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 mb-1">Mensal</p>
-                    <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                      R$147<span className="text-xs font-normal text-muted-foreground">/mês</span>
-                    </p>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 mb-1">PRO Mensal</p>
+                    <div className="flex items-baseline gap-1">
+                      <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                        R$59<span className="text-sm font-bold">,90</span>
+                      </p>
+                      <span className="text-xs text-muted-foreground">/mês</span>
+                    </div>
                     <p className="mb-4 text-[10px] text-muted-foreground">Cancele quando quiser</p>
                     <ul className="mb-4 space-y-2">
-                      {["Biblioteca completa", "Calculadora avançada", "Guias atualizados", "Suporte e-mail"].map((feature) => (
+                      {["Biblioteca completa (78+ peptídeos)", "Protocolos e comparações ilimitados", "Calculadora avançada + presets", "Stack Builder PRO (até 10/mês)", "Body Map interativo", "Suporte prioritário"].map((feature) => (
                         <li key={feature} className="flex items-start gap-2 text-[10px] text-muted-foreground">
                           <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {feature}
                         </li>
                       ))}
                     </ul>
-                    <Button variant="outline" size="sm" className="w-full text-xs">Começar</Button>
+                    <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => navigate("/app/billing")}>Ativar PRO Mensal</Button>
                   </div>
 
                   <div className="relative rounded-xl border-2 border-primary bg-background p-5 text-left shadow-lg shadow-primary/10">
                     <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
                       <Badge className="border-0 bg-primary text-primary-foreground text-[9px] shadow-lg">
-                        Mais Popular
+                        Mais Escolhido
                       </Badge>
                     </div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-primary mb-1">Vitalício</p>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-primary mb-1">PRO Vitalício</p>
                     <div className="flex items-baseline gap-2">
                       <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>R$397</p>
                       <span className="text-[10px] text-muted-foreground line-through">R$794</span>
+                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] px-1.5 py-0">-50%</Badge>
                     </div>
-                    <p className="mb-4 text-[10px] text-muted-foreground">Pagamento único · <span className="text-primary font-semibold">-50%</span></p>
+                    <p className="mb-4 text-[10px] text-muted-foreground">Pagamento único · Use para sempre</p>
                     <ul className="mb-4 space-y-2">
-                      {["Tudo do Mensal", "Acesso antecipado", "Lives exclusivas", "Consultoria em grupo"].map((feature) => (
+                      {["Tudo do PRO Mensal, mais:", "Acesso vitalício — pague uma vez", "Contato direto com fornecedores", "Stacks ilimitados (sem cap)", "Guias práticos atualizados", "Export PRO com timeline visual", "Suporte VIP dedicado"].map((feature) => (
                         <li key={feature} className="flex items-start gap-2 text-[10px] text-muted-foreground">
                           <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {feature}
                         </li>
                       ))}
                     </ul>
-                    <Button size="sm" className="w-full text-xs">Garantir Acesso</Button>
-                  </div>
-
-                  <div className="rounded-xl border border-border/30 bg-background p-5 text-left">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 mb-1">Premium</p>
-                    <div className="flex items-baseline gap-2">
-                      <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>R$997</p>
-                      <span className="text-[10px] text-muted-foreground line-through">R$1.997</span>
-                    </div>
-                    <p className="mb-4 text-[10px] text-muted-foreground">Vitalício + comunidade · <span className="text-primary font-semibold">-50%</span></p>
-                    <ul className="mb-4 space-y-2">
-                      {["Tudo do Vitalício", "Fornecedores confiáveis", "Comunidade +700", "Suporte WhatsApp"].map((feature) => (
-                        <li key={feature} className="flex items-start gap-2 text-[10px] text-muted-foreground">
-                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {feature}
-                        </li>
-                      ))}
-                    </ul>
-                    <Button variant="outline" size="sm" className="w-full border-primary text-primary text-xs hover:bg-primary hover:text-primary-foreground">
-                      Pagar Uma Vez
-                    </Button>
+                    <Button size="sm" className="w-full text-xs" onClick={() => navigate("/app/billing")}>Garantir Acesso Vitalício</Button>
                   </div>
                 </div>
               </div>
