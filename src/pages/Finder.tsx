@@ -255,6 +255,7 @@ export default function Finder() {
   };
 
   return (
+    <FreeGateOverlay pageTitle="Finder de Protocolos" features={["Geração de protocolos por IA", "Recomendações personalizadas", "Análise de objetivos", "Protocolos salvos"]}>
     <div className="flex items-start justify-center p-4 sm:p-6">
       <div className="w-full max-w-2xl">
         {/* ── Header ── */}
@@ -623,6 +624,7 @@ export default function Finder() {
       </div>
       <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason={gateReason} />
     </div>
+    </FreeGateOverlay>
   );
 }
 

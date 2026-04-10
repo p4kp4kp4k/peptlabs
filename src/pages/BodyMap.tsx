@@ -167,6 +167,7 @@ export default function BodyMap() {
   const resetDays = () => setCompletedDays(new Set());
 
   return (
+    <FreeGateOverlay pageTitle="Body Map Interativo" features={["Mapa corporal de pontos de injeção", "Técnicas de aplicação detalhadas", "Guia de assepsia e segurança", "Rotação de locais recomendada"]}>
     <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
       {/* Header */}
       <div>
@@ -916,5 +917,6 @@ function SiteDetailModal({ site, onClose }: { site: InjectionSite; onClose: () =
         </div>
       </div>
     </div>
+    </FreeGateOverlay>
   );
 }
