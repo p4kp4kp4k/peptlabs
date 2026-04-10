@@ -41,7 +41,7 @@ export default function PremiumGateModal({ open, onClose, reason, upgradeTo = "p
                 <li>✓ Biblioteca completa (peptídeos avançados)</li>
                 <li>✓ Protocolos ilimitados</li>
                 <li>✓ Comparador ilimitado</li>
-                <li>✓ Stack Builder PRO completo</li>
+                <li>✓ Stack Builder PRO (até 10/mês)</li>
                 <li>✓ Calculadora avançada + presets</li>
                 <li>✓ Histórico ilimitado</li>
                 <li>✓ Export PRO (PDF premium)</li>

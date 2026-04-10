@@ -55,7 +55,7 @@ const plans = [
       "Biblioteca completa (avançados)",
       "Protocolos ilimitados",
       "Comparador ilimitado",
-      "Stack Builder PRO completo",
+      "Stack Builder PRO (até 10/mês)",
       "Calculadora avançada + presets",
       "Histórico ilimitado",
       "Templates premium + IA",
