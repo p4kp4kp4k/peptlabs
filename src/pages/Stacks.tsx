@@ -13,6 +13,7 @@ import { getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
 import { useStacks } from "@/hooks/useStacks";
 import type { Stack } from "@/types";
 import { STACK_CATEGORIES } from "@/types";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 /* ─── Status badge ─── */
 function StatusBadge({ status }: { status: string }) {
