@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 type CounterField = "protocols_created" | "comparisons_made" | "exports_made" | "calcs_made" | "stacks_viewed" | "templates_used" | "interactions_checked";
@@ -28,17 +28,34 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Verify JWT properly
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
     const token = authHeader.replace("Bearer ", "");
-    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-    const userId = payload.sub as string;
-    if (!userId) throw new Error("No user id");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = claimsData.claims.sub as string;
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "No user id" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const body = await req.json().catch(() => ({}));
     const feature = body.feature as string;
     const field = FEATURE_MAP[feature];
 
     if (!field) {
-      return new Response(JSON.stringify({ error: `Invalid feature: ${feature}` }), {
+      return new Response(JSON.stringify({ error: `Invalid feature. Must be one of: ${Object.keys(FEATURE_MAP).join(", ")}` }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

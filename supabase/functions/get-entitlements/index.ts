@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const PLAN_LIMITS: Record<string, object> = {
@@ -22,42 +22,47 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Verify JWT properly using getClaims
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
     const token = authHeader.replace("Bearer ", "");
-    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-    const userId = payload.sub as string;
-    if (!userId) throw new Error("No user id");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = claimsData.claims.sub as string;
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "No user id in token" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get entitlements
-    const { data: ent } = await admin
-      .from("entitlements")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+    // Get entitlements, roles, and usage in parallel
+    const month = new Date().toISOString().slice(0, 7);
+    const [entRes, rolesRes, usageRes] = await Promise.all([
+      admin.from("entitlements").select("*").eq("user_id", userId).single(),
+      admin.from("user_roles").select("role").eq("user_id", userId),
+      admin.from("usage_counters").select("*").eq("user_id", userId).eq("month", month).single(),
+    ]);
 
-    // Check admin
-    const { data: roles } = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
-
+    const ent = entRes.data;
+    const isAdmin = (rolesRes.data ?? []).some((r: any) => r.role === "admin");
     const plan = ent?.plan ?? "free";
     const isActive = ent?.is_active ?? false;
     const limits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
-
-    // Get current month usage
-    const month = new Date().toISOString().slice(0, 7);
-    const { data: usage } = await admin
-      .from("usage_counters")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("month", month)
-      .single();
+    const usage = usageRes.data;
 
     return new Response(JSON.stringify({
       plan,
