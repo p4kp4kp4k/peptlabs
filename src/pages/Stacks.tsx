@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import ProBadge from "@/components/ProBadge";
 import { getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
+import UsageBadge from "@/components/UsageBadge";
 import { useStacks } from "@/hooks/useStacks";
 import type { Stack } from "@/types";
 import { STACK_CATEGORIES } from "@/types";
@@ -277,7 +278,10 @@ export default function Stacks() {
             Combinações sinérgicas de peptídeos com protocolos completos por objetivo
           </p>
         </div>
-        <Badge variant="secondary" className="text-[10px] shrink-0">{stacks?.length ?? 0} stacks</Badge>
+        <div className="flex items-center gap-2 shrink-0">
+          <UsageBadge feature="stack" />
+          <Badge variant="secondary" className="text-[10px]">{stacks?.length ?? 0} stacks</Badge>
+        </div>
       </div>
 
       {/* Filters */}

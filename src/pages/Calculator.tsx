@@ -16,6 +16,7 @@ import {
   Collapsible, CollapsibleContent, CollapsibleTrigger
 } from "@/components/ui/collapsible";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import UsageBadge from "@/components/UsageBadge";
 // Parse dose strings like "250 mcg/dia", "2.5 mg/dia", "5mg" to mcg number
 function parseDoseToMcg(doseStr: string): number {
   const clean = doseStr.toLowerCase().replace(/[^\d.,a-z]/g, " ");
@@ -220,6 +221,7 @@ export default function CalculatorPage() {
                <ProBadge className="ml-2 align-middle" />
             )}
           </h1>
+          <UsageBadge feature="calculator" />
           <p className="text-[11px] text-muted-foreground mt-0.5">Ferramenta profissional para reconstituição e dosagem de peptídeos</p>
         </div>
         <Button variant="ghost" size="icon" onClick={reset} title="Limpar" className="h-8 w-8">
