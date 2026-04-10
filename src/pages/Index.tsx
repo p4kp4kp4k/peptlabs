@@ -69,6 +69,21 @@ const Index = () => {
 
   return (
     <div className="relative h-screen overflow-hidden flex">
+      {/* Full-page video background */}
+      <div className="fixed inset-0 z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="h-full w-full object-cover"
+          style={{ filter: "brightness(0.18) saturate(1.4)" }}
+        >
+          <source src="/videos/hero-bg.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/30 to-background/70" />
+      </div>
       <ParticleBackground />
 
       {/* Fixed Sidebar */}

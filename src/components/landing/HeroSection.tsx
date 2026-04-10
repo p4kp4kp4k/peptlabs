@@ -72,21 +72,9 @@ const HeroSection = () => {
 
   return (
     <section className="relative overflow-hidden pb-16 pt-20 sm:pb-24 sm:pt-28">
-      {/* Video background */}
-      <div className="absolute inset-0 z-0">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          className="h-full w-full object-cover"
-          style={{ filter: "brightness(0.25) saturate(1.3)" }}
-        >
-          <source src="/videos/hero-bg.mp4" type="video/mp4" />
-        </video>
-        {/* Gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
+      {/* Subtle ambient glow (no video here — video is full-page in Index) */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-primary/[0.05] blur-[160px] animate-pulse-glow" />
       </div>
 
       <motion.div
