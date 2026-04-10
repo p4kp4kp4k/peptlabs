@@ -10,7 +10,9 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { CalculatorModal } from "@/components/peptide/CalculatorModal";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { usePeptides } from "@/hooks/usePeptides";
-import { Crown, Lock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Crown, Lock, UserPlus, Star, CheckCircle } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { Json } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Tag, Activity, Clock, RotateCcw, Zap, CheckCircle2,
