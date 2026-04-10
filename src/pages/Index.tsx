@@ -127,17 +127,18 @@ const Index = () => {
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 overflow-y-auto scrollbar-thin py-3 px-3 space-y-px">
+        <nav className="flex-1 overflow-y-auto scrollbar-thin py-3 px-2.5 space-y-px">
           {user ? (
             <>
               {/* Início (scroll to top) */}
               <button
                 onClick={() => scrollTo("hero")}
-                className={`w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all duration-200 group mb-1 ${
+                className={cn(
+                  "w-full group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150 mb-1",
                   active === "hero"
                     ? "bg-primary/[0.08] text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-card/50"
-                }`}
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
               >
                 <Home className="h-[15px] w-[15px] shrink-0" />
                 <span>Início</span>
@@ -150,7 +151,7 @@ const Index = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-card/50 hover:text-foreground transition-colors"
+                  className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                 >
                   <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
                   <span className="truncate">{item.label}</span>
@@ -163,7 +164,7 @@ const Index = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-card/50 hover:text-foreground transition-colors"
+                  className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                 >
                   <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
                   <span className="truncate">{item.label}</span>
