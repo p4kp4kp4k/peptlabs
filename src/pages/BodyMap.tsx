@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import PremiumGateModal from "@/components/PremiumGateModal";
+import FreeGateOverlay from "@/components/FreeGateOverlay";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import {
   MapPin, Calendar, Check, RotateCcw, ChevronRight, X,
   Syringe, AlertTriangle, Lightbulb, Info
 } from "lucide-react";
-import { useEntitlements } from "@/hooks/useEntitlements";
 // ── Injection site data ──
 interface InjectionSite {
   id: string;
