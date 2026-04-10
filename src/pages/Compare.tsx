@@ -78,6 +78,7 @@ export default function Compare() {
           <ArrowLeftRight className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-semibold tracking-tight text-foreground">Comparar Peptídeos</h1>
           <UsageBadge feature="compare" className="ml-2" />
+        </div>
         <p className="text-sm text-muted-foreground">Compare até 3 peptídeos lado a lado — mecanismos, dosagens, benefícios e compatibilidade.</p>
       </div>
 
