@@ -9,9 +9,6 @@ const PLAN_LIMITS: Record<string, Record<string, object>> = {
   free: {
     monthly: { max_protocols_month: 1, compare_limit: 1, history_days: 0, export_level: "basic", calc_limit: 1, stack_limit: 1, template_limit: 1, interaction_limit: 1 },
   },
-  starter: {
-    monthly: { max_protocols_month: 3, compare_limit: 5, history_days: 7, export_level: "basic", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
-  },
   pro: {
     monthly: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro", calc_limit: -1, stack_limit: 10, template_limit: -1, interaction_limit: -1 },
     lifetime: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro_timeline", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
@@ -58,11 +55,12 @@ Deno.serve(async (req) => {
 
     const ent = entRes.data;
     const isAdmin = (rolesRes.data ?? []).some((r: any) => r.role === "admin");
-    const plan = ent?.plan ?? "free";
+    // Normalize: any legacy "starter" plan maps to "free"
+    const rawPlan = ent?.plan ?? "free";
+    const plan = rawPlan === "starter" ? "free" : rawPlan;
     const billingType = (ent as any)?.billing_type ?? "monthly";
     const isActive = ent?.is_active ?? false;
     
-    // Get limits based on plan AND billing type
     const planLimits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
     const limits = planLimits[billingType] ?? planLimits["monthly"] ?? PLAN_LIMITS.free.monthly;
     
@@ -76,7 +74,6 @@ Deno.serve(async (req) => {
       isAdmin,
       isPro: plan === "pro" && isActive,
       isLifetime,
-      isStarter: plan === "starter" && isActive,
       limits,
       currentPeriodEnd: ent?.current_period_end ?? null,
       usage: {
