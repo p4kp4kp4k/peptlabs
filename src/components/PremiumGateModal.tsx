@@ -36,17 +36,16 @@ export default function PremiumGateModal({ open, onClose, reason }: Props) {
             <li>✓ Biblioteca completa (78+ peptídeos)</li>
             <li>✓ Protocolos e comparações ilimitados</li>
             <li>✓ Calculadora avançada + presets</li>
-            <li>✓ Stack Builder PRO (até 10/mês)</li>
+            <li>✓ Stack Builder PRO</li>
             <li>✓ Histórico e export ilimitados</li>
             <li>✓ Body Map interativo</li>
-            <li>✓ Contato direto com fornecedores</li>
             <li>✓ Suporte prioritário</li>
           </ul>
         </div>
 
         <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-center">
           <p className="text-[11px] text-emerald-400 font-medium">
-            💡 PRO Vitalício: R$ 397 único — pague uma vez, use para sempre
+            💡 PRO Vitalício: R$ 397 único — pague uma vez, use para sempre + contato com fornecedores
           </p>
         </div>
 
