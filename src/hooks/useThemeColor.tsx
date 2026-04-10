@@ -141,7 +141,9 @@ function applyTheme(theme: ThemeColor) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeColor>(() => {
-    return (localStorage.getItem("peptilab-theme") as ThemeColor) || "cyan";
+    const stored = localStorage.getItem("peptilab-theme") as string;
+    if (stored && stored in themes) return stored as ThemeColor;
+    return "cyan";
   });
 
   const setTheme = (t: ThemeColor) => {
