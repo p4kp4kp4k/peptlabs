@@ -56,22 +56,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const NavItem = ({ item, onClick }: { item: typeof mainNav[0]; onClick?: () => void }) => (
-    <Link
-      to={item.path}
-      onClick={onClick}
-      className={cn(
-        "group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150",
-        isActive(item.path)
-          ? "bg-primary/[0.08] text-primary"
-          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-      )}
-    >
-      <item.icon className={cn("h-[15px] w-[15px] shrink-0", isActive(item.path) ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-      <span className="truncate">{item.label}</span>
-      {isActive(item.path) && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
-    </Link>
-  );
+  const NavItem = ({ item, onClick }: { item: typeof mainNav[0]; onClick?: () => void }) => {
+    const locked = !hasAccess && !FREE_PATHS.has(item.path);
+    return (
+      <Link
+        to={locked ? "/app/billing" : item.path}
+        onClick={onClick}
+        className={cn(
+          "group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150",
+          locked
+            ? "text-muted-foreground/40 hover:text-muted-foreground/60 cursor-default"
+            : isActive(item.path)
+              ? "bg-primary/[0.08] text-primary"
+              : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+        )}
+      >
+        <item.icon className={cn("h-[15px] w-[15px] shrink-0", locked ? "text-muted-foreground/30" : isActive(item.path) ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+        <span className={cn("truncate", locked && "opacity-50")}>{item.label}</span>
+        {locked && <Lock className="ml-auto h-3 w-3 text-muted-foreground/30" />}
+        {!locked && isActive(item.path) && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
+      </Link>
+    );
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background bg-ambient">
