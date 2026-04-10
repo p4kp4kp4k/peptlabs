@@ -6,12 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { usePeptides } from "@/hooks/usePeptides";
 import type { PeptideListItem } from "@/types";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 export default function Compare() {
   const { data: peptides = [], isLoading } = usePeptides();
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [showPicker, setShowPicker] = useState(false);
+  const [gateOpen, setGateOpen] = useState(false);
+  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const hasAccess = isAdmin || isPro || isStarter;
 
   const selectedPeptides = useMemo(
     () => peptides.filter((p) => selected.includes(p.id)),
