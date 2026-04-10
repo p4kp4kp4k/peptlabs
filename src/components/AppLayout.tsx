@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Syringe, Search, ArrowLeftRight,
   Calculator, Layers, MapPin, History, Settings, CreditCard,
-  Shield, Menu, X, LogOut, FlaskConical, Zap, BookOpen, Palette, FileText
+  Shield, Menu, X, LogOut, FlaskConical, Zap, BookOpen, Palette, FileText, Home
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -79,6 +79,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto scrollbar-thin px-2.5 py-3 space-y-px">
+          <Link
+            to="/"
+            className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150 text-muted-foreground hover:bg-secondary hover:text-foreground mb-1"
+          >
+            <Home className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
+            <span>Início</span>
+          </Link>
+
           <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">
             Principal
           </p>
@@ -190,6 +198,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <button onClick={() => setSidebarOpen(false)} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
             </div>
             <nav className="px-2.5 py-3 space-y-px">
+              <Link
+                to="/"
+                onClick={() => setSidebarOpen(false)}
+                className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground mb-1"
+              >
+                <Home className="h-[15px] w-[15px] shrink-0" />
+                <span>Início</span>
+              </Link>
               {mainNav.map((item) => <NavItem key={item.path} item={item} onClick={() => setSidebarOpen(false)} />)}
               <div className="my-3 mx-2 border-t border-border" />
               {bottomNav.map((item) => <NavItem key={item.path} item={item} onClick={() => setSidebarOpen(false)} />)}
