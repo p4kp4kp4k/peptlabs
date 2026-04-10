@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import PremiumGateModal from "@/components/PremiumGateModal";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Shield, AlertTriangle, ShieldCheck, ShieldAlert, ChevronDown, CheckCircle2, XCircle } from "lucide-react";
+import { Search, Shield, AlertTriangle, ShieldCheck, ShieldAlert, ChevronDown, CheckCircle2, XCircle, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePeptidesWithInteractions } from "@/hooks/usePeptides";
 import type { PeptideWithInteractions, NormalizedInteraction } from "@/types";
@@ -211,9 +211,16 @@ export default function Interactions() {
 
       {/* Header */}
       <div className="space-y-1">
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-          Verificador de Interações
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            Verificador de Interações
+          </h1>
+          {!hasAccess && (
+            <Badge className="text-[9px] gap-1 bg-primary/15 text-primary border border-primary/25 font-bold px-2 py-0.5">
+              <Crown className="h-2.5 w-2.5" /> PRO
+            </Badge>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground">
           Verifique interações medicamentosas e combinações perigosas
         </p>

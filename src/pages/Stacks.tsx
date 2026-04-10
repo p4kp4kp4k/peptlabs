@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Layers, Search, Clock, X, Syringe, AlertTriangle,
-  CheckCircle2, Timer, GitMerge, ChevronRight
+  CheckCircle2, Timer, GitMerge, ChevronRight, Crown, Lock
 } from "lucide-react";
 import { getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
 import { useStacks } from "@/hooks/useStacks";
@@ -311,15 +311,25 @@ export default function Stacks() {
               <button
                 key={stack.id}
                 onClick={() => hasAccess ? setSelectedStack(stack) : setGateOpen(true)}
-                className={`group text-left rounded-xl border border-border/20 bg-card/60 p-5 hover:border-border/40 hover:bg-card/80 transition-all duration-200 ${!hasAccess ? "relative" : ""}`}
+                className={`group text-left rounded-xl border border-border/20 bg-card/60 p-5 hover:border-border/40 hover:bg-card/80 transition-all duration-200 relative`}
               >
+                {/* PRO badge for non-premium users */}
+                {!hasAccess && (
+                  <div className="absolute top-3 right-3 z-10">
+                    <Badge className="text-[9px] gap-1 bg-primary/15 text-primary border border-primary/25 font-bold px-2 py-0.5">
+                      <Crown className="h-2.5 w-2.5" /> PRO
+                    </Badge>
+                  </div>
+                )}
                 <div className="flex items-start justify-between mb-4">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${config.bgColor}`}>
                     <IconComp className={`h-5 w-5 ${config.color}`} />
                   </div>
+                  {hasAccess && (
                   <Badge variant="outline" className={`text-[10px] ${config.bgColor} ${config.color} ${config.borderColor} font-semibold px-2.5 py-0.5`}>
                     {stack.category}
                   </Badge>
+                  )}
                 </div>
                 <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors mb-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                   {stack.name}
