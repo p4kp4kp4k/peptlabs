@@ -17,6 +17,10 @@ export interface EntitlementUsage {
   protocolsCreated: number;
   comparisonsMade: number;
   exportsMade: number;
+  calcsMade: number;
+  stacksViewed: number;
+  templatesUsed: number;
+  interactionsChecked: number;
 }
 
 export interface EntitlementData {
@@ -47,7 +51,7 @@ const FREE_DEFAULTS: EntitlementData = {
     interaction_limit: 1,
   },
   currentPeriodEnd: null,
-  usage: { protocolsCreated: 0, comparisonsMade: 0, exportsMade: 0 },
+  usage: { protocolsCreated: 0, comparisonsMade: 0, exportsMade: 0, calcsMade: 0, stacksViewed: 0, templatesUsed: 0, interactionsChecked: 0 },
 };
 
 async function fetchEntitlements(): Promise<EntitlementData> {
