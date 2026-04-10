@@ -248,42 +248,7 @@ export default function PeptideDetail() {
   }
 
   /* ── LOCKED GATE for free users ── */
-  if (isLocked) {
-    return (
-      <div className="p-4 sm:p-6 max-w-lg mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-muted/50 border border-border">
-          <Lock className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <h1 className="text-xl font-bold text-foreground mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-          {peptide.name}
-        </h1>
-        <p className="text-sm text-muted-foreground mb-1">
-          {peptide.category} · {peptide.classification || peptide.evidence_level || "Peptídeo"}
-        </p>
-        <p className="text-xs text-muted-foreground/70 mb-6 max-w-sm">
-          Este peptídeo está disponível apenas para assinantes. Faça upgrade para acessar dosagens, protocolos e referências científicas completas.
-        </p>
-        <div className="rounded-xl border border-primary/20 bg-card p-5 w-full max-w-sm mb-4">
-          <Crown className="mx-auto h-7 w-7 text-primary mb-2" />
-          <p className="text-sm font-semibold text-foreground mb-1">Desbloqueie {allPeptides.length}+ peptídeos</p>
-          <ul className="text-[11px] text-muted-foreground space-y-1 text-left mt-3">
-            <li>✓ Biblioteca completa de peptídeos</li>
-            <li>✓ Dosagens e protocolos detalhados</li>
-            <li>✓ Referências científicas</li>
-            <li>✓ Stacks e interações</li>
-          </ul>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={() => navigate("/app/billing")} className="gap-2">
-            <Crown className="h-4 w-4" /> Fazer Upgrade
-          </Button>
-          <Button variant="outline" onClick={() => navigate("/app/peptides")}>
-            Voltar
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  /* Instead of blocking, we render the page blurred with a modal overlay */
 
   const p = peptide;
   const timelineData = p.timeline as unknown as TimelineItem[] | null;
