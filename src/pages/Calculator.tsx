@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import FreeGateOverlay from "@/components/FreeGateOverlay";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -200,6 +201,7 @@ export default function CalculatorPage() {
   const reset = () => { setVialMg(""); setDiluentMl(""); setDesiredDoseMcg(""); setSelectedProtocol(null); };
 
   return (
+    <FreeGateOverlay pageTitle="Calculadora de Dosagem" features={["Cálculo preciso de reconstituição", "Tabela de referência rápida", "Presets de peptídeos populares", "Guia visual de seringas"]}>
     <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
@@ -701,6 +703,7 @@ export default function CalculatorPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </FreeGateOverlay>
   );
 }
 

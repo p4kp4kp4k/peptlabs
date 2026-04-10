@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import FreeGateOverlay from "@/components/FreeGateOverlay";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -234,6 +235,7 @@ export default function Stacks() {
   }, [stacks, selectedCategory, search]);
 
   return (
+    <FreeGateOverlay pageTitle="Stack Builder" features={["Stacks sinérgicos pré-montados", "Verificação de interações cruzadas", "Análise de compatibilidade", "Protocolos combinados"]}>
     <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -350,5 +352,6 @@ export default function Stacks() {
       {/* Modal */}
       {selectedStack && <StackModal stack={selectedStack} onClose={() => setSelectedStack(null)} />}
     </div>
+    </FreeGateOverlay>
   );
 }

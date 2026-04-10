@@ -1,4 +1,5 @@
 import { useState } from "react";
+import FreeGateOverlay from "@/components/FreeGateOverlay";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
@@ -98,6 +99,7 @@ export default function Templates() {
   };
 
   return (
+    <FreeGateOverlay pageTitle="Templates de Protocolos" features={["Templates prontos por categoria", "Protocolos validados por especialistas", "Dosagens e durações otimizadas", "Templates premium com IA"]}>
     <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
@@ -265,5 +267,6 @@ export default function Templates() {
         upgradeTo="pro"
       />
     </div>
+    </FreeGateOverlay>
   );
 }

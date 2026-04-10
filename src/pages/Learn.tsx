@@ -1,4 +1,5 @@
 import { useState } from "react";
+import FreeGateOverlay from "@/components/FreeGateOverlay";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BookOpen,
@@ -61,6 +62,7 @@ export default function Learn() {
   };
 
   return (
+    <FreeGateOverlay pageTitle="Central de Aprendizado" features={["Guias práticos completos", "Estudos científicos curados", "Protocolos de segurança", "Referências PubMed"]}>
     <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
@@ -307,5 +309,6 @@ export default function Learn() {
         </>
       )}
     </div>
+    </FreeGateOverlay>
   );
 }
