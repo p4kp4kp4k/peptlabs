@@ -64,6 +64,7 @@ export default function Compare() {
   };
 
   return (
+    <FreeGateOverlay pageTitle="Comparador de Peptídeos" features={["Comparação lado a lado detalhada", "Análise de dosagens e protocolos", "Verificação de interações cruzadas", "Exportação de comparações"]}>
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
@@ -190,5 +191,6 @@ export default function Compare() {
         </div>
       )}
     </div>
+    </FreeGateOverlay>
   );
 }
