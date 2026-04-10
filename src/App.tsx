@@ -24,6 +24,7 @@ const Interactions = lazy(() => import("./pages/Interactions"));
 const BodyMap = lazy(() => import("./pages/BodyMap"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminBilling = lazy(() => import("./pages/AdminBilling"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const PeptideDetail = lazy(() => import("./pages/PeptideDetail"));
 const Compare = lazy(() => import("./pages/Compare"));
 const HistoryPage = lazy(() => import("./pages/History"));
