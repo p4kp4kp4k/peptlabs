@@ -162,6 +162,15 @@ export default function Auth() {
             <p><button onClick={() => setMode("login")} className="font-medium text-primary hover:underline">Voltar ao login</button></p>
           )}
         </div>
+
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => navigate("/admin-login")}
+            className="text-[9px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+          >
+            Administração
+          </button>
+        </div>
       </div>
     </div>
   );
