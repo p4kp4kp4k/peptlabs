@@ -31,6 +31,7 @@ const Billing = lazy(() => import("./pages/Billing"));
 const Learn = lazy(() => import("./pages/Learn"));
 const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const Templates = lazy(() => import("./pages/Templates"));
+const StackDetail = lazy(() => import("./pages/StackDetail"));
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,7 @@ const App = () => (
             <Route path="/app/compare" element={<AppRoute><Compare /></AppRoute>} />
             <Route path="/app/calculator" element={<AppRoute><Calculator /></AppRoute>} />
             <Route path="/app/stacks" element={<AppRoute><Stacks /></AppRoute>} />
+            <Route path="/app/stacks/:stackId" element={<AppRoute><StackDetail /></AppRoute>} />
             <Route path="/app/interactions" element={<AppRoute><Interactions /></AppRoute>} />
             <Route path="/app/body-map" element={<AppRoute><BodyMap /></AppRoute>} />
             <Route path="/app/history" element={<AppRoute><HistoryPage /></AppRoute>} />
