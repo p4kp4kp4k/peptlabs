@@ -201,7 +201,7 @@ export default function CalculatorPage() {
   const reset = () => { setVialMg(""); setDiluentMl(""); setDesiredDoseMcg(""); setSelectedProtocol(null); };
 
   return (
-    <FreeGateOverlay pageTitle="Calculadora de Reconstituição" description="Assine para acessar a calculadora precisa de reconstituição com presets de peptídeos e guia visual de seringas." comparisonRows={[["Cálculo de reconstituição", "✗", "✓"], ["Presets de peptídeos", "✗", "80+ peptídeos"], ["Guia visual de seringas", "✗", "✓"], ["Tabela de referência rápida", "✗", "✓"], ["Armazenamento e estabilidade", "✗", "✓"]]}>
+    <>
     <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
@@ -703,7 +703,7 @@ export default function CalculatorPage() {
         </TabsContent>
       </Tabs>
     </div>
-    </FreeGateOverlay>
+    </>
   );
 }
 

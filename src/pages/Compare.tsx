@@ -64,7 +64,7 @@ export default function Compare() {
   };
 
   return (
-    <FreeGateOverlay pageTitle="Comparador Premium" description="Assine para comparar peptídeos lado a lado com mecanismos, dosagens, benefícios e compatibilidade." comparisonRows={[["Comparação lado a lado", "✗", "Até 4 peptídeos"], ["Dosagens comparativas", "✗", "✓"], ["Compatibilidade cruzada", "✗", "✓"], ["Mecanismos de ação", "Resumo", "Detalhado"], ["Exportação de comparações", "✗", "✓"]]}>
+    <>
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
@@ -191,6 +191,6 @@ export default function Compare() {
         </div>
       )}
     </div>
-    </FreeGateOverlay>
+    </>
   );
 }
