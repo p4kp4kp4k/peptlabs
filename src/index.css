@@ -126,3 +126,24 @@
       hsl(var(--background));
   }
 }
+
+/* Force dark palette on landing page so text stays readable over dark video bg */
+.landing-dark-force {
+  --background: 222 47% 2%;
+  --foreground: 210 40% 98%;
+  --card: 220 35% 5%;
+  --card-foreground: 210 40% 98%;
+  --popover: 220 35% 6%;
+  --popover-foreground: 210 40% 98%;
+  --secondary: 220 25% 8%;
+  --secondary-foreground: 215 20% 70%;
+  --muted: 220 20% 8%;
+  --muted-foreground: 215 16% 47%;
+  --border: 220 15% 9%;
+  --input: 220 15% 9%;
+  --sidebar-background: 222 47% 2%;
+  --sidebar-foreground: 215 20% 60%;
+  --sidebar-accent: 220 25% 7%;
+  --sidebar-accent-foreground: 215 20% 85%;
+  --sidebar-border: 220 15% 7%;
+}
