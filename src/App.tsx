@@ -72,6 +72,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
+            <Route path="/admin-login" element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>} />
 
             {/* Legacy redirects */}
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
