@@ -47,6 +47,7 @@ const categoryIcons: Record<string, typeof BookOpen> = {
 export default function Learn() {
   const { slug } = useParams<{ slug: string }>();
   const [activeTab, setActiveTab] = useState<TabKey>("todos");
+  const [gateOpen, setGateOpen] = useState(false);
   const { isPro, isAdmin } = useEntitlements();
   const hasFullAccess = isPro || isAdmin;
   const navigate = useNavigate();
