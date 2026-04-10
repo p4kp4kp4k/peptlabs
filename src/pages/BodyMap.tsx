@@ -159,6 +159,7 @@ export default function BodyMap() {
   }, []);
 
   const toggleDay = (index: number) => {
+    if (!hasAccess) { setGateOpen(true); return; }
     setCompletedDays((prev) => {
       const next = new Set(prev);
       if (next.has(index)) next.delete(index);
@@ -167,7 +168,12 @@ export default function BodyMap() {
     });
   };
 
-  const resetDays = () => setCompletedDays(new Set());
+  const resetDays = () => { if (!hasAccess) { setGateOpen(true); return; } setCompletedDays(new Set()); };
+
+  const handleSiteClick = (site: InjectionSite) => {
+    if (!hasAccess) { setGateOpen(true); return; }
+    setSelectedSite(site);
+  };
 
   return (
 <>
