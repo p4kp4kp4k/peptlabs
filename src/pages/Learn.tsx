@@ -1,4 +1,5 @@
 import { useState } from "react";
+import FreeGateOverlay from "@/components/FreeGateOverlay";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BookOpen,

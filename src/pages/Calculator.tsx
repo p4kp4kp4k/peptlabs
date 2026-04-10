@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import FreeGateOverlay from "@/components/FreeGateOverlay";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

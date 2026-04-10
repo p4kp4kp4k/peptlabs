@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import FreeGateOverlay from "@/components/FreeGateOverlay";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";

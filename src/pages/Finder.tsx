@@ -1,4 +1,5 @@
 import { useState } from "react";
+import FreeGateOverlay from "@/components/FreeGateOverlay";
 import {
   Crosshair, ArrowRight, ArrowLeft, Check, Sparkles, Zap,
   AlertTriangle, Star, Timer, Save, RotateCcw, ChevronRight,
