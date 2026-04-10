@@ -6,9 +6,9 @@ const corsHeaders = {
 };
 
 const PLAN_LIMITS: Record<string, any> = {
-  free: { max_protocols_month: 0, compare_limit: 0, history_days: 0, export_level: "none" },
-  starter: { max_protocols_month: 3, compare_limit: 5, history_days: 7, export_level: "basic" },
-  pro: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro" },
+  free: { max_protocols_month: 1, compare_limit: 1, history_days: 0, export_level: "basic", calc_limit: 1, stack_limit: 1, template_limit: 1, interaction_limit: 1 },
+  starter: { max_protocols_month: 3, compare_limit: 5, history_days: 7, export_level: "basic", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
+  pro: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
 };
 
 Deno.serve(async (req) => {
@@ -57,22 +57,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Free users can't use anything
-    if (!isActive || plan === "free") {
-      // Log attempt
-      await admin.from("history").insert({
-        user_id: userId,
-        kind: "premium_gate",
-        metadata: { feature, plan, reason: "Plano inativo ou gratuito" },
-      });
-      return new Response(JSON.stringify({
-        allowed: false,
-        reason: "Você precisa de um plano ativo para usar esta funcionalidade.",
-      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // Starter limits
-    const limits = PLAN_LIMITS.starter;
+    const limits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
     const month = new Date().toISOString().slice(0, 7);
     const { data: usage } = await admin
       .from("usage_counters")
@@ -87,6 +72,7 @@ Deno.serve(async (req) => {
       exports_made: usage?.exports_made ?? 0,
     };
 
+    // Starter with active sub or free user
     let allowed = true;
     let reason = "";
 
@@ -94,23 +80,56 @@ Deno.serve(async (req) => {
       case "create_protocol":
         if (counters.protocols_created >= limits.max_protocols_month) {
           allowed = false;
-          reason = `Limite de ${limits.max_protocols_month} protocolos/mês atingido no plano Starter.`;
+          reason = plan === "free"
+            ? "Você atingiu o limite de 1 protocolo/mês no plano Gratuito. Faça upgrade para continuar."
+            : `Limite de ${limits.max_protocols_month} protocolos/mês atingido no plano Starter.`;
         }
         break;
       case "compare":
-        // Compare limit is per-comparison (UI enforced), but we can track monthly too
+        if (limits.compare_limit !== -1 && counters.comparisons_made >= limits.compare_limit) {
+          allowed = false;
+          reason = plan === "free"
+            ? "Você atingiu o limite de 1 comparação/mês no plano Gratuito."
+            : `Limite de ${limits.compare_limit} comparações/mês atingido.`;
+        }
         break;
       case "export":
-        // Starter has basic export only
+        if (limits.export_level === "none") {
+          allowed = false;
+          reason = "Exportação não disponível no seu plano.";
+        } else if (plan === "free" && counters.exports_made >= 1) {
+          allowed = false;
+          reason = "Você atingiu o limite de 1 exportação/mês no plano Gratuito.";
+        }
         break;
       case "engine":
       case "stack_builder":
-        allowed = false;
-        reason = "Funcionalidade disponível apenas no plano PRO.";
+        if (plan === "free") {
+          // Free users get 1 stack view
+          if (limits.stack_limit !== -1) {
+            allowed = false;
+            reason = "Você atingiu o limite de 1 stack/mês no plano Gratuito.";
+          }
+        } else if (plan === "starter" && !isActive) {
+          allowed = false;
+          reason = "Funcionalidade disponível apenas com plano ativo.";
+        }
         break;
       case "advanced_peptide":
         allowed = false;
         reason = "Peptídeos avançados disponíveis apenas no plano PRO.";
+        break;
+      case "calculator":
+        if (plan === "free" && limits.calc_limit !== -1) {
+          allowed = false;
+          reason = "Você atingiu o limite de 1 cálculo/mês no plano Gratuito.";
+        }
+        break;
+      case "interaction_check":
+        if (plan === "free" && limits.interaction_limit !== -1) {
+          allowed = false;
+          reason = "Você atingiu o limite de 1 verificação/mês no plano Gratuito.";
+        }
         break;
       default:
         break;
