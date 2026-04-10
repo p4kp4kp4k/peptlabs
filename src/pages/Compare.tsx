@@ -31,6 +31,7 @@ export default function Compare() {
   );
 
   const addPeptide = (id: string) => {
+    if (!hasAccess) { setGateOpen(true); return; }
     if (selected.length < 4) {
       setSelected((s) => [...s, id]);
       setShowPicker(false);
@@ -89,7 +90,7 @@ export default function Compare() {
           </Badge>
         ))}
         {selected.length < 4 && (
-          <Button variant="outline" size="sm" className="gap-1 text-xs h-7" onClick={() => setShowPicker(true)}>
+          <Button variant="outline" size="sm" className="gap-1 text-xs h-7" onClick={() => hasAccess ? setShowPicker(true) : setGateOpen(true)}>
             <Plus className="h-3 w-3" /> Adicionar Peptídeo
           </Button>
         )}
@@ -194,6 +195,7 @@ export default function Compare() {
           </div>
         </div>
       )}
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="O comparador de peptídeos é exclusivo para assinantes." />
     </div>
     </>
   );
