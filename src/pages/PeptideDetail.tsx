@@ -144,6 +144,7 @@ export default function PeptideDetail() {
   const hasAutoCollapsed = useRef(false);
 
   const { isAdmin, isPro, isStarter } = useEntitlements();
+  const { user } = useAuth();
   const hasAccess = isAdmin || isPro || isStarter;
   const { data: allPeptides = [] } = usePeptides();
 
