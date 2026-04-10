@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import PremiumGateModal from "@/components/PremiumGateModal";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,8 @@ import { getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
 import { useStacks } from "@/hooks/useStacks";
 import type { Stack } from "@/types";
 import { STACK_CATEGORIES } from "@/types";
-import { useEntitlements } from "@/hooks/useEntitlements";
+import { useEntitlements, checkFeature, incrementUsage } from "@/hooks/useEntitlements";
+import { toast } from "sonner";
 
 /* ─── Status badge ─── */
 function StatusBadge({ status }: { status: string }) {
@@ -215,8 +216,31 @@ export default function Stacks() {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedStack, setSelectedStack] = useState<Stack | null>(null);
   const [gateOpen, setGateOpen] = useState(false);
+  const [gateReason, setGateReason] = useState("");
   const { isAdmin, isPro, isStarter } = useEntitlements();
   const hasAccess = isAdmin || isPro || isStarter;
+
+  const handleOpenStack = useCallback(async (stack: Stack) => {
+    if (!hasAccess) {
+      setGateOpen(true);
+      return;
+    }
+    // Check usage limit (PRO has 10/month, free has 1/month)
+    if (!isAdmin) {
+      try {
+        const { allowed, reason } = await checkFeature("stack_builder");
+        if (!allowed) {
+          setGateReason(reason || "Limite de stacks atingido neste mês.");
+          setGateOpen(true);
+          return;
+        }
+        await incrementUsage("stack_builder");
+      } catch {
+        // If check fails, allow access gracefully
+      }
+    }
+    setSelectedStack(stack);
+  }, [hasAccess, isAdmin]);
 
   const { data: stacks, isLoading } = useStacks();
 
@@ -311,7 +335,7 @@ export default function Stacks() {
             return (
               <button
                 key={stack.id}
-                onClick={() => hasAccess ? setSelectedStack(stack) : setGateOpen(true)}
+                onClick={() => handleOpenStack(stack)}
                 className={`group text-left rounded-xl border border-border/20 bg-card/60 p-5 hover:border-border/40 hover:bg-card/80 transition-all duration-200 relative`}
               >
                 {/* PRO badge for non-premium users */}
