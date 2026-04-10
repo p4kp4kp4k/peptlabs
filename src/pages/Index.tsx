@@ -33,11 +33,31 @@ const navItems = [
   { id: "faq", label: "FAQ", icon: HelpCircle },
 ];
 
+const appMainNav = [
+  { label: "Dashboard", icon: LayoutDashboard, path: "/app/dashboard" },
+  { label: "Biblioteca", icon: Syringe, path: "/app/peptides" },
+  { label: "Finder", icon: Search, path: "/app/finder" },
+  { label: "Comparador", icon: ArrowLeftRight, path: "/app/compare" },
+  { label: "Calculadora", icon: Calculator, path: "/app/calculator" },
+  { label: "Stacks", icon: Layers, path: "/app/stacks" },
+  { label: "Mapa Corporal", icon: MapPin, path: "/app/body-map" },
+  { label: "Interações", icon: Zap, path: "/app/interactions" },
+  { label: "Aprender", icon: BookOpen, path: "/app/learn" },
+  { label: "Templates", icon: FileText, path: "/app/templates" },
+];
+
+const appBottomNav = [
+  { label: "Histórico", icon: History, path: "/app/history" },
+  { label: "Configurações", icon: Settings, path: "/app/settings" },
+  { label: "Assinatura", icon: CreditCard, path: "/app/billing" },
+];
+
 const Index = () => {
   const [active, setActive] = useState("hero");
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile, signOut, isAdmin: authIsAdmin } = useAuth();
   const { theme, setTheme } = useThemeColor();
+  const { isAdmin: entIsAdmin } = useEntitlements();
   const mainRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
