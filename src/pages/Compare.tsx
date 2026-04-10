@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import PremiumGateModal from "@/components/PremiumGateModal";
-import { ArrowLeftRight, Plus, X, Loader2 } from "lucide-react";
+import { ArrowLeftRight, Plus, X, Loader2, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -178,9 +178,19 @@ export default function Compare() {
             {POPULAR_COMPARISONS.map((comp) => (
               <button
                 key={comp.title}
-                onClick={() => loadPopularComparison(comp.slugs)}
-                className="text-left rounded-xl border border-border/50 bg-card p-4 hover:border-primary/30 transition-colors"
+                onClick={() => {
+                  if (!hasAccess) { setGateOpen(true); return; }
+                  loadPopularComparison(comp.slugs);
+                }}
+                className="relative text-left rounded-xl border border-border/50 bg-card p-4 hover:border-primary/30 transition-colors"
               >
+                {!hasAccess && (
+                  <div className="absolute top-3 right-3">
+                    <Badge className="text-[9px] gap-1 bg-primary/15 text-primary border border-primary/25 font-bold px-2 py-0.5">
+                      <Crown className="h-2.5 w-2.5" /> PRO
+                    </Badge>
+                  </div>
+                )}
                 <h3 className="text-sm font-semibold text-foreground">{comp.title}</h3>
                 <p className="text-xs text-muted-foreground mt-0.5 mb-3">{comp.desc}</p>
                 <div className="flex flex-wrap gap-1.5">
