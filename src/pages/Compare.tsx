@@ -16,8 +16,8 @@ export default function Compare() {
   const [search, setSearch] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
-  const { isAdmin, isPro, isStarter } = useEntitlements();
-  const hasAccess = isAdmin || isPro || isStarter;
+  const { isAdmin, isPro } = useEntitlements();
+  const hasAccess = isAdmin || isPro;
 
   const selectedPeptides = useMemo(
     () => peptides.filter((p) => selected.includes(p.id)),

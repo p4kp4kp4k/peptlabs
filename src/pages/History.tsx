@@ -29,8 +29,8 @@ export default function HistoryPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<string>("all");
   const [gateOpen, setGateOpen] = useState(false);
-  const { isAdmin, isPro, isStarter } = useEntitlements();
-  const hasAccess = isAdmin || isPro || isStarter;
+  const { isAdmin, isPro } = useEntitlements();
+  const hasAccess = isAdmin || isPro;
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["history", user?.id],

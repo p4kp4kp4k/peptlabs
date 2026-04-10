@@ -36,10 +36,10 @@ export default function FreeGateOverlay({
   bypass,
 }: Props) {
   const navigate = useNavigate();
-  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const { isAdmin, isPro } = useEntitlements();
   const { user } = useAuth();
 
-  const hasAccess = bypass || isAdmin || isPro || isStarter;
+  const hasAccess = bypass || isAdmin || isPro;
 
   if (hasAccess) return <>{children}</>;
 
