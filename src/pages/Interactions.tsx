@@ -192,7 +192,7 @@ export default function Interactions() {
   }, [tab, allPeptides, selectedPeptides]);
 
   return (
-    <FreeGateOverlay pageTitle="Verificador de Interações" features={["Verificação cruzada de peptídeos", "Alertas de segurança e compatibilidade", "Análise de risco detalhada", "Recomendações de monitoramento"]}>
+    <FreeGateOverlay pageTitle="Verificador de Interações" description="Assine para verificar interações entre peptídeos com alertas de segurança, análise de risco e recomendações." comparisonRows={[["Verificação cruzada", "✗", "✓"], ["Alertas de segurança", "✗", "✓"], ["Análise de risco", "✗", "Detalhada"], ["Recomendações clínicas", "✗", "✓"], ["Contraindicações", "✗", "✓"]]}>
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-5">
       {/* Warning banner */}
       <div className="flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-4 py-3">

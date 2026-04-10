@@ -53,7 +53,7 @@ export default function HistoryPage() {
   const filtered = filter === "all" ? items : items.filter((i) => i.kind === filter);
 
   return (
-    <FreeGateOverlay pageTitle="Histórico de Atividades" features={["Histórico completo de protocolos", "Registro de comparações e cálculos", "Rastreamento de atividade", "Exportação de dados"]}>
+    <FreeGateOverlay pageTitle="Histórico Premium" description="Assine para acessar o histórico completo de protocolos, comparações, cálculos e toda a sua atividade." comparisonRows={[["Histórico de protocolos", "✗", "Ilimitado"], ["Registro de comparações", "✗", "✓"], ["Rastreamento de atividade", "✗", "✓"], ["Exportação de dados", "✗", "✓"]]}>
     <div className="p-4 sm:p-6 max-w-4xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">

@@ -255,7 +255,7 @@ export default function Finder() {
   };
 
   return (
-    <FreeGateOverlay pageTitle="Finder de Protocolos" features={["Geração de protocolos por IA", "Recomendações personalizadas", "Análise de objetivos", "Protocolos salvos"]}>
+    <FreeGateOverlay pageTitle="PeptiLab Matcher" description="Assine para encontrar o peptídeo ideal com base nos seus objetivos, experiência e preferência de administração." comparisonRows={[["Quiz personalizado", "✗", "✓"], ["Recomendações por IA", "✗", "✓"], ["Score de compatibilidade", "✗", "0-100%"], ["Salvar protocolos", "✗", "✓"], ["Justificativa detalhada", "✗", "✓"]]}>
     <div className="flex items-start justify-center p-4 sm:p-6">
       <div className="w-full max-w-2xl">
         {/* ── Header ── */}

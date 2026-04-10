@@ -99,7 +99,7 @@ export default function Templates() {
   };
 
   return (
-    <FreeGateOverlay pageTitle="Templates de Protocolos" features={["Templates prontos por categoria", "Protocolos validados por especialistas", "Dosagens e durações otimizadas", "Templates premium com IA"]}>
+    <FreeGateOverlay pageTitle="Templates Premium" description="Assine para acessar templates de protocolos validados por especialistas com dosagens e durações otimizadas." comparisonRows={[["Templates por categoria", "✗", "✓"], ["Protocolos validados", "✗", "✓"], ["Dosagens otimizadas", "✗", "✓"], ["Templates com IA", "✗", "✓"]]}>
     <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
