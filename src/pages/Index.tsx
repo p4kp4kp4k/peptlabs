@@ -68,7 +68,7 @@ const Index = () => {
   };
 
   return (
-    <div className="relative h-screen overflow-hidden flex">
+    <div className="landing-dark-force relative h-screen overflow-hidden flex">
       {/* Full-page video background */}
       <div className="fixed inset-0 z-0">
         <video
