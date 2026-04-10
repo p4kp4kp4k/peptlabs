@@ -2,8 +2,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const VALID_FEATURES = [
+  "create_protocol", "compare", "export", "calculator",
+  "stack_builder", "engine", "template", "interaction_check", "advanced_peptide",
+];
 
 const PLAN_LIMITS: Record<string, any> = {
   free: { max_protocols_month: 1, compare_limit: 1, history_days: 0, export_level: "basic", calc_limit: 1, stack_limit: 1, template_limit: 1, interaction_limit: 1 },
@@ -22,16 +27,34 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Verify JWT properly
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
     const token = authHeader.replace("Bearer ", "");
-    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-    const userId = payload.sub as string;
-    if (!userId) throw new Error("No user id");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = claimsData.claims.sub as string;
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "No user id" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const body = await req.json().catch(() => ({}));
     const feature = body.feature as string;
 
-    if (!feature) {
-      return new Response(JSON.stringify({ error: "Missing feature" }), {
+    // Input validation
+    if (!feature || typeof feature !== "string" || !VALID_FEATURES.includes(feature)) {
+      return new Response(JSON.stringify({ error: `Invalid feature. Must be one of: ${VALID_FEATURES.join(", ")}` }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -41,14 +64,17 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get entitlements
-    const { data: ent } = await admin.from("entitlements").select("*").eq("user_id", userId).single();
-    const plan = ent?.plan ?? "free";
-    const isActive = ent?.is_active ?? false;
+    // Parallel queries
+    const month = new Date().toISOString().slice(0, 7);
+    const [entRes, rolesRes, usageRes] = await Promise.all([
+      admin.from("entitlements").select("*").eq("user_id", userId).single(),
+      admin.from("user_roles").select("role").eq("user_id", userId),
+      admin.from("usage_counters").select("*").eq("user_id", userId).eq("month", month).single(),
+    ]);
 
-    // Check admin
-    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", userId);
-    const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
+    const plan = entRes.data?.plan ?? "free";
+    const isActive = entRes.data?.is_active ?? false;
+    const isAdmin = (rolesRes.data ?? []).some((r: any) => r.role === "admin");
 
     // Admins bypass all limits
     if (isAdmin) {
@@ -57,20 +83,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // PRO with active subscription — check stack limit (10/month)
+    const usage = usageRes.data;
+
+    // PRO with active subscription
     if (plan === "pro" && isActive) {
       if (feature === "stack_builder" || feature === "engine") {
-        const limits = PLAN_LIMITS.pro;
-        const month = new Date().toISOString().slice(0, 7);
-        const { data: usage } = await admin
-          .from("usage_counters")
-          .select("*")
-          .eq("user_id", userId)
-          .eq("month", month)
-          .single();
         const stacks = (usage as any)?.stacks_viewed ?? 0;
-        if (stacks >= limits.stack_limit) {
-          const reason = `Você atingiu o limite de ${limits.stack_limit} stacks/mês no plano PRO.`;
+        const limit = PLAN_LIMITS.pro.stack_limit;
+        if (stacks >= limit) {
+          const reason = `Você atingiu o limite de ${limit} stacks/mês no plano PRO.`;
           await admin.from("history").insert({
             user_id: userId, kind: "premium_gate",
             metadata: { feature, plan, reason },
@@ -85,50 +106,37 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Starter with active subscription — only protocol limits apply
+    // Starter with active subscription
     if (plan === "starter" && isActive) {
       const limits = PLAN_LIMITS.starter;
-      const month = new Date().toISOString().slice(0, 7);
-      const { data: usage } = await admin
-        .from("usage_counters")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("month", month)
-        .single();
-
-      const counters = {
-        protocols_created: usage?.protocols_created ?? 0,
-        comparisons_made: usage?.comparisons_made ?? 0,
-        exports_made: usage?.exports_made ?? 0,
-      };
-
       let allowed = true;
       let reason = "";
 
       switch (feature) {
         case "create_protocol":
-          if (counters.protocols_created >= limits.max_protocols_month) {
+          if ((usage?.protocols_created ?? 0) >= limits.max_protocols_month) {
             allowed = false;
             reason = `Limite de ${limits.max_protocols_month} protocolos/mês atingido no plano Starter.`;
           }
           break;
         case "compare":
-          // per-comparison limit enforced in UI
+          if ((usage?.comparisons_made ?? 0) >= limits.compare_limit) {
+            allowed = false;
+            reason = `Limite de ${limits.compare_limit} comparações/mês atingido no plano Starter.`;
+          }
           break;
         case "advanced_peptide":
           allowed = false;
           reason = "Peptídeos avançados disponíveis apenas no plano PRO.";
           break;
-        // Starter has unlimited: calculator, stacks, templates, interactions, export
         default:
           break;
       }
 
       if (!allowed) {
         await admin.from("history").insert({
-          user_id: userId,
-          kind: "premium_gate",
-          metadata: { feature, plan, reason, usage: counters },
+          user_id: userId, kind: "premium_gate",
+          metadata: { feature, plan, reason },
         });
       }
 
@@ -137,16 +145,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // FREE plan or inactive subscription — check limits with usage counters
+    // FREE plan or inactive subscription
     const limits = PLAN_LIMITS.free;
-    const month = new Date().toISOString().slice(0, 7);
-    const { data: usage } = await admin
-      .from("usage_counters")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("month", month)
-      .single();
-
     const counters = {
       protocols_created: usage?.protocols_created ?? 0,
       comparisons_made: usage?.comparisons_made ?? 0,
@@ -214,8 +214,7 @@ Deno.serve(async (req) => {
 
     if (!allowed) {
       await admin.from("history").insert({
-        user_id: userId,
-        kind: "premium_gate",
+        user_id: userId, kind: "premium_gate",
         metadata: { feature, plan: plan || "free", reason, usage: counters },
       });
     }
