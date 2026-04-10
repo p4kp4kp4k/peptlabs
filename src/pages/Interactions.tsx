@@ -6,6 +6,7 @@ import { Search, Shield, AlertTriangle, ShieldCheck, ShieldAlert, ChevronDown, C
 import { Link } from "react-router-dom";
 import { usePeptidesWithInteractions } from "@/hooks/usePeptides";
 import type { PeptideWithInteractions, NormalizedInteraction } from "@/types";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 function getStatusInfo(status: string) {
   const s = status.toUpperCase();
@@ -56,6 +57,9 @@ export default function Interactions() {
   const [search, setSearch] = useState("");
   const [selectedPeptide, setSelectedPeptide] = useState<string | null>(null);
   const [selectedPeptides, setSelectedPeptides] = useState<string[]>([]);
+  const [gateOpen, setGateOpen] = useState(false);
+  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const hasAccess = isAdmin || isPro || isStarter;
 
   const { data: allPeptides = [], isLoading } = usePeptidesWithInteractions();
 

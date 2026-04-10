@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 const kindIcons: Record<string, any> = {
   protocol: FlaskConical,

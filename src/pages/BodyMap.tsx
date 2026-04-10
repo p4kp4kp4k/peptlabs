@@ -8,7 +8,7 @@ import {
   MapPin, Calendar, Check, RotateCcw, ChevronRight, X,
   Syringe, AlertTriangle, Lightbulb, Info
 } from "lucide-react";
-
+import { useEntitlements } from "@/hooks/useEntitlements";
 // ── Injection site data ──
 interface InjectionSite {
   id: string;
@@ -138,6 +138,9 @@ function getSiteById(id: string) {
 export default function BodyMap() {
   const [selectedSite, setSelectedSite] = useState<InjectionSite | null>(null);
   const [completedDays, setCompletedDays] = useState<Set<number>>(new Set());
+  const [gateOpen, setGateOpen] = useState(false);
+  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const hasAccess = isAdmin || isPro || isStarter;
 
   const todayIndex = new Date().getDay(); // 0=Sun, 1=Mon...
   const scheduleIndex = todayIndex === 0 ? 6 : todayIndex - 1; // Map to our Mon-Sun array
