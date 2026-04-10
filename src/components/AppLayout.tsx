@@ -46,7 +46,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { profile, signOut, user, isAdmin } = useAuth();
   const { theme, setTheme } = useThemeColor();
-
+  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const hasAccess = isAdmin || isPro || isStarter;
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
