@@ -355,6 +355,7 @@ export default function Stacks() {
 
       {/* Modal */}
       {selectedStack && <StackModal stack={selectedStack} onClose={() => setSelectedStack(null)} />}
+      <PremiumGateModal open={gateOpen} onClose={() => setGateOpen(false)} reason="Stacks sinérgicos são exclusivos para assinantes. Faça upgrade para acessar combinações otimizadas." />
     </div>
     </>
   );
