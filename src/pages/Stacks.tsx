@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import ProBadge from "@/components/ProBadge";
 import { getCatConfig, getCatIcon } from "@/components/stacks/stackUtils";
+import { stackImages } from "@/assets/stacks";
 import UsageBadge from "@/components/UsageBadge";
 import { useStacks } from "@/hooks/useStacks";
 import type { Stack } from "@/types";
