@@ -1,9 +1,13 @@
-import { Check, Crown, Zap, Shield, Sparkles, X, Star, Users, ArrowRight, Infinity, Clock, Gift } from "lucide-react";
+import { Check, Crown, Zap, Shield, Sparkles, X, Star, Users, ArrowRight, Infinity, Clock, Gift, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import { useBilling } from "@/hooks/useBilling";
 import { motion } from "framer-motion";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 
 /* ─── Feature comparison rows ─── */
 const comparisonRows: { label: string; free: string; proMonthly: string; proLifetime: string }[] = [
@@ -107,6 +111,17 @@ function CellValue({ value, isPro }: { value: string; isPro?: boolean }) {
 
 export default function Billing() {
   const { plan, billingType, isActive, isAdmin, isLifetime, currentPeriodEnd } = useEntitlements();
+  const { checkout, isCheckingOut, cancel, isCanceling, canUpgradeTo } = useBilling();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      toast.success("Pagamento confirmado! Bem-vindo ao PRO 🎉");
+    }
+    if (searchParams.get("canceled") === "true") {
+      toast.info("Checkout cancelado.");
+    }
+  }, [searchParams]);
 
   const currentPlan = isAdmin ? "lifetime" : (isLifetime ? "lifetime" : (isActive && plan === "pro" ? "pro" : (isActive ? plan : "free")));
 
@@ -226,9 +241,19 @@ export default function Billing() {
                       p.highlight ? "shadow-lg shadow-primary/20" : ""
                     }`}
                     variant={p.highlight ? "default" : "outline"}
-                    disabled={isCurrent && p.id === "free"}
+                    disabled={(isCurrent && p.id === "free") || isCheckingOut}
+                    onClick={() => {
+                      if (p.id === "free") return;
+                      if (isCurrent) return;
+                      const planId = p.id === "lifetime" ? "pro_lifetime" : "pro_monthly";
+                      checkout({ planId: planId as any });
+                    }}
                   >
-                    {isCurrent && p.id === "free" ? (
+                    {isCheckingOut ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : isCurrent && p.id === "free" ? (
+                      "Plano Atual"
+                    ) : isCurrent ? (
                       "Plano Atual"
                     ) : (
                       <>

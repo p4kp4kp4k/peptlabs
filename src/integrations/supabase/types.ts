@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      billing_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json | null
+          provider: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json | null
+          provider: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          provider?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       calculations: {
         Row: {
           created_at: string
@@ -71,6 +98,42 @@ export type Database = {
           plan?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      gateway_settings: {
+        Row: {
+          config: Json | null
+          configured_at: string | null
+          created_at: string
+          environment: string | null
+          id: string
+          is_active: boolean | null
+          provider: string
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          config?: Json | null
+          configured_at?: string | null
+          created_at?: string
+          environment?: string | null
+          id?: string
+          is_active?: boolean | null
+          provider: string
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          config?: Json | null
+          configured_at?: string | null
+          created_at?: string
+          environment?: string | null
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          updated_at?: string
+          webhook_url?: string | null
         }
         Relationships: []
       }
@@ -504,9 +567,12 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          cancel_at_period_end: boolean | null
           created_at: string
           current_period_end: string | null
           id: string
+          payment_provider: string | null
+          plan_id: string | null
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -514,9 +580,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cancel_at_period_end?: boolean | null
           created_at?: string
           current_period_end?: string | null
           id?: string
+          payment_provider?: string | null
+          plan_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -524,9 +593,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cancel_at_period_end?: boolean | null
           created_at?: string
           current_period_end?: string | null
           id?: string
+          payment_provider?: string | null
+          plan_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -628,6 +700,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_events: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          processed: boolean | null
+          processed_at: string | null
+          provider: string
+          provider_event_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          processed?: boolean | null
+          processed_at?: string | null
+          provider: string
+          provider_event_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          processed?: boolean | null
+          processed_at?: string | null
+          provider?: string
+          provider_event_id?: string | null
         }
         Relationships: []
       }
