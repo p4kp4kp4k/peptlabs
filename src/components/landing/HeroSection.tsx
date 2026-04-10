@@ -72,21 +72,22 @@ const HeroSection = () => {
 
   return (
     <section className="relative overflow-hidden pb-16 pt-20 sm:pb-24 sm:pt-28">
-      {/* Ambient orbs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-primary/[0.07] blur-[160px] animate-pulse-glow" />
-        <div className="absolute right-0 top-1/4 h-[350px] w-[350px] rounded-full bg-accent/[0.05] blur-[120px] animate-orb-drift" />
-        <div className="absolute left-0 bottom-0 h-[300px] w-[400px] rounded-full bg-primary/[0.04] blur-[100px]" />
+      {/* Video background */}
+      <div className="absolute inset-0 z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="h-full w-full object-cover"
+          style={{ filter: "brightness(0.25) saturate(1.3)" }}
+        >
+          <source src="/videos/hero-bg.mp4" type="video/mp4" />
+        </video>
+        {/* Gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
       </div>
-
-      {/* Grid overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(0,230,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0,230,255,0.3) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }}
-      />
 
       <motion.div
         className="relative mx-auto max-w-4xl px-4 text-center sm:px-6"
