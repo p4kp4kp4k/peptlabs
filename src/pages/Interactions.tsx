@@ -216,9 +216,7 @@ export default function Interactions() {
             Verificador de Interações
           </h1>
           {!hasAccess && (
-            <Badge className="text-[9px] gap-1 bg-primary/15 text-primary border border-primary/25 font-bold px-2 py-0.5">
-              <Crown className="h-2.5 w-2.5" /> PRO
-            </Badge>
+             <ProBadge />
           )}
         </div>
         <p className="text-xs text-muted-foreground">

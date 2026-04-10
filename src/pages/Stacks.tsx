@@ -316,9 +316,7 @@ export default function Stacks() {
                 {/* PRO badge for non-premium users */}
                 {!hasAccess && (
                   <div className="absolute top-3 right-3 z-10">
-                    <Badge className="text-[9px] gap-1 bg-primary/15 text-primary border border-primary/25 font-bold px-2 py-0.5">
-                      <Crown className="h-2.5 w-2.5" /> PRO
-                    </Badge>
+                     <ProBadge />
                   </div>
                 )}
                 <div className="flex items-start justify-between mb-4">

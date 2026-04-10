@@ -216,9 +216,7 @@ export default function CalculatorPage() {
             <CalcIcon className="inline h-4.5 w-4.5 mr-2 text-primary" />
             Calculadora de Doses
             {!hasAccess && (
-              <Badge className="ml-2 text-[9px] gap-1 bg-primary/15 text-primary border border-primary/25 font-bold px-2 py-0.5 align-middle">
-                <Crown className="h-2.5 w-2.5" /> PRO
-              </Badge>
+               <ProBadge className="ml-2 align-middle" />
             )}
           </h1>
           <p className="text-[11px] text-muted-foreground mt-0.5">Ferramenta profissional para reconstituição e dosagem de peptídeos</p>
