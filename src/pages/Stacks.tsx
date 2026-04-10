@@ -212,6 +212,9 @@ export default function Stacks() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedStack, setSelectedStack] = useState<Stack | null>(null);
+  const [gateOpen, setGateOpen] = useState(false);
+  const { isAdmin, isPro, isStarter } = useEntitlements();
+  const hasAccess = isAdmin || isPro || isStarter;
 
   const { data: stacks, isLoading } = useStacks();
 
@@ -306,8 +309,8 @@ export default function Stacks() {
             return (
               <button
                 key={stack.id}
-                onClick={() => setSelectedStack(stack)}
-                className="group text-left rounded-xl border border-border/20 bg-card/60 p-5 hover:border-border/40 hover:bg-card/80 transition-all duration-200"
+                onClick={() => hasAccess ? setSelectedStack(stack) : setGateOpen(true)}
+                className={`group text-left rounded-xl border border-border/20 bg-card/60 p-5 hover:border-border/40 hover:bg-card/80 transition-all duration-200 ${!hasAccess ? "relative" : ""}`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${config.bgColor}`}>
