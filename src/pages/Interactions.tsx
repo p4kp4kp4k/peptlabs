@@ -349,6 +349,7 @@ export default function Interactions() {
         />
       )}
     </div>
+    </FreeGateOverlay>
   );
 }
 
@@ -616,6 +617,5 @@ function InteractionCard({
         </div>
       )}
     </div>
-    </FreeGateOverlay>
   );
 }

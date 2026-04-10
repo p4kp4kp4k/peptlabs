@@ -364,6 +364,7 @@ export default function BodyMap() {
         <SiteDetailModal site={selectedSite} onClose={() => setSelectedSite(null)} />
       )}
     </div>
+    </FreeGateOverlay>
   );
 }
 
@@ -917,6 +918,5 @@ function SiteDetailModal({ site, onClose }: { site: InjectionSite; onClose: () =
         </div>
       </div>
     </div>
-    </FreeGateOverlay>
   );
 }
