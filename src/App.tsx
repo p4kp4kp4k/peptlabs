@@ -24,6 +24,7 @@ const Interactions = lazy(() => import("./pages/Interactions"));
 const BodyMap = lazy(() => import("./pages/BodyMap"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminBilling = lazy(() => import("./pages/AdminBilling"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const PeptideDetail = lazy(() => import("./pages/PeptideDetail"));
 const Compare = lazy(() => import("./pages/Compare"));
 const HistoryPage = lazy(() => import("./pages/History"));
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
+            <Route path="/admin-login" element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>} />
 
             {/* Legacy redirects */}
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
