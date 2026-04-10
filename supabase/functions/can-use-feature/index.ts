@@ -8,12 +8,20 @@ const corsHeaders = {
 const VALID_FEATURES = [
   "create_protocol", "compare", "export", "calculator",
   "stack_builder", "engine", "template", "interaction_check", "advanced_peptide",
+  "contact_suppliers",
 ];
 
-const PLAN_LIMITS: Record<string, any> = {
-  free: { max_protocols_month: 1, compare_limit: 1, history_days: 0, export_level: "basic", calc_limit: 1, stack_limit: 1, template_limit: 1, interaction_limit: 1 },
-  starter: { max_protocols_month: 3, compare_limit: 5, history_days: 7, export_level: "basic", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
-  pro: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro", calc_limit: -1, stack_limit: 10, template_limit: -1, interaction_limit: -1 },
+const PLAN_LIMITS: Record<string, Record<string, any>> = {
+  free: {
+    monthly: { max_protocols_month: 1, compare_limit: 1, history_days: 0, export_level: "basic", calc_limit: 1, stack_limit: 1, template_limit: 1, interaction_limit: 1 },
+  },
+  starter: {
+    monthly: { max_protocols_month: 3, compare_limit: 5, history_days: 7, export_level: "basic", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
+  },
+  pro: {
+    monthly: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro", calc_limit: -1, stack_limit: 10, template_limit: -1, interaction_limit: -1 },
+    lifetime: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro_timeline", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
+  },
 };
 
 Deno.serve(async (req) => {
@@ -27,7 +35,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify JWT properly
     const supabaseAuth = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -46,7 +53,6 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const feature = body.feature as string;
 
-    // Input validation
     if (!feature || typeof feature !== "string" || !VALID_FEATURES.includes(feature)) {
       return new Response(JSON.stringify({ error: `Invalid feature. Must be one of: ${VALID_FEATURES.join(", ")}` }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -58,7 +64,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Parallel queries
     const month = new Date().toISOString().slice(0, 7);
     const [entRes, rolesRes, usageRes] = await Promise.all([
       admin.from("entitlements").select("*").eq("user_id", userId).single(),
@@ -67,8 +72,10 @@ Deno.serve(async (req) => {
     ]);
 
     const plan = entRes.data?.plan ?? "free";
+    const billingType = (entRes.data as any)?.billing_type ?? "monthly";
     const isActive = entRes.data?.is_active ?? false;
     const isAdmin = (rolesRes.data ?? []).some((r: any) => r.role === "admin");
+    const isLifetime = plan === "pro" && billingType === "lifetime" && isActive;
 
     // Admins bypass all limits
     if (isAdmin) {
@@ -79,30 +86,54 @@ Deno.serve(async (req) => {
 
     const usage = usageRes.data;
 
-    // PRO with active subscription
+    // Get correct limits for plan + billing type
+    const planLimits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
+    const limits = planLimits[billingType] ?? planLimits["monthly"] ?? PLAN_LIMITS.free.monthly;
+
+    // ── PRO Lifetime: everything unlimited, no expiry ──
+    if (isLifetime) {
+      return new Response(JSON.stringify({ allowed: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── PRO Monthly ──
     if (plan === "pro" && isActive) {
+      // Contact suppliers is lifetime-only
+      if (feature === "contact_suppliers") {
+        const reason = "Contato com fornecedores é exclusivo do plano PRO Vitalício.";
+        await admin.from("history").insert({
+          user_id: userId, kind: "premium_gate",
+          metadata: { feature, plan, billingType, reason },
+        });
+        return new Response(JSON.stringify({ allowed: false, reason }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Stack limit for monthly PRO
       if (feature === "stack_builder" || feature === "engine") {
         const stacks = (usage as any)?.stacks_viewed ?? 0;
-        const limit = PLAN_LIMITS.pro.stack_limit;
-        if (stacks >= limit) {
-          const reason = `Você atingiu o limite de ${limit} stacks/mês no plano PRO.`;
+        const limit = limits.stack_limit;
+        if (limit !== -1 && stacks >= limit) {
+          const reason = `Você atingiu o limite de ${limit} stacks/mês no PRO Mensal. Faça upgrade para o PRO Vitalício para acesso ilimitado.`;
           await admin.from("history").insert({
             user_id: userId, kind: "premium_gate",
-            metadata: { feature, plan, reason },
+            metadata: { feature, plan, billingType, reason },
           });
           return new Response(JSON.stringify({ allowed: false, reason }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
       }
+
       return new Response(JSON.stringify({ allowed: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Starter with active subscription
+    // ── Starter ──
     if (plan === "starter" && isActive) {
-      const limits = PLAN_LIMITS.starter;
       let allowed = true;
       let reason = "";
 
@@ -123,6 +154,10 @@ Deno.serve(async (req) => {
           allowed = false;
           reason = "Peptídeos avançados disponíveis apenas no plano PRO.";
           break;
+        case "contact_suppliers":
+          allowed = false;
+          reason = "Contato com fornecedores é exclusivo do plano PRO Vitalício.";
+          break;
         default:
           break;
       }
@@ -139,8 +174,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // FREE plan or inactive subscription
-    const limits = PLAN_LIMITS.free;
+    // ── FREE plan or inactive subscription ──
+    const freeLimits = PLAN_LIMITS.free.monthly;
     const counters = {
       protocols_created: usage?.protocols_created ?? 0,
       comparisons_made: usage?.comparisons_made ?? 0,
@@ -156,13 +191,13 @@ Deno.serve(async (req) => {
 
     switch (feature) {
       case "create_protocol":
-        if (counters.protocols_created >= limits.max_protocols_month) {
+        if (counters.protocols_created >= freeLimits.max_protocols_month) {
           allowed = false;
           reason = "Você atingiu o limite de 1 protocolo/mês no plano Gratuito. Faça upgrade para continuar.";
         }
         break;
       case "compare":
-        if (counters.comparisons_made >= limits.compare_limit) {
+        if (counters.comparisons_made >= freeLimits.compare_limit) {
           allowed = false;
           reason = "Você atingiu o limite de 1 comparação/mês no plano Gratuito.";
         }
@@ -174,26 +209,26 @@ Deno.serve(async (req) => {
         }
         break;
       case "calculator":
-        if (counters.calcs_made >= limits.calc_limit) {
+        if (counters.calcs_made >= freeLimits.calc_limit) {
           allowed = false;
           reason = "Você atingiu o limite de 1 cálculo/mês no plano Gratuito.";
         }
         break;
       case "stack_builder":
       case "engine":
-        if (counters.stacks_viewed >= limits.stack_limit) {
+        if (counters.stacks_viewed >= freeLimits.stack_limit) {
           allowed = false;
           reason = "Você atingiu o limite de 1 stack/mês no plano Gratuito.";
         }
         break;
       case "template":
-        if (counters.templates_used >= limits.template_limit) {
+        if (counters.templates_used >= freeLimits.template_limit) {
           allowed = false;
           reason = "Você atingiu o limite de 1 template/mês no plano Gratuito.";
         }
         break;
       case "interaction_check":
-        if (counters.interactions_checked >= limits.interaction_limit) {
+        if (counters.interactions_checked >= freeLimits.interaction_limit) {
           allowed = false;
           reason = "Você atingiu o limite de 1 verificação/mês no plano Gratuito.";
         }
@@ -201,6 +236,10 @@ Deno.serve(async (req) => {
       case "advanced_peptide":
         allowed = false;
         reason = "Peptídeos avançados disponíveis apenas no plano PRO.";
+        break;
+      case "contact_suppliers":
+        allowed = false;
+        reason = "Contato com fornecedores é exclusivo do plano PRO Vitalício.";
         break;
       default:
         break;

@@ -5,10 +5,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const PLAN_LIMITS: Record<string, object> = {
-  free: { max_protocols_month: 1, compare_limit: 1, history_days: 0, export_level: "basic", calc_limit: 1, stack_limit: 1, template_limit: 1, interaction_limit: 1 },
-  starter: { max_protocols_month: 3, compare_limit: 5, history_days: 7, export_level: "basic", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
-  pro: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro", calc_limit: -1, stack_limit: 10, template_limit: -1, interaction_limit: -1 },
+const PLAN_LIMITS: Record<string, Record<string, object>> = {
+  free: {
+    monthly: { max_protocols_month: 1, compare_limit: 1, history_days: 0, export_level: "basic", calc_limit: 1, stack_limit: 1, template_limit: 1, interaction_limit: 1 },
+  },
+  starter: {
+    monthly: { max_protocols_month: 3, compare_limit: 5, history_days: 7, export_level: "basic", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
+  },
+  pro: {
+    monthly: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro", calc_limit: -1, stack_limit: 10, template_limit: -1, interaction_limit: -1 },
+    lifetime: { max_protocols_month: -1, compare_limit: -1, history_days: -1, export_level: "pro_timeline", calc_limit: -1, stack_limit: -1, template_limit: -1, interaction_limit: -1 },
+  },
 };
 
 Deno.serve(async (req) => {
@@ -22,7 +29,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify JWT properly using getClaims
     const supabaseAuth = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -37,18 +43,12 @@ Deno.serve(async (req) => {
     }
 
     const userId = user.id;
-    if (!userId) {
-      return new Response(JSON.stringify({ error: "No user id in token" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get entitlements, roles, and usage in parallel
     const month = new Date().toISOString().slice(0, 7);
     const [entRes, rolesRes, usageRes] = await Promise.all([
       admin.from("entitlements").select("*").eq("user_id", userId).single(),
@@ -59,15 +59,23 @@ Deno.serve(async (req) => {
     const ent = entRes.data;
     const isAdmin = (rolesRes.data ?? []).some((r: any) => r.role === "admin");
     const plan = ent?.plan ?? "free";
+    const billingType = (ent as any)?.billing_type ?? "monthly";
     const isActive = ent?.is_active ?? false;
-    const limits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
+    
+    // Get limits based on plan AND billing type
+    const planLimits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
+    const limits = planLimits[billingType] ?? planLimits["monthly"] ?? PLAN_LIMITS.free.monthly;
+    
     const usage = usageRes.data;
+    const isLifetime = plan === "pro" && billingType === "lifetime" && isActive;
 
     return new Response(JSON.stringify({
       plan,
+      billingType,
       isActive: plan === "free" ? true : isActive,
       isAdmin,
       isPro: plan === "pro" && isActive,
+      isLifetime,
       isStarter: plan === "starter" && isActive,
       limits,
       currentPeriodEnd: ent?.current_period_end ?? null,
