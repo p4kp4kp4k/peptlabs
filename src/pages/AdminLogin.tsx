@@ -16,8 +16,11 @@ export default function AdminLogin() {
 
   // If already logged in as admin, redirect
   if (user && isAdmin) {
-    navigate("/app/admin", { replace: true });
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
