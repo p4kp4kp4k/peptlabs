@@ -41,7 +41,7 @@ export default function Library() {
   const totalCount = peptides.length || 78;
 
   const planLabel = hasAccess
-    ? (isPro || isAdmin ? "PRO" : "STARTER")
+    ? "PRO"
     : "GRÁTIS";
 
   return (

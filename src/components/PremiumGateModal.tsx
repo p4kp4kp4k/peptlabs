@@ -7,7 +7,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   reason?: string;
-  upgradeTo?: "starter" | "pro";
+  upgradeTo?: "pro";
 }
 
 export default function PremiumGateModal({ open, onClose, reason }: Props) {
