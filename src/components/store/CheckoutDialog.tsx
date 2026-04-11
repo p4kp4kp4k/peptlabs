@@ -211,7 +211,7 @@ export default function CheckoutDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" onOpenAutoFocus={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="text-base" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Finalizar Compra
@@ -307,35 +307,35 @@ export default function CheckoutDialog({
                   <div className="space-y-2.5">
                     <div className="space-y-1">
                       <Label className="text-[10px]">Número do Cartão</Label>
-                      <div id="mp-card-number" className="h-9 rounded-md border border-border bg-secondary/50" />
+                      <div id="mp-card-number" className="h-9 rounded-md border border-border bg-secondary/50" style={{ position: "relative", zIndex: 10 }} />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <Label className="text-[10px]">Validade</Label>
-                        <div id="mp-expiration-date" className="h-9 rounded-md border border-border bg-secondary/50" />
+                        <div id="mp-expiration-date" className="h-9 rounded-md border border-border bg-secondary/50" style={{ position: "relative", zIndex: 10 }} />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-[10px]">CVV</Label>
-                        <div id="mp-security-code" className="h-9 rounded-md border border-border bg-secondary/50" />
+                        <div id="mp-security-code" className="h-9 rounded-md border border-border bg-secondary/50" style={{ position: "relative", zIndex: 10 }} />
                       </div>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[10px]">Nome no Cartão</Label>
-                      <input id="mp-cardholder-name" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" />
+                      <input id="mp-cardholder-name" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <Label className="text-[10px]">Tipo Doc.</Label>
-                        <select id="mp-doc-type" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" />
+                        <select id="mp-doc-type" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-[10px]">CPF</Label>
-                        <input id="mp-doc-number" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" />
+                        <input id="mp-doc-number" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
                       </div>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[10px]">Parcelas</Label>
-                      <select id="mp-installments" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" />
+                      <select id="mp-installments" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
                     </div>
                   </div>
                 </form>
