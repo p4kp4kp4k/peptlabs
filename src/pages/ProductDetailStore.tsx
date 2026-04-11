@@ -140,22 +140,29 @@ function ProductView({ product }: { product: Product }) {
           {/* Variants */}
           {activeVariants.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Cores disponíveis</p>
+              <p className="text-xs font-medium text-muted-foreground">Opções disponíveis</p>
               <div className="flex flex-wrap gap-2">
                 {activeVariants.map((v) => (
                   <button
                     key={v.id}
                     onClick={() => setSelectedVariant(v)}
-                    className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs transition-all ${
+                    className={`flex items-center gap-2 rounded-lg border p-1.5 pr-3 text-xs transition-all ${
                       selectedVariant?.id === v.id
-                        ? "border-primary bg-primary/5 text-foreground"
+                        ? "border-primary bg-primary/5 text-foreground ring-1 ring-primary/30"
                         : "border-border hover:border-foreground/30 text-muted-foreground"
                     }`}
                   >
-                    <div
-                      className="h-4 w-4 rounded-full border border-border/50"
-                      style={{ backgroundColor: v.color_hex }}
-                    />
+                    {v.image_url ? (
+                      <img
+                        src={v.image_url}
+                        alt={v.color_name}
+                        className="h-8 w-8 rounded object-cover"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded bg-secondary/50 flex items-center justify-center">
+                        <Package className="h-3.5 w-3.5 text-muted-foreground/40" />
+                      </div>
+                    )}
                     {v.color_name}
                   </button>
                 ))}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,7 @@ interface NewVariant {
   stock: string;
   imageFile: File | null;
   imagePreview: string | null;
+  existingImageUrl: string | null; // track the persisted URL separately
 }
 
 const emptyVariant = (): NewVariant => ({
@@ -57,6 +58,7 @@ const emptyVariant = (): NewVariant => ({
   stock: "0",
   imageFile: null,
   imagePreview: null,
+  existingImageUrl: null,
 });
 
 export default function AdminProducts() {
@@ -114,11 +116,12 @@ export default function AdminProducts() {
       product.product_variants.length > 0
         ? product.product_variants.map((v) => ({
             color_name: v.color_name,
-            color_hex: v.color_hex,
+            color_hex: v.color_hex || "#000000",
             price: String(v.price),
             stock: String(v.stock),
             imageFile: null,
             imagePreview: v.image_url,
+            existingImageUrl: v.image_url,
           }))
         : [emptyVariant()]
     );
@@ -142,6 +145,14 @@ export default function AdminProducts() {
     setVariants(
       variants.map((v, i) =>
         i === idx ? { ...v, imageFile: file, imagePreview: preview } : v
+      )
+    );
+  };
+
+  const clearImage = (idx: number) => {
+    setVariants(
+      variants.map((v, i) =>
+        i === idx ? { ...v, imageFile: null, imagePreview: null, existingImageUrl: null } : v
       )
     );
   };
@@ -212,7 +223,7 @@ export default function AdminProducts() {
       for (const v of variants) {
         if (!v.color_name.trim()) continue;
 
-        let imageUrl = v.imagePreview;
+        let imageUrl: string | null = v.existingImageUrl;
         if (v.imageFile) {
           imageUrl = await uploadImage(v.imageFile, slug, v.color_name);
         }
@@ -220,7 +231,7 @@ export default function AdminProducts() {
         const { error } = await supabase.from("product_variants").insert({
           product_id: productId,
           color_name: v.color_name.trim(),
-          color_hex: v.color_hex,
+          color_hex: v.color_hex || "#000000",
           price: parseFloat(v.price) || 0,
           image_url: imageUrl,
           stock: parseInt(v.stock) || 0,
@@ -250,6 +261,12 @@ export default function AdminProducts() {
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     }
+  };
+
+  // Get first variant image for table thumbnail
+  const getProductThumb = (p: Product) => {
+    const v = p.product_variants.find((v) => v.image_url);
+    return v?.image_url || null;
   };
 
   return (
@@ -285,6 +302,7 @@ export default function AdminProducts() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="text-xs w-12">Foto</TableHead>
                   <TableHead className="text-xs">Produto</TableHead>
                   <TableHead className="text-xs">Preço Base</TableHead>
                   <TableHead className="text-xs">Variantes</TableHead>
@@ -293,50 +311,63 @@ export default function AdminProducts() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="text-xs font-medium">{p.name}</TableCell>
-                    <TableCell className="text-xs">
-                      R$ {Number(p.base_price).toFixed(2).replace(".", ",")}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        {p.product_variants.slice(0, 5).map((v) => (
-                          <div
-                            key={v.id}
-                            className="h-4 w-4 rounded-full border border-border"
-                            style={{ backgroundColor: v.color_hex }}
-                            title={v.color_name}
-                          />
-                        ))}
-                        <span className="text-[10px] text-muted-foreground ml-1">
-                          {p.product_variants.length}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={`text-[9px] ${p.is_active ? "text-emerald-400 border-emerald-400/30" : "text-muted-foreground"}`}
-                      >
-                        {p.is_active ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEdit(p)}>
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDelete(p.id, p.name)}>
-                          <Trash2 className="h-3 w-3 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filtered.map((p) => {
+                  const thumb = getProductThumb(p);
+                  return (
+                    <TableRow key={p.id}>
+                      <TableCell>
+                        {thumb ? (
+                          <img src={thumb} alt={p.name} className="h-8 w-8 rounded object-cover border border-border/40" />
+                        ) : (
+                          <div className="h-8 w-8 rounded bg-secondary/40 flex items-center justify-center">
+                            <Package className="h-3.5 w-3.5 text-muted-foreground/40" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs font-medium">{p.name}</TableCell>
+                      <TableCell className="text-xs">
+                        R$ {Number(p.base_price).toFixed(2).replace(".", ",")}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {p.product_variants.slice(0, 4).map((v) => (
+                            v.image_url ? (
+                              <img key={v.id} src={v.image_url} alt={v.color_name} className="h-6 w-6 rounded object-cover border border-border/40" title={v.color_name} />
+                            ) : (
+                              <div key={v.id} className="h-6 w-6 rounded bg-secondary/40 border border-border/40 flex items-center justify-center" title={v.color_name}>
+                                <Package className="h-2.5 w-2.5 text-muted-foreground/40" />
+                              </div>
+                            )
+                          ))}
+                          <span className="text-[10px] text-muted-foreground ml-1">
+                            {p.product_variants.length}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={`text-[9px] ${p.is_active ? "text-emerald-400 border-emerald-400/30" : "text-muted-foreground"}`}
+                        >
+                          {p.is_active ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEdit(p)}>
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDelete(p.id, p.name)}>
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">
                       <Package className="h-8 w-8 mx-auto mb-2 opacity-30" />
                       Nenhum produto cadastrado
                     </TableCell>
@@ -362,7 +393,7 @@ export default function AdminProducts() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Nome do Produto</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Camiseta PeptiLab" className="h-8 text-xs" />
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Box V50" className="h-8 text-xs" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Preço Base (R$)</Label>
@@ -383,9 +414,9 @@ export default function AdminProducts() {
             {/* Variants */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold">Variantes de Cor</Label>
+                <Label className="text-xs font-semibold">Variantes</Label>
                 <Button variant="outline" size="sm" className="h-6 text-[10px] gap-1" onClick={addVariant}>
-                  <Plus className="h-2.5 w-2.5" /> Adicionar Cor
+                  <Plus className="h-2.5 w-2.5" /> Adicionar Variante
                 </Button>
               </div>
 
@@ -401,60 +432,23 @@ export default function AdminProducts() {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-4 gap-2">
-                      <div className="space-y-1">
-                        <Label className="text-[10px]">Cor</Label>
-                        <div className="flex gap-1.5 items-center">
-                          <input
-                            type="color"
-                            value={v.color_hex}
-                            onChange={(e) => updateVariant(idx, "color_hex", e.target.value)}
-                            className="h-7 w-7 rounded border border-border cursor-pointer"
-                          />
-                          <Input
-                            value={v.color_name}
-                            onChange={(e) => updateVariant(idx, "color_name", e.target.value)}
-                            placeholder="Preto"
-                            className="h-7 text-[10px] flex-1"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[10px]">Preço (R$)</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={v.price}
-                          onChange={(e) => updateVariant(idx, "price", e.target.value)}
-                          placeholder="0.00"
-                          className="h-7 text-[10px]"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[10px]">Estoque</Label>
-                        <Input
-                          type="number"
-                          value={v.stock}
-                          onChange={(e) => updateVariant(idx, "stock", e.target.value)}
-                          placeholder="0"
-                          className="h-7 text-[10px]"
-                        />
-                      </div>
-                      <div className="space-y-1">
+                    <div className="flex gap-3 items-start">
+                      {/* Photo */}
+                      <div className="space-y-1 shrink-0">
                         <Label className="text-[10px]">Foto</Label>
                         {v.imagePreview ? (
-                          <div className="relative h-14 w-14 rounded border border-border overflow-hidden">
-                            <img src={v.imagePreview} className="h-full w-full object-cover" alt="" />
+                          <div className="relative h-20 w-20 rounded-md border border-border overflow-hidden">
+                            <img src={v.imagePreview} className="h-full w-full object-cover" alt={v.color_name || "Variante"} />
                             <button
-                              className="absolute top-0 right-0 bg-destructive/80 rounded-bl p-0.5"
-                              onClick={() => updateVariant(idx, "imagePreview", null)}
+                              className="absolute top-0.5 right-0.5 bg-destructive/80 rounded-full p-0.5"
+                              onClick={() => clearImage(idx)}
                             >
                               <X className="h-2.5 w-2.5 text-white" />
                             </button>
                           </div>
                         ) : (
-                          <label className="flex h-14 w-14 cursor-pointer items-center justify-center rounded border border-dashed border-border hover:border-primary/40 transition-colors">
-                            <ImagePlus className="h-4 w-4 text-muted-foreground" />
+                          <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-md border border-dashed border-border hover:border-primary/40 transition-colors bg-secondary/30">
+                            <ImagePlus className="h-5 w-5 text-muted-foreground" />
                             <input
                               type="file"
                               accept="image/*"
@@ -463,6 +457,40 @@ export default function AdminProducts() {
                             />
                           </label>
                         )}
+                      </div>
+
+                      {/* Info fields */}
+                      <div className="flex-1 grid grid-cols-3 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">Descrição (ex: Azul)</Label>
+                          <Input
+                            value={v.color_name}
+                            onChange={(e) => updateVariant(idx, "color_name", e.target.value)}
+                            placeholder="Azul"
+                            className="h-7 text-[10px]"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">Preço (R$)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={v.price}
+                            onChange={(e) => updateVariant(idx, "price", e.target.value)}
+                            placeholder="0.00"
+                            className="h-7 text-[10px]"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">Estoque</Label>
+                          <Input
+                            type="number"
+                            value={v.stock}
+                            onChange={(e) => updateVariant(idx, "stock", e.target.value)}
+                            placeholder="0"
+                            className="h-7 text-[10px]"
+                          />
+                        </div>
                       </div>
                     </div>
                   </CardContent>
