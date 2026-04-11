@@ -360,6 +360,7 @@ export default function CheckoutDialog({
   return (
     <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        hideOverlay
         className="max-w-md"
         onOpenAutoFocus={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}

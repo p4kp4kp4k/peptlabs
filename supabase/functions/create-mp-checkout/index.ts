@@ -23,6 +23,32 @@ function failure(error: string, details?: string, diagnostics?: ApiDiagnostics) 
   return jsonResponse({ ok: false, error, details, diagnostics });
 }
 
+function getMercadoPagoErrorMessage(mpData: Record<string, any>): string {
+  const detailedErrors = Array.isArray(mpData.errors)
+    ? mpData.errors
+        .flatMap((entry: Record<string, unknown>) => {
+          const details = Array.isArray(entry?.details)
+            ? entry.details.filter((detail): detail is string => typeof detail === "string")
+            : [];
+
+          if (details.length > 0) return details;
+          if (typeof entry?.message === "string" && entry.message.trim()) return [entry.message.trim()];
+          if (typeof entry?.code === "string" && entry.code.trim()) return [entry.code.trim()];
+          return [];
+        })
+        .filter(Boolean)
+    : [];
+
+  return (
+    detailedErrors[0] ||
+    mpData.message ||
+    mpData.error ||
+    mpData.cause?.[0]?.description ||
+    mpData.details ||
+    "Falha ao criar a cobrança no Mercado Pago."
+  );
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -138,7 +164,6 @@ serve(async (req) => {
       processing_mode: "automatic",
       total_amount: totalAmount,
       external_reference: localOrderId,
-      notification_url: notificationUrl,
       payer,
       transactions: {
         payments: [] as Record<string, unknown>[],
@@ -212,17 +237,11 @@ serve(async (req) => {
     if (!mpResponse.ok) {
       console.error("MercadoPago Orders API error:", JSON.stringify(mpData));
 
-      const detailedMessage =
-        mpData.message ||
-        mpData.error ||
-        mpData.cause?.[0]?.description ||
-        mpData.details ||
-        "Falha ao criar a cobrança no Mercado Pago.";
-
-      return failure("Payment processing failed", detailedMessage, {
+      return failure("Payment processing failed", getMercadoPagoErrorMessage(mpData), {
         mpStatus: mpResponse.status,
         paymentMethod,
         externalReference: localOrderId,
+        notificationUrl,
       });
     }
 
