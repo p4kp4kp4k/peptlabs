@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, Copy, CreditCard, Loader2, QrCode, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MercadoPagoCardSection from "@/components/store/MercadoPagoCardSection";
@@ -117,11 +117,12 @@ export default function CheckoutDialog({
     setTimeout(() => setPixCopied(false), 2000);
   };
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
-    <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-background/60 px-4 py-6 backdrop-blur-sm sm:items-center">
-      <div className="relative w-full max-w-md rounded-lg border bg-background p-6 shadow-lg">
+  return createPortal(
+    <div className="fixed inset-0 z-[80] overflow-y-auto bg-background/60 px-4 py-6">
+      <div className="flex min-h-full items-start justify-center sm:items-center">
+        <div className="relative w-full max-w-md rounded-lg border bg-background p-6 shadow-lg">
         <button
           type="button"
           aria-label="Fechar checkout"
@@ -150,17 +151,25 @@ export default function CheckoutDialog({
           </p>
         </div>
 
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="mt-4 h-9 w-full bg-secondary/60 p-0.5">
-            <TabsTrigger value="pix" className="h-8 flex-1 gap-1.5 text-[11px] data-[state=active]:bg-card">
+          <div className="mt-4 grid grid-cols-2 rounded-md bg-secondary/60 p-0.5">
+            <button
+              type="button"
+              onClick={() => setTab("pix")}
+              className={`flex h-8 items-center justify-center gap-1.5 rounded-sm text-[11px] font-medium transition-all ${tab === "pix" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+            >
               <QrCode className="h-3.5 w-3.5" /> PIX
-            </TabsTrigger>
-            <TabsTrigger value="card" className="h-8 flex-1 gap-1.5 text-[11px] data-[state=active]:bg-card">
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("card")}
+              className={`flex h-8 items-center justify-center gap-1.5 rounded-sm text-[11px] font-medium transition-all ${tab === "card" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+            >
               <CreditCard className="h-3.5 w-3.5" /> Cartão
-            </TabsTrigger>
-          </TabsList>
+            </button>
+          </div>
 
-          <TabsContent value="pix" className="mt-3 space-y-3">
+          {tab === "pix" ? (
+            <div className="mt-3 space-y-3">
             {!pixQrCode ? (
               <>
                 <div className="space-y-1.5">
@@ -202,9 +211,9 @@ export default function CheckoutDialog({
                 <p className="text-[10px] text-muted-foreground">O pagamento será confirmado automaticamente.</p>
               </div>
             )}
-          </TabsContent>
-
-          <TabsContent value="card" className="mt-3">
+            </div>
+          ) : (
+            <div className="mt-3">
             <MercadoPagoCardSection
               active={tab === "card"}
               open={open}
@@ -215,13 +224,15 @@ export default function CheckoutDialog({
               totalAmount={totalAmount}
               initialEmail={payerEmail}
             />
-          </TabsContent>
-        </Tabs>
+            </div>
+          )}
 
-        <p className="mt-4 text-center text-[9px] text-muted-foreground/50">
-          Pagamento processado com segurança pelo Mercado Pago
-        </p>
+          <p className="mt-4 text-center text-[9px] text-muted-foreground/50">
+            Pagamento processado com segurança pelo Mercado Pago
+          </p>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
