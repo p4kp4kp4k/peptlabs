@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Package, ArrowLeft, ShoppingBag } from "lucide-react";
+import { Loader2, Package, ArrowLeft, ShoppingBag, Minus, Plus } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductVariant {
   id: string;
@@ -74,6 +75,8 @@ function ProductView({ product }: { product: Product }) {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     activeVariants[0] || null
   );
+  const [quantity, setQuantity] = useState(1);
+  const { toast } = useToast();
 
   const displayPrice = selectedVariant ? selectedVariant.price : product.base_price;
   const imageUrl = selectedVariant?.image_url;
@@ -158,6 +161,55 @@ function ProductView({ product }: { product: Product }) {
               )}
             </div>
           )}
+
+          {/* Quantity selector */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Quantidade</p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={quantity <= 1}
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+              <span className="w-10 text-center text-sm font-semibold text-foreground">{quantity}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setQuantity(Math.min(selectedVariant?.stock || 99, quantity + 1))}
+                disabled={selectedVariant ? quantity >= selectedVariant.stock : false}
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Total */}
+          {quantity > 1 && (
+            <p className="text-xs text-muted-foreground">
+              Total: <span className="font-semibold text-foreground">R$ {(Number(displayPrice) * quantity).toFixed(2).replace(".", ",")}</span>
+            </p>
+          )}
+
+          {/* Buy button */}
+          <Button
+            size="lg"
+            className="w-full gap-2 text-sm font-semibold"
+            disabled={selectedVariant ? selectedVariant.stock <= 0 : false}
+            onClick={() => {
+              toast({
+                title: "Produto adicionado!",
+                description: `${quantity}x ${product.name}${selectedVariant ? ` (${selectedVariant.color_name})` : ""} — R$ ${(Number(displayPrice) * quantity).toFixed(2).replace(".", ",")}`,
+              });
+            }}
+          >
+            <ShoppingBag className="h-4 w-4" />
+            Comprar Agora
+          </Button>
         </div>
       </div>
     </div>
