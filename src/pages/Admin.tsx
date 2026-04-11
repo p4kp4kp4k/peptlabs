@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import {
   Users, Layers, BookOpen, Shield, TrendingUp, Search, Trash2, Edit,
-  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag
+  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag, CreditCard
 } from "lucide-react";
 import { fetchAllProfiles, fetchProfileCount } from "@/services/userService";
 import { fetchPeptides, fetchPeptideCount, deletePeptide } from "@/services/peptideService";
@@ -143,6 +143,9 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="security" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Shield className="h-3.5 w-3.5" /> Segurança
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <CreditCard className="h-3.5 w-3.5" /> Pagamentos
           </TabsTrigger>
         </TabsList>
 
@@ -299,6 +302,11 @@ export default function Admin() {
         {/* Security Tab */}
         <TabsContent value="security">
           <SecurityPanel />
+        </TabsContent>
+
+        {/* Payments Tab */}
+        <TabsContent value="payments">
+          <PaymentsPanel />
         </TabsContent>
       </Tabs>
     </div>
