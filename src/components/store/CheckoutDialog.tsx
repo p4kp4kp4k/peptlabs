@@ -363,8 +363,6 @@ export default function CheckoutDialog({
         hideOverlay
         className="max-w-md"
         onOpenAutoFocus={(event) => event.preventDefault()}
-        onPointerDownOutside={(event) => event.preventDefault()}
-        onInteractOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle className="text-base" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
