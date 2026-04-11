@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AdminProducts from "@/components/admin/AdminProducts";
 import AdminOrders from "@/components/admin/AdminOrders";
+import AdminWebhooks from "@/components/admin/AdminWebhooks";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -151,6 +152,9 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="orders" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Package className="h-3.5 w-3.5" /> Pedidos
+          </TabsTrigger>
+          <TabsTrigger value="webhooks" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Webhook className="h-3.5 w-3.5" /> Webhooks
           </TabsTrigger>
         </TabsList>
 
@@ -317,6 +321,11 @@ export default function Admin() {
         {/* Orders Tab */}
         <TabsContent value="orders">
           <AdminOrders />
+        </TabsContent>
+
+        {/* Webhooks Tab */}
+        <TabsContent value="webhooks">
+          <AdminWebhooks />
         </TabsContent>
       </Tabs>
     </div>
