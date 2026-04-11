@@ -215,44 +215,25 @@ function ProductView({ product }: { product: Product }) {
           <Button
             size="lg"
             className="w-full gap-2 text-sm font-semibold"
-            disabled={(selectedVariant ? selectedVariant.stock <= 0 : false) || buying}
-            onClick={async () => {
-              setBuying(true);
-              try {
-                const res = await supabase.functions.invoke("create-mp-checkout", {
-                  body: {
-                    productId: product.id,
-                    variantId: selectedVariant?.id || null,
-                    quantity,
-                  },
-                });
-
-                if (res.error) throw new Error(res.error.message);
-                const data = res.data;
-
-                if (data?.checkoutUrl) {
-                  window.open(data.checkoutUrl, "_blank");
-                } else if (data?.sandboxUrl) {
-                  window.open(data.sandboxUrl, "_blank");
-                } else {
-                  throw new Error("Checkout URL not returned");
-                }
-              } catch (err: any) {
-                toast({
-                  title: "Erro no checkout",
-                  description: err.message || "Não foi possível iniciar o pagamento.",
-                  variant: "destructive",
-                });
-              } finally {
-                setBuying(false);
-              }
-            }}
+            disabled={selectedVariant ? selectedVariant.stock <= 0 : false}
+            onClick={() => setCheckoutOpen(true)}
           >
-            {buying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />}
-            {buying ? "Processando..." : "Comprar Agora"}
+            <ShoppingBag className="h-4 w-4" />
+            Comprar Agora
           </Button>
         </div>
       </div>
+
+      <CheckoutDialog
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        product={{ id: product.id, name: product.name }}
+        variantId={selectedVariant?.id || null}
+        variantName={selectedVariant?.color_name || null}
+        unitPrice={Number(displayPrice)}
+        quantity={quantity}
+        publicKey={mpPublicKey || null}
+      />
     </div>
   );
 }
