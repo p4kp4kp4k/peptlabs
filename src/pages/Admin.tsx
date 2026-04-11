@@ -751,12 +751,18 @@ function PaymentsPanel() {
             <Input
               value={mpPublicKey}
               onChange={(e) => setMpPublicKey(e.target.value)}
-              placeholder="APP_USR-xxxx..."
-              className="h-8 text-xs font-mono"
+              placeholder={mpEnvironment === "sandbox" ? "TEST-xxxx..." : "APP_USR-xxxx..."}
+              className={`h-8 text-xs font-mono ${keyMismatchError && mpPublicKey.trim() ? "border-red-500/60" : ""}`}
             />
-            <p className="text-[10px] text-muted-foreground">
-              Encontre em: MercadoPago → Seu negócio → Configurações → Credenciais
-            </p>
+            {keyMismatchError && mpPublicKey.trim() ? (
+              <p className="text-[10px] text-red-400 flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" /> {keyMismatchError}
+              </p>
+            ) : (
+              <p className="text-[10px] text-muted-foreground">
+                Encontre em: MercadoPago → Seu negócio → Configurações → Credenciais
+              </p>
+            )}
           </div>
 
           {/* Access Token notice */}
