@@ -642,7 +642,25 @@ function PaymentsPanel() {
     }
   });
 
+  const getKeyEnvironmentMismatch = (): string | null => {
+    if (!mpPublicKey.trim()) return "Informe a Public Key.";
+    const key = mpPublicKey.trim();
+    if (mpEnvironment === "sandbox" && !key.startsWith("TEST-")) {
+      return "Para o ambiente Sandbox, a Public Key deve começar com \"TEST-\". Verifique se está usando as credenciais de teste do MercadoPago.";
+    }
+    if (mpEnvironment === "production" && key.startsWith("TEST-")) {
+      return "Para o ambiente Produção, a Public Key não pode começar com \"TEST-\". Use as credenciais de produção do MercadoPago.";
+    }
+    return null;
+  };
+
+  const keyMismatchError = getKeyEnvironmentMismatch();
+
   const handleSave = async () => {
+    if (keyMismatchError) {
+      toast({ title: "Validação", description: keyMismatchError, variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -650,7 +668,7 @@ function PaymentsPanel() {
         is_active: true,
         environment: mpEnvironment,
         config: {
-          public_key: mpPublicKey,
+          public_key: mpPublicKey.trim(),
           has_access_token: true,
         },
         configured_at: new Date().toISOString(),
