@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ShoppingBag, Package } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 interface ProductVariant {
   id: string;
@@ -65,8 +66,11 @@ export default function Store() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <Link to={`/app/store/${product.id}`} key={product.id} className="block">
+              <ProductCard product={product} />
+            </Link>
           ))}
+        </div>
         </div>
       )}
     </div>
