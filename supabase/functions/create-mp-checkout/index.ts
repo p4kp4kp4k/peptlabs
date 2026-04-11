@@ -1,8 +1,9 @@
 /**
  * create-mp-checkout/index.ts
  * ═══════════════════════════
- * Creates a MercadoPago order via Orders API for transparent checkout.
+ * Creates a MercadoPago order via Orders API (/v1/orders) for transparent checkout.
  * Supports PIX (bank_transfer) and credit card payments.
+ * Docs: https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-integration
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
@@ -96,8 +97,8 @@ serve(async (req) => {
     const email = payerEmail || user.email || "";
     const idempotencyKey = crypto.randomUUID();
 
-    // Build order payload based on payment method
-    let orderPayload: any = {
+    // Build order payload per MercadoPago Orders API v1 docs
+    const orderPayload: Record<string, unknown> = {
       type: "online",
       processing_mode: "automatic",
       total_amount: totalAmount,
@@ -111,13 +112,15 @@ serve(async (req) => {
         email,
       },
       transactions: {
-        payments: [] as any[],
+        payments: [] as Record<string, unknown>[],
       },
       description: `${product.name}${variantName ? ` - ${variantName}` : ""} x${quantity}`,
     };
 
+    const payments = (orderPayload.transactions as Record<string, unknown>).payments as Record<string, unknown>[];
+
     if (paymentMethod === "pix") {
-      orderPayload.transactions.payments.push({
+      payments.push({
         amount: totalAmount,
         payment_method: {
           id: "pix",
@@ -128,13 +131,14 @@ serve(async (req) => {
       if (!cardToken) {
         return jsonResponse({ error: "Card token required for credit card payment" }, 400);
       }
-      orderPayload.transactions.payments.push({
+      payments.push({
         amount: totalAmount,
         payment_method: {
-          id: "master", // Will be auto-detected from token
+          id: "master",
           type: "credit_card",
           token: cardToken,
           installments: installments || 1,
+          statement_descriptor: "PeptLabs",
         },
       });
     } else {
@@ -142,6 +146,8 @@ serve(async (req) => {
     }
 
     // Create order via MercadoPago Orders API
+    console.log("Creating order:", JSON.stringify(orderPayload));
+
     const mpResponse = await fetch("https://api.mercadopago.com/v1/orders", {
       method: "POST",
       headers: {
@@ -163,6 +169,8 @@ serve(async (req) => {
       }, 400);
     }
 
+    console.log("Order created:", JSON.stringify(mpData));
+
     // Log billing event
     await adminClient.from("billing_events").insert({
       user_id: user.id,
@@ -179,23 +187,24 @@ serve(async (req) => {
       },
     });
 
-    // Extract relevant response data
+    // Extract payment from response
+    // Response structure: mpData.transactions.payments[0]
     const payment = mpData.transactions?.payments?.[0];
-    const responseData: any = {
+    const responseData: Record<string, unknown> = {
       orderId: mpData.id,
       status: mpData.status,
+      statusDetail: mpData.status_detail,
       paymentStatus: payment?.status,
     };
 
-    // For PIX, return QR code data
+    // For PIX, return QR code data from payment_method
     if (paymentMethod === "pix" && payment) {
-      const pixData = payment.payment_method?.digital_wallet?.transaction_data ||
-                      payment.point_of_interaction?.transaction_data;
-      if (pixData) {
+      const pm = payment.payment_method;
+      if (pm) {
         responseData.pix = {
-          qrCode: pixData.qr_code,
-          qrCodeBase64: pixData.qr_code_base64,
-          ticketUrl: pixData.ticket_url,
+          qrCode: pm.qr_code,
+          qrCodeBase64: pm.qr_code_base64,
+          ticketUrl: pm.ticket_url,
         };
       }
     }
