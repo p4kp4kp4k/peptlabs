@@ -203,6 +203,8 @@ export default function CheckoutDialog({
       return;
     }
 
+    if (!validateCardFields()) return;
+
     setProcessing(true);
     setCardResult(null);
 
@@ -372,7 +374,13 @@ export default function CheckoutDialog({
                       </div>
                       <div className="space-y-1">
                         <Label className="text-[10px]">Nome no Cartão</Label>
-                        <input id="mp-cardholder-name" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
+                        <input
+                          id="mp-cardholder-name"
+                          className={`flex h-9 w-full rounded-md border px-3 py-2 text-xs bg-secondary/50 ${cardErrors.name ? "border-destructive" : "border-border"}`}
+                          style={{ position: "relative", zIndex: 10 }}
+                          onChange={() => setCardErrors((prev) => ({ ...prev, name: undefined }))}
+                        />
+                        {cardErrors.name && <p className="text-[9px] text-destructive">{cardErrors.name}</p>}
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
@@ -381,7 +389,15 @@ export default function CheckoutDialog({
                         </div>
                         <div className="space-y-1">
                           <Label className="text-[10px]">CPF</Label>
-                          <input id="mp-doc-number" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
+                          <input
+                            id="mp-doc-number"
+                            className={`flex h-9 w-full rounded-md border px-3 py-2 text-xs bg-secondary/50 ${cardErrors.cpf ? "border-destructive" : "border-border"}`}
+                            style={{ position: "relative", zIndex: 10 }}
+                            onInput={handleCPFInput}
+                            placeholder="000.000.000-00"
+                            inputMode="numeric"
+                          />
+                          {cardErrors.cpf && <p className="text-[9px] text-destructive">{cardErrors.cpf}</p>}
                         </div>
                       </div>
                       <div className="space-y-1">
