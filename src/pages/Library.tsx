@@ -187,6 +187,11 @@ export default function Library() {
                       <Lock className="h-2.5 w-2.5" />
                       PRO
                     </span>
+                  ) : hasAccess ? (
+                    <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-emerald-500/90 px-1.5 py-0.5 text-[9px] font-semibold text-white backdrop-blur-sm">
+                      <Crown className="h-2.5 w-2.5" />
+                      PRO
+                    </span>
                   ) : (
                     <span className="absolute right-2 top-2 rounded-full bg-primary/90 px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground">
                       GRÁTIS
