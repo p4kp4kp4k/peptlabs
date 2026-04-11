@@ -96,8 +96,46 @@ serve(async (req) => {
       processed_at: new Date().toISOString(),
     });
 
-    // Log billing event if we have a userId
+    // Upsert order record
     if (refData.userId) {
+      // Check if order already exists for this mp_order_id
+      const { data: existingOrder } = await adminClient
+        .from("orders")
+        .select("id")
+        .eq("mp_order_id", orderId)
+        .maybeSingle();
+
+      const paymentStatus = order.status === "processed" ? "approved" :
+        order.status === "cancelled" ? "cancelled" :
+        order.status === "expired" ? "rejected" : "pending";
+
+      if (existingOrder) {
+        await adminClient.from("orders").update({
+          payment_status: paymentStatus,
+          metadata: {
+            mp_status: order.status,
+            mp_status_detail: order.status_detail,
+            payments: order.transactions?.payments,
+          },
+        }).eq("id", existingOrder.id);
+      } else {
+        await adminClient.from("orders").insert({
+          user_id: refData.userId,
+          product_id: refData.productId || null,
+          variant_id: refData.variantId || null,
+          quantity: parseInt(refData.quantity || "1", 10),
+          total_amount: order.total_amount || 0,
+          payment_method: refData.paymentMethod || "pix",
+          payment_status: paymentStatus,
+          mp_order_id: orderId,
+          metadata: {
+            mp_status: order.status,
+            mp_status_detail: order.status_detail,
+          },
+        });
+      }
+
+      // Log billing event
       await adminClient.from("billing_events").insert({
         user_id: refData.userId,
         event_type: `store_order_${order.status}`,

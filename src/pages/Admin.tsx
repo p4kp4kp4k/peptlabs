@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AdminProducts from "@/components/admin/AdminProducts";
+import AdminOrders from "@/components/admin/AdminOrders";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Users, Layers, BookOpen, Shield, TrendingUp, Search, Trash2, Edit,
-  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag, CreditCard
+  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag, CreditCard, Package, Copy, Webhook
 } from "lucide-react";
 import { fetchAllProfiles, fetchProfileCount } from "@/services/userService";
 import { fetchPeptides, fetchPeptideCount, deletePeptide } from "@/services/peptideService";
@@ -147,6 +148,9 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="payments" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <CreditCard className="h-3.5 w-3.5" /> Pagamentos
+          </TabsTrigger>
+          <TabsTrigger value="orders" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Package className="h-3.5 w-3.5" /> Pedidos
           </TabsTrigger>
         </TabsList>
 
@@ -308,6 +312,11 @@ export default function Admin() {
         {/* Payments Tab */}
         <TabsContent value="payments">
           <PaymentsPanel />
+        </TabsContent>
+
+        {/* Orders Tab */}
+        <TabsContent value="orders">
+          <AdminOrders />
         </TabsContent>
       </Tabs>
     </div>
@@ -737,6 +746,35 @@ function PaymentsPanel() {
             <p className="text-[11px] text-foreground">
               <strong>Access Token:</strong> O token de acesso já está configurado de forma segura no backend.
               Para atualizá-lo, acesse as configurações de secrets do projeto.
+            </p>
+          </div>
+
+          {/* Webhook URL */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium flex items-center gap-1.5">
+              <Webhook className="h-3.5 w-3.5 text-primary" />
+              URL do Webhook (Notificações)
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                value={`https://rvbhlpgrzvhtojuvxacb.supabase.co/functions/v1/mp-webhook`}
+                readOnly
+                className="h-8 text-[10px] font-mono bg-secondary/30"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-[10px] gap-1 shrink-0"
+                onClick={() => {
+                  navigator.clipboard.writeText("https://rvbhlpgrzvhtojuvxacb.supabase.co/functions/v1/mp-webhook");
+                  toast({ title: "Copiado!", description: "URL do webhook copiada." });
+                }}
+              >
+                <Copy className="h-3 w-3" /> Copiar
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Cadastre esta URL no painel do MercadoPago → Suas integrações → Webhooks → Tópico: <strong>Order</strong>
             </p>
           </div>
 

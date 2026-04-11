@@ -107,6 +107,7 @@ serve(async (req) => {
         productId,
         variantId: variantId || null,
         quantity,
+        paymentMethod,
       }),
       payer: {
         email,
@@ -170,6 +171,19 @@ serve(async (req) => {
     }
 
     console.log("Order created:", JSON.stringify(mpData));
+
+    // Create order record in DB
+    await adminClient.from("orders").insert({
+      user_id: user.id,
+      product_id: productId,
+      variant_id: variantId || null,
+      quantity,
+      total_amount: totalAmount,
+      payment_method: paymentMethod,
+      payment_status: mpData.status === "processed" ? "approved" : "pending",
+      mp_order_id: mpData.id,
+      metadata: { status: mpData.status },
+    });
 
     // Log billing event
     await adminClient.from("billing_events").insert({
