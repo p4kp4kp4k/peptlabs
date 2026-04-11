@@ -71,6 +71,7 @@ export default function CheckoutDialog({
   const [pixQrCode, setPixQrCode] = useState<string | null>(null);
   const [pixQrBase64, setPixQrBase64] = useState<string | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
+  const [mpInstanceVersion, setMpInstanceVersion] = useState(0);
 
   const [cardResult, setCardResult] = useState<CheckoutFunctionResponse | null>(null);
   const [cardErrors, setCardErrors] = useState<{ name?: string; cpf?: string }>({});
@@ -201,6 +202,7 @@ export default function CheckoutDialog({
 
     try {
       mpInstanceRef.current = new window.MercadoPago(publicKey, { locale: "pt-BR" });
+      setMpInstanceVersion((current) => current + 1);
     } catch (error) {
       console.error("MercadoPago SDK init error:", error);
     }
@@ -208,11 +210,12 @@ export default function CheckoutDialog({
     return () => {
       cleanupCardForm();
       mpInstanceRef.current = null;
+      setMpInstanceVersion(0);
     };
   }, [open, publicKey, sdkReady, tab]);
 
   useEffect(() => {
-    if (!open || tab !== "card" || !sdkReady || !mpInstanceRef.current || !cardFormRef.current) return;
+    if (!open || tab !== "card" || !sdkReady || !mpInstanceVersion || !mpInstanceRef.current || !cardFormRef.current) return;
 
     const frame = window.requestAnimationFrame(() => {
       cleanupCardForm();
@@ -248,7 +251,7 @@ export default function CheckoutDialog({
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [open, sdkReady, tab, totalAmount]);
+  }, [open, sdkReady, tab, totalAmount, mpInstanceVersion, publicKey]);
 
   const handlePixPayment = async () => {
     setProcessing(true);
