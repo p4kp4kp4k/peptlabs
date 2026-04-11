@@ -1,17 +1,11 @@
-/**
- * create-mp-checkout/index.ts
- * ═══════════════════════════
- * Creates a MercadoPago order via Orders API (/v1/orders) for transparent checkout.
- * Supports PIX (bank_transfer) and credit card payments.
- * Docs: https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-integration
- */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
+type ApiDiagnostics = Record<string, unknown>;
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 function jsonResponse(data: unknown, status = 200) {
@@ -21,45 +15,67 @@ function jsonResponse(data: unknown, status = 200) {
   });
 }
 
+function success(data: Record<string, unknown>) {
+  return jsonResponse({ ok: true, ...data });
+}
+
+function failure(error: string, details?: string, diagnostics?: ApiDiagnostics) {
+  return jsonResponse({ ok: false, error, details, diagnostics });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // Auth check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return jsonResponse({ error: "Unauthorized" }, 401);
+      return failure("Unauthorized", "Faça login para continuar.");
     }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } } },
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
-      return jsonResponse({ error: "Invalid token" }, 401);
+      return failure("Invalid token", "Sua sessão expirou. Entre novamente e tente de novo.");
     }
 
-    const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
+    const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN")?.trim();
     if (!accessToken) {
-      return jsonResponse({ error: "MercadoPago not configured" }, 500);
+      return failure("MercadoPago not configured", "O token privado do Mercado Pago não está configurado no backend.");
     }
 
     const body = await req.json();
-    const { productId, variantId, quantity, paymentMethod, cardToken, installments, payerEmail } = body;
+    const {
+      productId,
+      variantId,
+      quantity,
+      paymentMethod,
+      cardToken,
+      installments,
+      payerEmail,
+      paymentMethodId,
+      identificationType,
+      identificationNumber,
+    } = body;
 
-    if (!productId || !quantity || quantity < 1 || !paymentMethod) {
-      return jsonResponse({ error: "Missing required fields: productId, quantity, paymentMethod" }, 400);
+    const quantityValue = Number(quantity);
+    if (!productId || !Number.isInteger(quantityValue) || quantityValue < 1 || !paymentMethod) {
+      return failure("Missing required fields", "Envie productId, quantity e paymentMethod corretamente.");
     }
 
-    // Fetch product
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
     const { data: product, error: productError } = await adminClient
@@ -70,57 +86,63 @@ serve(async (req) => {
       .single();
 
     if (productError || !product) {
-      return jsonResponse({ error: "Product not found" }, 404);
+      return failure("Product not found", "Produto não encontrado ou inativo.");
     }
 
     let unitPrice = Number(product.base_price);
-    let variantName = "";
 
     if (variantId) {
-      const { data: variant } = await adminClient
+      const { data: variant, error: variantError } = await adminClient
         .from("product_variants")
         .select("*")
         .eq("id", variantId)
         .eq("product_id", productId)
         .single();
 
-      if (variant) {
-        if (variant.stock < quantity) {
-          return jsonResponse({ error: "Estoque insuficiente" }, 400);
-        }
-        unitPrice = Number(variant.price) || unitPrice;
-        variantName = variant.color_name || "";
+      if (variantError || !variant) {
+        return failure("Variant not found", "A variante selecionada não foi encontrada para este produto.");
       }
+
+      if (variant.stock < quantityValue) {
+        return failure("Insufficient stock", "Estoque insuficiente para a quantidade selecionada.");
+      }
+
+      unitPrice = Number(variant.price) || unitPrice;
     }
 
-    const totalAmount = (unitPrice * quantity).toFixed(2);
-    const email = payerEmail || user.email || "";
-    const idempotencyKey = crypto.randomUUID();
+    const totalAmountValue = Number((unitPrice * quantityValue).toFixed(2));
+    const totalAmount = totalAmountValue.toFixed(2);
+    const email = String(payerEmail || user.email || "").trim().toLowerCase();
 
-    // Build order payload per MercadoPago Orders API v1 docs
-    // Build webhook notification URL
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const notificationUrl = `${supabaseUrl}/functions/v1/mp-webhook`;
+    if (!email) {
+      return failure("Missing payer email", "Informe um e-mail válido para continuar.");
+    }
+
+    const localOrderId = crypto.randomUUID();
+    const notificationUrl = `${Deno.env.get("SUPABASE_URL")!}/functions/v1/mp-webhook`;
+    const payer: Record<string, unknown> = { email };
+
+    if (paymentMethod === "credit_card") {
+      if (!identificationType || !identificationNumber) {
+        return failure("Missing payer identification", "Informe o tipo e o número do documento do titular.");
+      }
+
+      payer.identification = {
+        type: String(identificationType),
+        number: String(identificationNumber).replace(/\D/g, ""),
+      };
+    }
 
     const orderPayload: Record<string, unknown> = {
       type: "online",
       processing_mode: "automatic",
       total_amount: totalAmount,
-      external_reference: JSON.stringify({
-        userId: user.id,
-        productId,
-        variantId: variantId || null,
-        quantity,
-        paymentMethod,
-      }),
+      external_reference: localOrderId,
       notification_url: notificationUrl,
-      payer: {
-        email,
-      },
+      payer,
       transactions: {
         payments: [] as Record<string, unknown>[],
       },
-      description: `${product.name}${variantName ? ` - ${variantName}` : ""} x${quantity}`,
     };
 
     const payments = (orderPayload.transactions as Record<string, unknown>).payments as Record<string, unknown>[];
@@ -134,101 +156,143 @@ serve(async (req) => {
         },
       });
     } else if (paymentMethod === "credit_card") {
-      if (!cardToken) {
-        return jsonResponse({ error: "Card token required for credit card payment" }, 400);
+      const brand = String(paymentMethodId || "").trim();
+
+      if (!cardToken || !brand) {
+        return failure(
+          "Card tokenization failed",
+          "Não foi possível identificar os dados obrigatórios do cartão. Recarregue o formulário e tente novamente.",
+        );
       }
+
       payments.push({
         amount: totalAmount,
         payment_method: {
-          id: "master",
+          id: brand,
           type: "credit_card",
-          token: cardToken,
-          installments: installments || 1,
+          token: String(cardToken),
+          installments: Number(installments) || 1,
           statement_descriptor: "PeptLabs",
         },
       });
     } else {
-      return jsonResponse({ error: "Invalid payment method. Use 'pix' or 'credit_card'" }, 400);
+      return failure("Invalid payment method", "Use 'pix' ou 'credit_card'.");
     }
 
-    // Create order via MercadoPago Orders API
-    console.log("Creating order:", JSON.stringify(orderPayload));
+    console.log(
+      "create-mp-checkout request",
+      JSON.stringify({
+        productId,
+        variantId,
+        quantity: quantityValue,
+        paymentMethod,
+        externalReference: localOrderId,
+      }),
+    );
 
     const mpResponse = await fetch("https://api.mercadopago.com/v1/orders", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
-        "X-Idempotency-Key": idempotencyKey,
+        "X-Idempotency-Key": crypto.randomUUID(),
       },
       body: JSON.stringify(orderPayload),
     });
 
-    const mpData = await mpResponse.json();
+    const rawResponse = await mpResponse.text();
+    let mpData: Record<string, any> = {};
+
+    try {
+      mpData = rawResponse ? JSON.parse(rawResponse) : {};
+    } catch {
+      mpData = { raw: rawResponse };
+    }
 
     if (!mpResponse.ok) {
       console.error("MercadoPago Orders API error:", JSON.stringify(mpData));
-      return jsonResponse({
-        error: "Payment processing failed",
-        details: mpData.message || mpData.error || "Unknown error",
+
+      const detailedMessage =
+        mpData.message ||
+        mpData.error ||
+        mpData.cause?.[0]?.description ||
+        mpData.details ||
+        "Falha ao criar a cobrança no Mercado Pago.";
+
+      return failure("Payment processing failed", detailedMessage, {
         mpStatus: mpResponse.status,
-      }, 400);
+        paymentMethod,
+        externalReference: localOrderId,
+      });
     }
 
-    console.log("Order created:", JSON.stringify(mpData));
+    const payment = Array.isArray(mpData.transactions?.payments)
+      ? mpData.transactions.payments[0]
+      : undefined;
 
-    // Create order record in DB
-    await adminClient.from("orders").insert({
+    const paymentStatus = mpData.status === "processed"
+      ? "approved"
+      : payment?.status === "approved"
+        ? "approved"
+        : "pending";
+
+    const { error: insertError } = await adminClient.from("orders").insert({
+      id: localOrderId,
       user_id: user.id,
       product_id: productId,
       variant_id: variantId || null,
-      quantity,
-      total_amount: totalAmount,
+      quantity: quantityValue,
+      total_amount: totalAmountValue,
       payment_method: paymentMethod,
-      payment_status: mpData.status === "processed" ? "approved" : "pending",
+      payment_status: paymentStatus,
       mp_order_id: mpData.id,
-      metadata: { status: mpData.status },
+      metadata: {
+        external_reference: localOrderId,
+        mp_status: mpData.status,
+        mp_status_detail: mpData.status_detail,
+      },
     });
 
-    // Log billing event
+    if (insertError) {
+      console.error("orders insert error:", insertError);
+      return failure("Order persistence failed", "A cobrança foi criada, mas não conseguimos salvar o pedido localmente.", {
+        externalReference: localOrderId,
+        mpOrderId: mpData.id,
+      });
+    }
+
     await adminClient.from("billing_events").insert({
       user_id: user.id,
       event_type: "store_order_created",
       provider: "mercadopago",
       payload: {
         orderId: mpData.id,
+        localOrderId,
         productId,
         variantId,
-        quantity,
-        totalAmount,
+        quantity: quantityValue,
+        totalAmount: totalAmountValue,
         paymentMethod,
         status: mpData.status,
       },
     });
 
-    // Extract payment from response
-    // Response structure: mpData.transactions.payments[0]
-    const payment = mpData.transactions?.payments?.[0];
     const responseData: Record<string, unknown> = {
       orderId: mpData.id,
+      localOrderId,
       status: mpData.status,
       statusDetail: mpData.status_detail,
       paymentStatus: payment?.status,
     };
 
-    // For PIX, return QR code data from payment_method
-    if (paymentMethod === "pix" && payment) {
-      const pm = payment.payment_method;
-      if (pm) {
-        responseData.pix = {
-          qrCode: pm.qr_code,
-          qrCodeBase64: pm.qr_code_base64,
-          ticketUrl: pm.ticket_url,
-        };
-      }
+    if (paymentMethod === "pix" && payment?.payment_method) {
+      responseData.pix = {
+        qrCode: payment.payment_method.qr_code,
+        qrCodeBase64: payment.payment_method.qr_code_base64,
+        ticketUrl: payment.payment_method.ticket_url,
+      };
     }
 
-    // For card, return approval status
     if (paymentMethod === "credit_card" && payment) {
       responseData.card = {
         status: payment.status,
@@ -237,10 +301,10 @@ serve(async (req) => {
       };
     }
 
-    return jsonResponse(responseData);
+    return success(responseData);
   } catch (err) {
     if (err instanceof Response) return err;
     console.error("create-mp-checkout error:", err);
-    return jsonResponse({ error: err.message }, 500);
+    return failure("Unexpected error", err instanceof Error ? err.message : "Erro interno ao processar o checkout.");
   }
 });

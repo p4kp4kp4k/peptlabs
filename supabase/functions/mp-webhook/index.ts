@@ -1,35 +1,16 @@
-/**
- * mp-webhook/index.ts
- * ═══════════════════
- * Receives MercadoPago Order webhook notifications.
- * Configure in MP dashboard: https://<project>.supabase.co/functions/v1/mp-webhook
- * Topic: Order (Mercado Pago)
- *
- * Validates x-signature header using HMAC SHA-256 for authenticity.
- * Docs: https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications/webhooks
- */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-/**
- * Validates the x-signature header from MercadoPago.
- * Template: id:[data.id];request-id:[x-request-id];ts:[ts];
- * HMAC SHA-256 with the webhook secret as key.
- */
-async function validateSignature(
-  req: Request,
-  dataId: string,
-): Promise<boolean> {
+async function validateSignature(req: Request, dataId: string): Promise<boolean> {
   const webhookSecret = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET");
   if (!webhookSecret) {
     console.warn("MERCADOPAGO_WEBHOOK_SECRET not set — skipping signature validation");
-    return true; // Allow if not configured (graceful degradation)
+    return true;
   }
 
   const xSignature = req.headers.get("x-signature");
@@ -40,33 +21,24 @@ async function validateSignature(
     return false;
   }
 
-  // Parse x-signature: "ts=...,v1=..."
   const parts: Record<string, string> = {};
   for (const part of xSignature.split(",")) {
     const [key, ...valueParts] = part.trim().split("=");
     parts[key] = valueParts.join("=");
   }
 
-  const ts = parts["ts"];
-  const v1 = parts["v1"];
-
+  const ts = parts.ts;
+  const v1 = parts.v1;
   if (!ts || !v1) {
     console.warn("Invalid x-signature format");
     return false;
   }
 
-  // Build the manifest template
-  // Template: id:[data.id_url];request-id:[x-request-id_header];ts:[ts_header];
   let manifest = "";
-  if (dataId) {
-    manifest += `id:${dataId};`;
-  }
-  if (xRequestId) {
-    manifest += `request-id:${xRequestId};`;
-  }
+  if (dataId) manifest += `id:${dataId};`;
+  if (xRequestId) manifest += `request-id:${xRequestId};`;
   manifest += `ts:${ts};`;
 
-  // Compute HMAC SHA-256
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -76,15 +48,9 @@ async function validateSignature(
     ["sign"],
   );
 
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    encoder.encode(manifest),
-  );
-
-  // Convert to hex
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(manifest));
   const computed = Array.from(new Uint8Array(signature))
-    .map((b) => b.toString(16).padStart(2, "0"))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 
   if (computed !== v1) {
@@ -100,7 +66,6 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // MP sends GET for validation
   if (req.method === "GET") {
     return new Response("ok", { status: 200, headers: corsHeaders });
   }
@@ -110,14 +75,11 @@ serve(async (req) => {
     console.log("MP Webhook received:", JSON.stringify(body));
 
     const { action, type, data } = body;
-
-    // Only process order notifications
     if (type !== "order" || !data?.id) {
       console.log("Ignoring non-order notification:", type);
       return new Response("ok", { status: 200, headers: corsHeaders });
     }
 
-    // Validate x-signature
     const isValid = await validateSignature(req, String(data.id));
     if (!isValid) {
       console.error("Invalid webhook signature — rejecting notification");
@@ -135,14 +97,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Fetch full order from MP API
-    const orderId = data.id;
-    const orderResponse = await fetch(
-      `https://api.mercadopago.com/v1/orders/${orderId}`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      },
-    );
+    const orderId = String(data.id);
+    const orderResponse = await fetch(`https://api.mercadopago.com/v1/orders/${orderId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
 
     if (!orderResponse.ok) {
       console.error("Failed to fetch order:", orderResponse.status);
@@ -150,20 +108,25 @@ serve(async (req) => {
     }
 
     const order = await orderResponse.json();
-    console.log(
-      "Order fetched:",
-      JSON.stringify({ id: order.id, status: order.status }),
-    );
+    console.log("Order fetched:", JSON.stringify({ id: order.id, status: order.status }));
 
-    // Parse external_reference to get userId, productId, etc.
-    let refData: Record<string, string> = {};
-    try {
-      refData = JSON.parse(order.external_reference || "{}");
-    } catch {
-      console.warn("Could not parse external_reference");
+    const rawExternalReference = typeof order.external_reference === "string"
+      ? order.external_reference.trim()
+      : "";
+
+    let legacyRefData: Record<string, string> = {};
+    if (rawExternalReference.startsWith("{")) {
+      try {
+        legacyRefData = JSON.parse(rawExternalReference);
+      } catch {
+        console.warn("Could not parse legacy external_reference JSON");
+      }
     }
 
-    // Log webhook event
+    const localOrderId = rawExternalReference && !rawExternalReference.startsWith("{")
+      ? rawExternalReference
+      : null;
+
     await adminClient.from("webhook_events").insert({
       provider: "mercadopago",
       event_type: action || `order.${order.status}`,
@@ -173,80 +136,117 @@ serve(async (req) => {
         status: order.status,
         statusDetail: order.status_detail,
         totalAmount: order.total_amount,
-        payments: order.transactions?.payments?.map((p: any) => ({
-          id: p.id,
-          status: p.status,
-          statusDetail: p.status_detail,
-          amount: p.amount,
+        externalReference: rawExternalReference || null,
+        payments: order.transactions?.payments?.map((payment: any) => ({
+          id: payment.id,
+          status: payment.status,
+          statusDetail: payment.status_detail,
+          amount: payment.amount,
         })),
-        externalReference: refData,
       },
       processed: true,
       processed_at: new Date().toISOString(),
     });
 
-    // Upsert order record
-    if (refData.userId) {
-      const { data: existingOrder } = await adminClient
+    const paymentStatus =
+      order.status === "processed"
+        ? "approved"
+        : order.status === "cancelled"
+          ? "cancelled"
+          : order.status === "expired"
+            ? "rejected"
+            : "pending";
+
+    let existingOrder:
+      | { id: string; user_id: string; product_id: string | null; variant_id: string | null; quantity: number; payment_method: string }
+      | null = null;
+
+    const byMpOrder = await adminClient
+      .from("orders")
+      .select("id, user_id, product_id, variant_id, quantity, payment_method")
+      .eq("mp_order_id", orderId)
+      .maybeSingle();
+
+    existingOrder = byMpOrder.data;
+
+    if (!existingOrder && localOrderId) {
+      const byLocalId = await adminClient
         .from("orders")
-        .select("id")
-        .eq("mp_order_id", orderId)
+        .select("id, user_id, product_id, variant_id, quantity, payment_method")
+        .eq("id", localOrderId)
         .maybeSingle();
 
-      const paymentStatus =
-        order.status === "processed"
-          ? "approved"
-          : order.status === "cancelled"
-            ? "cancelled"
-            : order.status === "expired"
-              ? "rejected"
-              : "pending";
+      existingOrder = byLocalId.data;
+    }
 
-      if (existingOrder) {
-        await adminClient
-          .from("orders")
-          .update({
-            payment_status: paymentStatus,
-            metadata: {
-              mp_status: order.status,
-              mp_status_detail: order.status_detail,
-              payments: order.transactions?.payments,
-            },
-          })
-          .eq("id", existingOrder.id);
-      } else {
-        await adminClient.from("orders").insert({
-          user_id: refData.userId,
-          product_id: refData.productId || null,
-          variant_id: refData.variantId || null,
-          quantity: parseInt(refData.quantity || "1", 10),
-          total_amount: order.total_amount || 0,
-          payment_method: refData.paymentMethod || "pix",
-          payment_status: paymentStatus,
+    if (existingOrder) {
+      await adminClient
+        .from("orders")
+        .update({
           mp_order_id: orderId,
+          total_amount: Number(order.total_amount || 0),
+          payment_status: paymentStatus,
           metadata: {
+            external_reference: rawExternalReference || null,
             mp_status: order.status,
             mp_status_detail: order.status_detail,
+            payments: order.transactions?.payments ?? [],
           },
-        });
-      }
+        })
+        .eq("id", existingOrder.id);
 
-      // Log billing event
       await adminClient.from("billing_events").insert({
-        user_id: refData.userId,
+        user_id: existingOrder.user_id,
         event_type: `store_order_${order.status}`,
         provider: "mercadopago",
         payload: {
           orderId: order.id,
+          localOrderId: existingOrder.id,
+          productId: existingOrder.product_id,
+          variantId: existingOrder.variant_id,
+          quantity: existingOrder.quantity,
+          paymentMethod: existingOrder.payment_method,
           status: order.status,
-          productId: refData.productId,
-          variantId: refData.variantId,
-          quantity: refData.quantity,
         },
       });
+    } else if (legacyRefData.userId) {
+      await adminClient.from("orders").insert({
+        user_id: legacyRefData.userId,
+        product_id: legacyRefData.productId || null,
+        variant_id: legacyRefData.variantId || null,
+        quantity: parseInt(legacyRefData.quantity || "1", 10),
+        total_amount: Number(order.total_amount || 0),
+        payment_method: legacyRefData.paymentMethod || "pix",
+        payment_status: paymentStatus,
+        mp_order_id: orderId,
+        metadata: {
+          external_reference: rawExternalReference || null,
+          mp_status: order.status,
+          mp_status_detail: order.status_detail,
+          payments: order.transactions?.payments ?? [],
+        },
+      });
+
+      await adminClient.from("billing_events").insert({
+        user_id: legacyRefData.userId,
+        event_type: `store_order_${order.status}`,
+        provider: "mercadopago",
+        payload: {
+          orderId: order.id,
+          productId: legacyRefData.productId,
+          variantId: legacyRefData.variantId,
+          quantity: legacyRefData.quantity,
+          paymentMethod: legacyRefData.paymentMethod,
+          status: order.status,
+        },
+      });
+    } else {
+      console.warn("Webhook received for order without matching local record:", JSON.stringify({
+        orderId,
+        externalReference: rawExternalReference || null,
+      }));
     }
 
-    // Return 200 to acknowledge (MP retries if not 200/201 within 22s)
     return new Response("ok", { status: 200, headers: corsHeaders });
   } catch (err) {
     console.error("mp-webhook error:", err);
