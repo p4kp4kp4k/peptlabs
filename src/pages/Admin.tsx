@@ -642,7 +642,25 @@ function PaymentsPanel() {
     }
   });
 
+  const getKeyEnvironmentMismatch = (): string | null => {
+    if (!mpPublicKey.trim()) return "Informe a Public Key.";
+    const key = mpPublicKey.trim();
+    if (mpEnvironment === "sandbox" && !key.startsWith("TEST-")) {
+      return "Para o ambiente Sandbox, a Public Key deve começar com \"TEST-\". Verifique se está usando as credenciais de teste do MercadoPago.";
+    }
+    if (mpEnvironment === "production" && key.startsWith("TEST-")) {
+      return "Para o ambiente Produção, a Public Key não pode começar com \"TEST-\". Use as credenciais de produção do MercadoPago.";
+    }
+    return null;
+  };
+
+  const keyMismatchError = getKeyEnvironmentMismatch();
+
   const handleSave = async () => {
+    if (keyMismatchError) {
+      toast({ title: "Validação", description: keyMismatchError, variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -650,7 +668,7 @@ function PaymentsPanel() {
         is_active: true,
         environment: mpEnvironment,
         config: {
-          public_key: mpPublicKey,
+          public_key: mpPublicKey.trim(),
           has_access_token: true,
         },
         configured_at: new Date().toISOString(),
@@ -733,12 +751,18 @@ function PaymentsPanel() {
             <Input
               value={mpPublicKey}
               onChange={(e) => setMpPublicKey(e.target.value)}
-              placeholder="APP_USR-xxxx..."
-              className="h-8 text-xs font-mono"
+              placeholder={mpEnvironment === "sandbox" ? "TEST-xxxx..." : "APP_USR-xxxx..."}
+              className={`h-8 text-xs font-mono ${keyMismatchError && mpPublicKey.trim() ? "border-red-500/60" : ""}`}
             />
-            <p className="text-[10px] text-muted-foreground">
-              Encontre em: MercadoPago → Seu negócio → Configurações → Credenciais
-            </p>
+            {keyMismatchError && mpPublicKey.trim() ? (
+              <p className="text-[10px] text-red-400 flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" /> {keyMismatchError}
+              </p>
+            ) : (
+              <p className="text-[10px] text-muted-foreground">
+                Encontre em: MercadoPago → Seu negócio → Configurações → Credenciais
+              </p>
+            )}
           </div>
 
           {/* Access Token notice */}
