@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CheckCircle2, Copy, CreditCard, Loader2, QrCode } from "lucide-react";
+import { CheckCircle2, Copy, CreditCard, Loader2, QrCode, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 declare global {
@@ -357,18 +356,25 @@ export default function CheckoutDialog({
     }
   };
 
+  if (!open) return null;
+
   return (
-    <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        hideOverlay
-        className="max-w-md"
-        onOpenAutoFocus={(event) => event.preventDefault()}
-      >
-        <DialogHeader>
-          <DialogTitle className="text-base" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+    <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-background/60 px-4 py-6 backdrop-blur-sm sm:items-center">
+      <div className="relative w-full max-w-md rounded-lg border bg-background p-6 shadow-lg">
+        <button
+          type="button"
+          aria-label="Fechar checkout"
+          onClick={() => onOpenChange(false)}
+          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="mb-4">
+          <h2 className="text-base font-semibold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Finalizar Compra
-          </DialogTitle>
-        </DialogHeader>
+          </h2>
+        </div>
 
         <div className="rounded-md border border-border/40 bg-secondary/20 p-3 space-y-1">
           <p className="text-xs font-medium text-foreground">
@@ -531,10 +537,10 @@ export default function CheckoutDialog({
           </TabsContent>
         </Tabs>
 
-        <p className="text-[9px] text-center text-muted-foreground/50">
+        <p className="mt-4 text-[9px] text-center text-muted-foreground/50">
           Pagamento processado com segurança pelo Mercado Pago
         </p>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
