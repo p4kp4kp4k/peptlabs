@@ -46,9 +46,59 @@ export default function CheckoutDialog({
 
   // Card state
   const [cardResult, setCardResult] = useState<any>(null);
+  const [cardErrors, setCardErrors] = useState<{ name?: string; cpf?: string }>({});
   const cardFormRef = useRef<HTMLDivElement>(null);
   const mpInstanceRef = useRef<any>(null);
   const cardFormInstanceRef = useRef<any>(null);
+
+  const formatCPF = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  };
+
+  const isValidCPF = (cpf: string) => {
+    const digits = cpf.replace(/\D/g, "");
+    if (digits.length !== 11 || /^(\d)\1{10}$/.test(digits)) return false;
+    let sum = 0;
+    for (let i = 0; i < 9; i++) sum += parseInt(digits[i]) * (10 - i);
+    let rest = (sum * 10) % 11;
+    if (rest === 10) rest = 0;
+    if (rest !== parseInt(digits[9])) return false;
+    sum = 0;
+    for (let i = 0; i < 10; i++) sum += parseInt(digits[i]) * (11 - i);
+    rest = (sum * 10) % 11;
+    if (rest === 10) rest = 0;
+    return rest === parseInt(digits[10]);
+  };
+
+  const handleCPFInput = (e: React.FormEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const formatted = formatCPF(input.value);
+    input.value = formatted;
+    setCardErrors((prev) => ({ ...prev, cpf: undefined }));
+  };
+
+  const validateCardFields = () => {
+    const errors: { name?: string; cpf?: string } = {};
+    const nameEl = document.getElementById("mp-cardholder-name") as HTMLInputElement | null;
+    const cpfEl = document.getElementById("mp-doc-number") as HTMLInputElement | null;
+
+    const name = nameEl?.value?.trim() || "";
+    const cpf = cpfEl?.value || "";
+
+    if (name.length < 3 || !/\s/.test(name)) {
+      errors.name = "Informe o nome completo (nome e sobrenome)";
+    }
+    if (!isValidCPF(cpf)) {
+      errors.cpf = "CPF inválido";
+    }
+
+    setCardErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // Load user email
   useEffect(() => {
