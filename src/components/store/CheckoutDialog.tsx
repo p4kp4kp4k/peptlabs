@@ -361,10 +361,9 @@ export default function CheckoutDialog({
     <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideOverlay
+        disableOutsidePointerEvents={false}
         className="max-w-md"
         onOpenAutoFocus={(event) => event.preventDefault()}
-        onPointerDownOutside={(event) => event.preventDefault()}
-        onInteractOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle className="text-base" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
