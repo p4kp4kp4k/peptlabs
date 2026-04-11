@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Users, Layers, BookOpen, Shield, TrendingUp, Search, Trash2, Edit,
-  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag
+  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag, CreditCard
 } from "lucide-react";
 import { fetchAllProfiles, fetchProfileCount } from "@/services/userService";
 import { fetchPeptides, fetchPeptideCount, deletePeptide } from "@/services/peptideService";
@@ -143,6 +144,9 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="security" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Shield className="h-3.5 w-3.5" /> Segurança
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <CreditCard className="h-3.5 w-3.5" /> Pagamentos
           </TabsTrigger>
         </TabsList>
 
@@ -299,6 +303,11 @@ export default function Admin() {
         {/* Security Tab */}
         <TabsContent value="security">
           <SecurityPanel />
+        </TabsContent>
+
+        {/* Payments Tab */}
+        <TabsContent value="payments">
+          <PaymentsPanel />
         </TabsContent>
       </Tabs>
     </div>
@@ -585,6 +594,172 @@ function SecurityPanel() {
               </TableBody>
             </Table>
           )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ── Payments Panel Component ──
+
+function PaymentsPanel() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [mpToken, setMpToken] = useState("");
+  const [mpPublicKey, setMpPublicKey] = useState("");
+  const [mpEnvironment, setMpEnvironment] = useState<"sandbox" | "production">("sandbox");
+  const [saving, setSaving] = useState(false);
+
+  // Load existing gateway settings
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ["gateway-mp-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("gateway_settings")
+        .select("*")
+        .eq("provider", "mercadopago")
+        .single();
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    },
+  });
+
+  // Initialize form from saved settings
+  useState(() => {
+    if (settings) {
+      const config = (settings.config || {}) as Record<string, string>;
+      setMpPublicKey(config.public_key || "");
+      setMpEnvironment((settings.environment as "sandbox" | "production") || "sandbox");
+    }
+  });
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        provider: "mercadopago",
+        is_active: true,
+        environment: mpEnvironment,
+        config: {
+          public_key: mpPublicKey,
+          has_access_token: true,
+        },
+        configured_at: new Date().toISOString(),
+      };
+
+      if (settings?.id) {
+        const { error } = await supabase
+          .from("gateway_settings")
+          .update(payload)
+          .eq("id", settings.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("gateway_settings")
+          .insert(payload);
+        if (error) throw error;
+      }
+
+      toast({ title: "Configurações salvas", description: "MercadoPago configurado com sucesso." });
+      queryClient.invalidateQueries({ queryKey: ["gateway-mp-settings"] });
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card className="border-border/40 bg-card/80">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <CreditCard className="inline h-4 w-4 mr-2 text-primary" />
+            Configuração MercadoPago
+          </CardTitle>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Configure as credenciais do MercadoPago para aceitar pagamentos via PIX e cartão de crédito.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Status */}
+          <div className="flex items-center gap-2">
+            <div className={`h-2 w-2 rounded-full ${settings?.is_active ? "bg-emerald-400" : "bg-muted-foreground/30"}`} />
+            <span className="text-xs text-muted-foreground">
+              {settings?.is_active ? "Configurado e ativo" : "Não configurado"}
+            </span>
+            {settings?.configured_at && (
+              <span className="text-[10px] text-muted-foreground/50">
+                — Última config: {new Date(settings.configured_at).toLocaleDateString("pt-BR")}
+              </span>
+            )}
+          </div>
+
+          {/* Environment toggle */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Ambiente</Label>
+            <div className="flex gap-2">
+              <Button
+                variant={mpEnvironment === "sandbox" ? "default" : "outline"}
+                size="sm"
+                className="h-7 text-[10px]"
+                onClick={() => setMpEnvironment("sandbox")}
+              >
+                Sandbox (Teste)
+              </Button>
+              <Button
+                variant={mpEnvironment === "production" ? "default" : "outline"}
+                size="sm"
+                className="h-7 text-[10px]"
+                onClick={() => setMpEnvironment("production")}
+              >
+                Produção
+              </Button>
+            </div>
+          </div>
+
+          {/* Public Key */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Public Key</Label>
+            <Input
+              value={mpPublicKey}
+              onChange={(e) => setMpPublicKey(e.target.value)}
+              placeholder="APP_USR-xxxx..."
+              className="h-8 text-xs font-mono"
+            />
+            <p className="text-[10px] text-muted-foreground">
+              Encontre em: MercadoPago → Seu negócio → Configurações → Credenciais
+            </p>
+          </div>
+
+          {/* Access Token notice */}
+          <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
+            <p className="text-[11px] text-foreground">
+              <strong>Access Token:</strong> O token de acesso já está configurado de forma segura no backend.
+              Para atualizá-lo, acesse as configurações de secrets do projeto.
+            </p>
+          </div>
+
+          {/* Methods accepted */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Métodos aceitos</Label>
+            <div className="flex gap-3">
+              <Badge variant="outline" className="text-[10px] gap-1.5 py-1">
+                💳 Cartão de Crédito
+              </Badge>
+              <Badge variant="outline" className="text-[10px] gap-1.5 py-1">
+                🔑 PIX
+              </Badge>
+              <Badge variant="outline" className="text-[10px] gap-1.5 py-1">
+                🏦 Boleto
+              </Badge>
+            </div>
+          </div>
+
+          <Button onClick={handleSave} disabled={saving} className="text-xs gap-1.5">
+            {saving && <Loader2 className="h-3 w-3 animate-spin" />}
+            Salvar Configurações
+          </Button>
         </CardContent>
       </Card>
     </div>
