@@ -1,13 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle
-} from "@/components/ui/dialog";
-import { Loader2, CreditCard, QrCode, Copy, CheckCircle2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CheckCircle2, Copy, CreditCard, Loader2, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 declare global {
@@ -30,8 +28,37 @@ interface CheckoutDialogProps {
   publicKey: string | null;
 }
 
+interface CheckoutFunctionResponse {
+  ok?: boolean;
+  error?: string;
+  details?: string;
+  orderId?: string;
+  localOrderId?: string;
+  status?: string;
+  statusDetail?: string;
+  paymentStatus?: string;
+  diagnostics?: Record<string, unknown>;
+  pix?: {
+    qrCode?: string;
+    qrCodeBase64?: string;
+    ticketUrl?: string;
+  };
+  card?: {
+    status?: string;
+    statusDetail?: string;
+    authorizationCode?: string;
+  };
+}
+
 export default function CheckoutDialog({
-  open, onOpenChange, product, variantId, variantName, unitPrice, quantity, publicKey
+  open,
+  onOpenChange,
+  product,
+  variantId,
+  variantName,
+  unitPrice,
+  quantity,
+  publicKey,
 }: CheckoutDialogProps) {
   const { toast } = useToast();
   const totalAmount = unitPrice * quantity;
@@ -39,16 +66,14 @@ export default function CheckoutDialog({
   const [processing, setProcessing] = useState(false);
   const [payerEmail, setPayerEmail] = useState("");
   const [sdkReady, setSdkReady] = useState(
-    typeof window !== "undefined" && typeof window.MercadoPago !== "undefined"
+    typeof window !== "undefined" && typeof window.MercadoPago !== "undefined",
   );
 
-  // PIX state
   const [pixQrCode, setPixQrCode] = useState<string | null>(null);
   const [pixQrBase64, setPixQrBase64] = useState<string | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
 
-  // Card state
-  const [cardResult, setCardResult] = useState<any>(null);
+  const [cardResult, setCardResult] = useState<CheckoutFunctionResponse | null>(null);
   const [cardErrors, setCardErrors] = useState<{ name?: string; cpf?: string }>({});
   const cardFormRef = useRef<HTMLDivElement>(null);
   const mpInstanceRef = useRef<any>(null);
@@ -65,6 +90,11 @@ export default function CheckoutDialog({
     }
   };
 
+  const getErrorMessage = (data: CheckoutFunctionResponse | null | undefined, fallback: string) => {
+    if (!data) return fallback;
+    return data.details || data.error || fallback;
+  };
+
   const formatCPF = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
     if (digits.length <= 3) return digits;
@@ -76,20 +106,24 @@ export default function CheckoutDialog({
   const isValidCPF = (cpf: string) => {
     const digits = cpf.replace(/\D/g, "");
     if (digits.length !== 11 || /^(\d)\1{10}$/.test(digits)) return false;
+
     let sum = 0;
-    for (let i = 0; i < 9; i++) sum += parseInt(digits[i]) * (10 - i);
+    for (let index = 0; index < 9; index += 1) sum += parseInt(digits[index]) * (10 - index);
+
     let rest = (sum * 10) % 11;
     if (rest === 10) rest = 0;
     if (rest !== parseInt(digits[9])) return false;
+
     sum = 0;
-    for (let i = 0; i < 10; i++) sum += parseInt(digits[i]) * (11 - i);
+    for (let index = 0; index < 10; index += 1) sum += parseInt(digits[index]) * (11 - index);
+
     rest = (sum * 10) % 11;
     if (rest === 10) rest = 0;
     return rest === parseInt(digits[10]);
   };
 
-  const handleCPFInput = (e: React.FormEvent<HTMLInputElement>) => {
-    const input = e.currentTarget;
+  const handleCPFInput = (event: React.FormEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
     input.value = formatCPF(input.value);
     setCardErrors((prev) => ({ ...prev, cpf: undefined }));
   };
@@ -105,6 +139,7 @@ export default function CheckoutDialog({
     if (name.length < 3 || !/\s/.test(name)) {
       errors.name = "Informe o nome completo (nome e sobrenome)";
     }
+
     if (!isValidCPF(cpf)) {
       errors.cpf = "CPF inválido";
     }
@@ -113,14 +148,12 @@ export default function CheckoutDialog({
     return Object.keys(errors).length === 0;
   };
 
-  // Load user email
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user?.email) setPayerEmail(data.user.email);
     });
   }, []);
 
-  // Ensure MercadoPago SDK is available when card tab is opened
   useEffect(() => {
     if (!open || tab !== "card" || !publicKey) return;
 
@@ -164,14 +197,13 @@ export default function CheckoutDialog({
     };
   }, [open, publicKey, tab, toast]);
 
-  // Initialize MercadoPago SDK instance
   useEffect(() => {
     if (!open || !publicKey || tab !== "card" || !sdkReady || !window.MercadoPago) return;
 
     try {
       mpInstanceRef.current = new window.MercadoPago(publicKey, { locale: "pt-BR" });
-    } catch (err) {
-      console.error("MercadoPago SDK init error:", err);
+    } catch (error) {
+      console.error("MercadoPago SDK init error:", error);
     }
 
     return () => {
@@ -180,7 +212,6 @@ export default function CheckoutDialog({
     };
   }, [open, publicKey, sdkReady, tab]);
 
-  // Mount card form after SDK and DOM are ready
   useEffect(() => {
     if (!open || tab !== "card" || !sdkReady || !mpInstanceRef.current || !cardFormRef.current) return;
 
@@ -199,6 +230,7 @@ export default function CheckoutDialog({
             cardholderName: { id: "mp-cardholder-name", placeholder: "Nome no cartão" },
             identificationType: { id: "mp-doc-type" },
             identificationNumber: { id: "mp-doc-number", placeholder: "CPF" },
+            issuer: { id: "mp-issuer" },
             installments: { id: "mp-installments" },
           },
           callbacks: {
@@ -211,8 +243,8 @@ export default function CheckoutDialog({
             },
           },
         });
-      } catch (err) {
-        console.error("CardForm init error:", err);
+      } catch (error) {
+        console.error("CardForm init error:", error);
       }
     });
 
@@ -236,20 +268,20 @@ export default function CheckoutDialog({
       });
 
       if (res.error) throw new Error(res.error.message);
-      const data = res.data;
+      const data = (res.data ?? null) as CheckoutFunctionResponse | null;
 
-      if (data.error) {
-        throw new Error(data.details || data.error);
+      if (data?.ok === false) {
+        throw new Error(getErrorMessage(data, "Não foi possível gerar o PIX."));
       }
 
-      if (data.pix) {
+      if (data?.pix?.qrCode) {
         setPixQrCode(data.pix.qrCode);
-        setPixQrBase64(data.pix.qrCodeBase64);
+        setPixQrBase64(data.pix.qrCodeBase64 || null);
       } else {
-        toast({ title: "PIX gerado", description: `Pedido: ${data.orderId} — Status: ${data.status}` });
+        toast({ title: "PIX gerado", description: `Pedido: ${data?.orderId} — Status: ${data?.status}` });
       }
-    } catch (err: any) {
-      toast({ title: "Erro no PIX", description: err.message, variant: "destructive" });
+    } catch (error: any) {
+      toast({ title: "Erro no PIX", description: error.message, variant: "destructive" });
     } finally {
       setProcessing(false);
     }
@@ -269,9 +301,12 @@ export default function CheckoutDialog({
     try {
       const cardFormData = cardFormInstanceRef.current.getCardFormData();
       const token = cardFormData.token;
+      const paymentMethodId = cardFormData.paymentMethodId;
+      const identificationType = cardFormData.identificationType;
+      const identificationNumber = cardFormData.identificationNumber;
 
-      if (!token) {
-        throw new Error("Não foi possível tokenizar o cartão. Verifique os dados.");
+      if (!token || !paymentMethodId || !identificationType || !identificationNumber) {
+        throw new Error("Não foi possível tokenizar o cartão. Verifique os dados e tente novamente.");
       }
 
       const res = await supabase.functions.invoke("create-mp-checkout", {
@@ -281,31 +316,34 @@ export default function CheckoutDialog({
           quantity,
           paymentMethod: "credit_card",
           cardToken: token,
-          installments: parseInt(cardFormData.installments) || 1,
+          installments: parseInt(cardFormData.installments, 10) || 1,
+          paymentMethodId,
+          identificationType,
+          identificationNumber,
           payerEmail,
         },
       });
 
       if (res.error) throw new Error(res.error.message);
-      const data = res.data;
+      const data = (res.data ?? null) as CheckoutFunctionResponse | null;
 
-      if (data.error) {
-        throw new Error(data.details || data.error);
+      if (data?.ok === false) {
+        throw new Error(getErrorMessage(data, "Não foi possível processar o cartão."));
       }
 
       setCardResult(data);
 
-      if (data.card?.status === "approved") {
+      if (data?.card?.status === "approved") {
         toast({ title: "Pagamento aprovado! ✅", description: `Pedido #${data.orderId}` });
       } else {
         toast({
           title: "Pagamento processado",
-          description: `Status: ${data.card?.statusDetail || data.status}`,
-          variant: data.card?.status === "rejected" ? "destructive" : "default",
+          description: `Status: ${data?.card?.statusDetail || data?.status || "em processamento"}`,
+          variant: data?.card?.status === "rejected" ? "destructive" : "default",
         });
       }
-    } catch (err: any) {
-      toast({ title: "Erro no cartão", description: err.message, variant: "destructive" });
+    } catch (error: any) {
+      toast({ title: "Erro no cartão", description: error.message, variant: "destructive" });
     } finally {
       setProcessing(false);
     }
@@ -320,18 +358,27 @@ export default function CheckoutDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md" onOpenAutoFocus={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="max-w-md"
+        onOpenAutoFocus={(event) => event.preventDefault()}
+        onPointerDownOutside={(event) => event.preventDefault()}
+        onInteractOutside={(event) => event.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="text-base" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Finalizar Compra
           </DialogTitle>
         </DialogHeader>
 
-        {/* Order summary */}
         <div className="rounded-md border border-border/40 bg-secondary/20 p-3 space-y-1">
-          <p className="text-xs font-medium text-foreground">{product.name}{variantName ? ` — ${variantName}` : ""}</p>
-          <p className="text-[10px] text-muted-foreground">{quantity}x R$ {unitPrice.toFixed(2).replace(".", ",")}</p>
+          <p className="text-xs font-medium text-foreground">
+            {product.name}
+            {variantName ? ` — ${variantName}` : ""}
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            {quantity}x R$ {unitPrice.toFixed(2).replace(".", ",")}
+          </p>
           <p className="text-sm font-bold text-primary" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Total: R$ {totalAmount.toFixed(2).replace(".", ",")}
           </p>
@@ -347,7 +394,6 @@ export default function CheckoutDialog({
             </TabsTrigger>
           </TabsList>
 
-          {/* PIX Tab */}
           <TabsContent value="pix" className="space-y-3 mt-3">
             {!pixQrCode ? (
               <>
@@ -355,16 +401,12 @@ export default function CheckoutDialog({
                   <Label className="text-xs">E-mail</Label>
                   <Input
                     value={payerEmail}
-                    onChange={(e) => setPayerEmail(e.target.value)}
+                    onChange={(event) => setPayerEmail(event.target.value)}
                     placeholder="seu@email.com"
                     className="h-8 text-xs"
                   />
                 </div>
-                <Button
-                  onClick={handlePixPayment}
-                  disabled={processing || !payerEmail}
-                  className="w-full gap-2 text-xs"
-                >
+                <Button onClick={handlePixPayment} disabled={processing || !payerEmail} className="w-full gap-2 text-xs">
                   {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <QrCode className="h-3.5 w-3.5" />}
                   {processing ? "Gerando PIX..." : "Gerar QR Code PIX"}
                 </Button>
@@ -382,11 +424,7 @@ export default function CheckoutDialog({
                   </div>
                 )}
                 <div className="flex gap-2">
-                  <Input
-                    value={pixQrCode || ""}
-                    readOnly
-                    className="h-8 text-[9px] font-mono flex-1"
-                  />
+                  <Input value={pixQrCode || ""} readOnly className="h-8 text-[9px] font-mono flex-1" />
                   <Button size="sm" variant="outline" onClick={copyPixCode} className="h-8 gap-1 text-[10px]">
                     {pixCopied ? <CheckCircle2 className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
                     {pixCopied ? "Copiado" : "Copiar"}
@@ -397,7 +435,6 @@ export default function CheckoutDialog({
             )}
           </TabsContent>
 
-          {/* Card Tab */}
           <TabsContent value="card" className="space-y-3 mt-3">
             {!publicKey ? (
               <div className="text-center py-4">
@@ -413,13 +450,24 @@ export default function CheckoutDialog({
               </div>
             ) : (
               <>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">E-mail</Label>
+                  <Input
+                    value={payerEmail}
+                    onChange={(event) => setPayerEmail(event.target.value)}
+                    placeholder="seu@email.com"
+                    className="h-8 text-xs"
+                  />
+                </div>
+
                 <div ref={cardFormRef}>
-                  <form id="mp-card-form" onSubmit={(e) => e.preventDefault()}>
+                  <form id="mp-card-form" onSubmit={(event) => event.preventDefault()}>
                     <div className="space-y-2.5">
                       <div className="space-y-1">
                         <Label className="text-[10px]">Número do Cartão</Label>
                         <div id="mp-card-number" className="h-9 rounded-md border border-border bg-secondary/50" style={{ position: "relative", zIndex: 10 }} />
                       </div>
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
                           <Label className="text-[10px]">Validade</Label>
@@ -430,6 +478,7 @@ export default function CheckoutDialog({
                           <div id="mp-security-code" className="h-9 rounded-md border border-border bg-secondary/50" style={{ position: "relative", zIndex: 10 }} />
                         </div>
                       </div>
+
                       <div className="space-y-1">
                         <Label className="text-[10px]">Nome no Cartão</Label>
                         <input
@@ -440,6 +489,7 @@ export default function CheckoutDialog({
                         />
                         {cardErrors.name && <p className="text-[9px] text-destructive">{cardErrors.name}</p>}
                       </div>
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
                           <Label className="text-[10px]">Tipo Doc.</Label>
@@ -458,18 +508,22 @@ export default function CheckoutDialog({
                           {cardErrors.cpf && <p className="text-[9px] text-destructive">{cardErrors.cpf}</p>}
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <Label className="text-[10px]">Parcelas</Label>
-                        <select id="mp-installments" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">Banco / Emissor</Label>
+                          <select id="mp-issuer" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">Parcelas</Label>
+                          <select id="mp-installments" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
+                        </div>
                       </div>
                     </div>
                   </form>
                 </div>
-                <Button
-                  onClick={handleCardPayment}
-                  disabled={processing}
-                  className="w-full gap-2 text-xs"
-                >
+
+                <Button onClick={handleCardPayment} disabled={processing || !payerEmail} className="w-full gap-2 text-xs">
                   {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
                   {processing ? "Processando..." : `Pagar R$ ${totalAmount.toFixed(2).replace(".", ",")}`}
                 </Button>
