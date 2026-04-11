@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Package, ArrowLeft, ShoppingBag, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import CheckoutDialog from "@/components/store/CheckoutDialog";
 
 interface ProductVariant {
   id: string;
@@ -76,8 +77,22 @@ function ProductView({ product }: { product: Product }) {
     activeVariants[0] || null
   );
   const [quantity, setQuantity] = useState(1);
-  const [buying, setBuying] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { toast } = useToast();
+
+  // Load MercadoPago public key from gateway settings
+  const { data: mpPublicKey } = useQuery({
+    queryKey: ["mp-public-key"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("gateway_settings")
+        .select("config")
+        .eq("provider", "mercadopago")
+        .eq("is_active", true)
+        .single();
+      return (data?.config as any)?.public_key || null;
+    },
+  });
 
   const displayPrice = selectedVariant ? selectedVariant.price : product.base_price;
   const imageUrl = selectedVariant?.image_url;
