@@ -98,6 +98,10 @@ serve(async (req) => {
     const idempotencyKey = crypto.randomUUID();
 
     // Build order payload per MercadoPago Orders API v1 docs
+    // Build webhook notification URL
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const notificationUrl = `${supabaseUrl}/functions/v1/mp-webhook`;
+
     const orderPayload: Record<string, unknown> = {
       type: "online",
       processing_mode: "automatic",
@@ -109,6 +113,7 @@ serve(async (req) => {
         quantity,
         paymentMethod,
       }),
+      notification_url: notificationUrl,
       payer: {
         email,
       },
