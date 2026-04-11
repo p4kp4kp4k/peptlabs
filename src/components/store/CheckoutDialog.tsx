@@ -38,6 +38,9 @@ export default function CheckoutDialog({
   const [tab, setTab] = useState("pix");
   const [processing, setProcessing] = useState(false);
   const [payerEmail, setPayerEmail] = useState("");
+  const [sdkReady, setSdkReady] = useState(
+    typeof window !== "undefined" && typeof window.MercadoPago !== "undefined"
+  );
 
   // PIX state
   const [pixQrCode, setPixQrCode] = useState<string | null>(null);
@@ -50,6 +53,17 @@ export default function CheckoutDialog({
   const cardFormRef = useRef<HTMLDivElement>(null);
   const mpInstanceRef = useRef<any>(null);
   const cardFormInstanceRef = useRef<any>(null);
+
+  const cleanupCardForm = () => {
+    if (cardFormInstanceRef.current) {
+      try {
+        cardFormInstanceRef.current.unmount();
+      } catch {
+        // ignore SDK unmount errors
+      }
+      cardFormInstanceRef.current = null;
+    }
+  };
 
   const formatCPF = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -76,8 +90,7 @@ export default function CheckoutDialog({
 
   const handleCPFInput = (e: React.FormEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
-    const formatted = formatCPF(input.value);
-    input.value = formatted;
+    input.value = formatCPF(input.value);
     setCardErrors((prev) => ({ ...prev, cpf: undefined }));
   };
 
@@ -107,59 +120,104 @@ export default function CheckoutDialog({
     });
   }, []);
 
-  // Initialize MercadoPago SDK for card
+  // Ensure MercadoPago SDK is available when card tab is opened
   useEffect(() => {
-    if (!open || !publicKey || tab !== "card") return;
-    
-    try {
-      if (window.MercadoPago && !mpInstanceRef.current) {
-        mpInstanceRef.current = new window.MercadoPago(publicKey, { locale: "pt-BR" });
+    if (!open || tab !== "card" || !publicKey) return;
+
+    let cancelled = false;
+    const sdkUrl = "https://sdk.mercadopago.com/js/v2";
+    const setReady = () => {
+      if (!cancelled) setSdkReady(true);
+    };
+    const handleError = () => {
+      if (!cancelled) {
+        toast({
+          title: "Erro no cartão",
+          description: "Não foi possível carregar o formulário seguro do cartão.",
+          variant: "destructive",
+        });
       }
+    };
+
+    if (window.MercadoPago) {
+      setReady();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    let script = document.querySelector(`script[src="${sdkUrl}"]`) as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement("script");
+      script.src = sdkUrl;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+
+    script.addEventListener("load", setReady);
+    script.addEventListener("error", handleError);
+
+    return () => {
+      cancelled = true;
+      script?.removeEventListener("load", setReady);
+      script?.removeEventListener("error", handleError);
+    };
+  }, [open, publicKey, tab, toast]);
+
+  // Initialize MercadoPago SDK instance
+  useEffect(() => {
+    if (!open || !publicKey || tab !== "card" || !sdkReady || !window.MercadoPago) return;
+
+    try {
+      mpInstanceRef.current = new window.MercadoPago(publicKey, { locale: "pt-BR" });
     } catch (err) {
       console.error("MercadoPago SDK init error:", err);
     }
 
     return () => {
-      if (cardFormInstanceRef.current) {
-        try { cardFormInstanceRef.current.unmount(); } catch {}
-        cardFormInstanceRef.current = null;
-      }
+      cleanupCardForm();
+      mpInstanceRef.current = null;
     };
-  }, [open, publicKey, tab]);
+  }, [open, publicKey, sdkReady, tab]);
 
-  // Mount card form
+  // Mount card form after SDK and DOM are ready
   useEffect(() => {
-    if (!open || tab !== "card" || !mpInstanceRef.current || !cardFormRef.current) return;
-    if (cardFormInstanceRef.current) return;
+    if (!open || tab !== "card" || !sdkReady || !mpInstanceRef.current || !cardFormRef.current) return;
 
-    try {
-      cardFormInstanceRef.current = mpInstanceRef.current.cardForm({
-        amount: totalAmount.toFixed(2),
-        iframe: true,
-        form: {
-          id: "mp-card-form",
-          cardNumber: { id: "mp-card-number", placeholder: "Número do cartão" },
-          expirationDate: { id: "mp-expiration-date", placeholder: "MM/AA" },
-          securityCode: { id: "mp-security-code", placeholder: "CVV" },
-          cardholderName: { id: "mp-cardholder-name", placeholder: "Nome no cartão" },
-          identificationNumber: { id: "mp-doc-number", placeholder: "CPF" },
-          identificationType: { id: "mp-doc-type" },
-          installments: { id: "mp-installments" },
-        },
-        callbacks: {
-          onFormMounted: (error: any) => {
-            if (error) console.warn("CardForm mount error:", error);
+    const frame = window.requestAnimationFrame(() => {
+      cleanupCardForm();
+
+      try {
+        cardFormInstanceRef.current = mpInstanceRef.current.cardForm({
+          amount: totalAmount.toFixed(2),
+          iframe: true,
+          form: {
+            id: "mp-card-form",
+            cardNumber: { id: "mp-card-number", placeholder: "Número do cartão" },
+            expirationDate: { id: "mp-expiration-date", placeholder: "MM/AA" },
+            securityCode: { id: "mp-security-code", placeholder: "CVV" },
+            cardholderName: { id: "mp-cardholder-name", placeholder: "Nome no cartão" },
+            identificationType: { id: "mp-doc-type" },
+            identificationNumber: { id: "mp-doc-number", placeholder: "CPF" },
+            installments: { id: "mp-installments" },
           },
-          onSubmit: async (event: any) => {
-            event.preventDefault();
-            handleCardPayment();
+          callbacks: {
+            onFormMounted: (error: any) => {
+              if (error) console.warn("CardForm mount error:", error);
+            },
+            onSubmit: async (event: any) => {
+              event.preventDefault();
+              handleCardPayment();
+            },
           },
-        },
-      });
-    } catch (err) {
-      console.error("CardForm init error:", err);
-    }
-  }, [open, tab, totalAmount]);
+        });
+      } catch (err) {
+        console.error("CardForm init error:", err);
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [open, sdkReady, tab, totalAmount]);
 
   const handlePixPayment = async () => {
     setProcessing(true);
