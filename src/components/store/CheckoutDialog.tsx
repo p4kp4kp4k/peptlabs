@@ -303,42 +303,44 @@ export default function CheckoutDialog({
               </div>
             ) : (
               <>
-                <form id="mp-card-form" onSubmit={(e) => e.preventDefault()}>
-                  <div className="space-y-2.5">
-                    <div className="space-y-1">
-                      <Label className="text-[10px]">Número do Cartão</Label>
-                      <div id="mp-card-number" className="h-9 rounded-md border border-border bg-secondary/50" style={{ position: "relative", zIndex: 10 }} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
+                <div ref={cardFormRef}>
+                  <form id="mp-card-form" onSubmit={(e) => e.preventDefault()}>
+                    <div className="space-y-2.5">
                       <div className="space-y-1">
-                        <Label className="text-[10px]">Validade</Label>
-                        <div id="mp-expiration-date" className="h-9 rounded-md border border-border bg-secondary/50" style={{ position: "relative", zIndex: 10 }} />
+                        <Label className="text-[10px]">Número do Cartão</Label>
+                        <div id="mp-card-number" className="h-9 rounded-md border border-border bg-secondary/50" style={{ position: "relative", zIndex: 10 }} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">Validade</Label>
+                          <div id="mp-expiration-date" className="h-9 rounded-md border border-border bg-secondary/50" style={{ position: "relative", zIndex: 10 }} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">CVV</Label>
+                          <div id="mp-security-code" className="h-9 rounded-md border border-border bg-secondary/50" style={{ position: "relative", zIndex: 10 }} />
+                        </div>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[10px]">CVV</Label>
-                        <div id="mp-security-code" className="h-9 rounded-md border border-border bg-secondary/50" style={{ position: "relative", zIndex: 10 }} />
+                        <Label className="text-[10px]">Nome no Cartão</Label>
+                        <input id="mp-cardholder-name" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
                       </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[10px]">Nome no Cartão</Label>
-                      <input id="mp-cardholder-name" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">Tipo Doc.</Label>
+                          <select id="mp-doc-type" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">CPF</Label>
+                          <input id="mp-doc-number" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
+                        </div>
+                      </div>
                       <div className="space-y-1">
-                        <Label className="text-[10px]">Tipo Doc.</Label>
-                        <select id="mp-doc-type" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[10px]">CPF</Label>
-                        <input id="mp-doc-number" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
+                        <Label className="text-[10px]">Parcelas</Label>
+                        <select id="mp-installments" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
                       </div>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-[10px]">Parcelas</Label>
-                      <select id="mp-installments" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" style={{ position: "relative", zIndex: 10 }} />
-                    </div>
-                  </div>
-                </form>
+                  </form>
+                </div>
                 <Button
                   onClick={handleCardPayment}
                   disabled={processing}
