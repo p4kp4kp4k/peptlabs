@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AdminProducts from "@/components/admin/AdminProducts";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import {
   Users, Layers, BookOpen, Shield, TrendingUp, Search, Trash2, Edit,
-  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock
+  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag
 } from "lucide-react";
 import { fetchAllProfiles, fetchProfileCount } from "@/services/userService";
 import { fetchPeptides, fetchPeptideCount, deletePeptide } from "@/services/peptideService";
@@ -136,6 +137,9 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="sync" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Database className="h-3.5 w-3.5" /> Sync
+          </TabsTrigger>
+          <TabsTrigger value="products" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <ShoppingBag className="h-3.5 w-3.5" /> Produtos
           </TabsTrigger>
           <TabsTrigger value="security" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Shield className="h-3.5 w-3.5" /> Segurança
@@ -285,6 +289,11 @@ export default function Admin() {
         {/* Sync Tab */}
         <TabsContent value="sync">
           <SyncPanel />
+        </TabsContent>
+
+        {/* Products Tab */}
+        <TabsContent value="products">
+          <AdminProducts />
         </TabsContent>
 
         {/* Security Tab */}
