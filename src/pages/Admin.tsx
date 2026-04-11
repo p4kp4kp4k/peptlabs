@@ -749,6 +749,35 @@ function PaymentsPanel() {
             </p>
           </div>
 
+          {/* Webhook URL */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium flex items-center gap-1.5">
+              <Webhook className="h-3.5 w-3.5 text-primary" />
+              URL do Webhook (Notificações)
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                value={`https://rvbhlpgrzvhtojuvxacb.supabase.co/functions/v1/mp-webhook`}
+                readOnly
+                className="h-8 text-[10px] font-mono bg-secondary/30"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-[10px] gap-1 shrink-0"
+                onClick={() => {
+                  navigator.clipboard.writeText("https://rvbhlpgrzvhtojuvxacb.supabase.co/functions/v1/mp-webhook");
+                  toast({ title: "Copiado!", description: "URL do webhook copiada." });
+                }}
+              >
+                <Copy className="h-3 w-3" /> Copiar
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Cadastre esta URL no painel do MercadoPago → Suas integrações → Webhooks → Tópico: <strong>Order</strong>
+            </p>
+          </div>
+
           {/* Methods accepted */}
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Métodos aceitos</Label>
