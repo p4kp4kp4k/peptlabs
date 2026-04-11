@@ -1,0 +1,361 @@
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle
+} from "@/components/ui/dialog";
+import { Loader2, CreditCard, QrCode, Copy, CheckCircle2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+declare global {
+  interface Window {
+    MercadoPago: any;
+  }
+}
+
+interface CheckoutDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  product: {
+    id: string;
+    name: string;
+  };
+  variantId: string | null;
+  variantName: string | null;
+  unitPrice: number;
+  quantity: number;
+  publicKey: string | null;
+}
+
+export default function CheckoutDialog({
+  open, onOpenChange, product, variantId, variantName, unitPrice, quantity, publicKey
+}: CheckoutDialogProps) {
+  const { toast } = useToast();
+  const totalAmount = unitPrice * quantity;
+  const [tab, setTab] = useState("pix");
+  const [processing, setProcessing] = useState(false);
+  const [payerEmail, setPayerEmail] = useState("");
+
+  // PIX state
+  const [pixQrCode, setPixQrCode] = useState<string | null>(null);
+  const [pixQrBase64, setPixQrBase64] = useState<string | null>(null);
+  const [pixCopied, setPixCopied] = useState(false);
+
+  // Card state
+  const [cardResult, setCardResult] = useState<any>(null);
+  const cardFormRef = useRef<HTMLDivElement>(null);
+  const mpInstanceRef = useRef<any>(null);
+  const cardFormInstanceRef = useRef<any>(null);
+
+  // Load user email
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) setPayerEmail(data.user.email);
+    });
+  }, []);
+
+  // Initialize MercadoPago SDK for card
+  useEffect(() => {
+    if (!open || !publicKey || tab !== "card") return;
+    
+    try {
+      if (window.MercadoPago && !mpInstanceRef.current) {
+        mpInstanceRef.current = new window.MercadoPago(publicKey, { locale: "pt-BR" });
+      }
+    } catch (err) {
+      console.error("MercadoPago SDK init error:", err);
+    }
+
+    return () => {
+      if (cardFormInstanceRef.current) {
+        try { cardFormInstanceRef.current.unmount(); } catch {}
+        cardFormInstanceRef.current = null;
+      }
+    };
+  }, [open, publicKey, tab]);
+
+  // Mount card form
+  useEffect(() => {
+    if (!open || tab !== "card" || !mpInstanceRef.current || !cardFormRef.current) return;
+    if (cardFormInstanceRef.current) return;
+
+    try {
+      cardFormInstanceRef.current = mpInstanceRef.current.cardForm({
+        amount: totalAmount.toFixed(2),
+        iframe: true,
+        form: {
+          id: "mp-card-form",
+          cardNumber: { id: "mp-card-number", placeholder: "Número do cartão" },
+          expirationDate: { id: "mp-expiration-date", placeholder: "MM/AA" },
+          securityCode: { id: "mp-security-code", placeholder: "CVV" },
+          cardholderName: { id: "mp-cardholder-name", placeholder: "Nome no cartão" },
+          identificationNumber: { id: "mp-doc-number", placeholder: "CPF" },
+          identificationType: { id: "mp-doc-type" },
+          installments: { id: "mp-installments" },
+        },
+        callbacks: {
+          onFormMounted: (error: any) => {
+            if (error) console.warn("CardForm mount error:", error);
+          },
+          onSubmit: async (event: any) => {
+            event.preventDefault();
+            handleCardPayment();
+          },
+        },
+      });
+    } catch (err) {
+      console.error("CardForm init error:", err);
+    }
+  }, [open, tab, totalAmount]);
+
+  const handlePixPayment = async () => {
+    setProcessing(true);
+    setPixQrCode(null);
+    setPixQrBase64(null);
+
+    try {
+      const res = await supabase.functions.invoke("create-mp-checkout", {
+        body: {
+          productId: product.id,
+          variantId,
+          quantity,
+          paymentMethod: "pix",
+          payerEmail,
+        },
+      });
+
+      if (res.error) throw new Error(res.error.message);
+      const data = res.data;
+
+      if (data.error) {
+        throw new Error(data.details || data.error);
+      }
+
+      if (data.pix) {
+        setPixQrCode(data.pix.qrCode);
+        setPixQrBase64(data.pix.qrCodeBase64);
+      } else {
+        toast({ title: "PIX gerado", description: `Pedido: ${data.orderId} — Status: ${data.status}` });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro no PIX", description: err.message, variant: "destructive" });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleCardPayment = async () => {
+    if (!cardFormInstanceRef.current) {
+      toast({ title: "Erro", description: "Formulário de cartão não carregado", variant: "destructive" });
+      return;
+    }
+
+    setProcessing(true);
+    setCardResult(null);
+
+    try {
+      const cardFormData = cardFormInstanceRef.current.getCardFormData();
+      const token = cardFormData.token;
+
+      if (!token) {
+        throw new Error("Não foi possível tokenizar o cartão. Verifique os dados.");
+      }
+
+      const res = await supabase.functions.invoke("create-mp-checkout", {
+        body: {
+          productId: product.id,
+          variantId,
+          quantity,
+          paymentMethod: "credit_card",
+          cardToken: token,
+          installments: parseInt(cardFormData.installments) || 1,
+          payerEmail,
+        },
+      });
+
+      if (res.error) throw new Error(res.error.message);
+      const data = res.data;
+
+      if (data.error) {
+        throw new Error(data.details || data.error);
+      }
+
+      setCardResult(data);
+
+      if (data.card?.status === "approved") {
+        toast({ title: "Pagamento aprovado! ✅", description: `Pedido #${data.orderId}` });
+      } else {
+        toast({
+          title: "Pagamento processado",
+          description: `Status: ${data.card?.statusDetail || data.status}`,
+          variant: data.card?.status === "rejected" ? "destructive" : "default",
+        });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro no cartão", description: err.message, variant: "destructive" });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const copyPixCode = () => {
+    if (pixQrCode) {
+      navigator.clipboard.writeText(pixQrCode);
+      setPixCopied(true);
+      setTimeout(() => setPixCopied(false), 2000);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-base" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            Finalizar Compra
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Order summary */}
+        <div className="rounded-md border border-border/40 bg-secondary/20 p-3 space-y-1">
+          <p className="text-xs font-medium text-foreground">{product.name}{variantName ? ` — ${variantName}` : ""}</p>
+          <p className="text-[10px] text-muted-foreground">{quantity}x R$ {unitPrice.toFixed(2).replace(".", ",")}</p>
+          <p className="text-sm font-bold text-primary" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            Total: R$ {totalAmount.toFixed(2).replace(".", ",")}
+          </p>
+        </div>
+
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="w-full h-9 bg-secondary/60 p-0.5">
+            <TabsTrigger value="pix" className="flex-1 text-[11px] gap-1.5 h-8 data-[state=active]:bg-card">
+              <QrCode className="h-3.5 w-3.5" /> PIX
+            </TabsTrigger>
+            <TabsTrigger value="card" className="flex-1 text-[11px] gap-1.5 h-8 data-[state=active]:bg-card">
+              <CreditCard className="h-3.5 w-3.5" /> Cartão
+            </TabsTrigger>
+          </TabsList>
+
+          {/* PIX Tab */}
+          <TabsContent value="pix" className="space-y-3 mt-3">
+            {!pixQrCode ? (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">E-mail</Label>
+                  <Input
+                    value={payerEmail}
+                    onChange={(e) => setPayerEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <Button
+                  onClick={handlePixPayment}
+                  disabled={processing || !payerEmail}
+                  className="w-full gap-2 text-xs"
+                >
+                  {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <QrCode className="h-3.5 w-3.5" />}
+                  {processing ? "Gerando PIX..." : "Gerar QR Code PIX"}
+                </Button>
+              </>
+            ) : (
+              <div className="space-y-3 text-center">
+                <p className="text-xs text-muted-foreground">Escaneie o QR Code ou copie o código:</p>
+                {pixQrBase64 && (
+                  <div className="flex justify-center">
+                    <img
+                      src={`data:image/png;base64,${pixQrBase64}`}
+                      alt="QR Code PIX"
+                      className="w-48 h-48 rounded-md border border-border"
+                    />
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Input
+                    value={pixQrCode || ""}
+                    readOnly
+                    className="h-8 text-[9px] font-mono flex-1"
+                  />
+                  <Button size="sm" variant="outline" onClick={copyPixCode} className="h-8 gap-1 text-[10px]">
+                    {pixCopied ? <CheckCircle2 className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                    {pixCopied ? "Copiado" : "Copiar"}
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">O pagamento será confirmado automaticamente.</p>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Card Tab */}
+          <TabsContent value="card" className="space-y-3 mt-3">
+            {!publicKey ? (
+              <div className="text-center py-4">
+                <p className="text-xs text-muted-foreground">
+                  Pagamento por cartão não configurado. Configure a Public Key do MercadoPago no painel admin.
+                </p>
+              </div>
+            ) : cardResult?.card?.status === "approved" ? (
+              <div className="text-center py-6 space-y-2">
+                <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto" />
+                <p className="text-sm font-semibold text-foreground">Pagamento Aprovado!</p>
+                <p className="text-[10px] text-muted-foreground">Pedido #{cardResult.orderId}</p>
+              </div>
+            ) : (
+              <>
+                <form id="mp-card-form" onSubmit={(e) => e.preventDefault()}>
+                  <div className="space-y-2.5">
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Número do Cartão</Label>
+                      <div id="mp-card-number" className="h-9 rounded-md border border-border bg-secondary/50" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Validade</Label>
+                        <div id="mp-expiration-date" className="h-9 rounded-md border border-border bg-secondary/50" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">CVV</Label>
+                        <div id="mp-security-code" className="h-9 rounded-md border border-border bg-secondary/50" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Nome no Cartão</Label>
+                      <input id="mp-cardholder-name" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Tipo Doc.</Label>
+                        <select id="mp-doc-type" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">CPF</Label>
+                        <input id="mp-doc-number" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Parcelas</Label>
+                      <select id="mp-installments" className="flex h-9 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-xs" />
+                    </div>
+                  </div>
+                </form>
+                <Button
+                  onClick={handleCardPayment}
+                  disabled={processing}
+                  className="w-full gap-2 text-xs"
+                >
+                  {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
+                  {processing ? "Processando..." : `Pagar R$ ${totalAmount.toFixed(2).replace(".", ",")}`}
+                </Button>
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <p className="text-[9px] text-center text-muted-foreground/50">
+          Pagamento processado com segurança pelo Mercado Pago
+        </p>
+      </DialogContent>
+    </Dialog>
+  );
+}

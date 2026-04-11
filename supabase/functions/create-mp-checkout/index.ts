@@ -1,8 +1,8 @@
 /**
  * create-mp-checkout/index.ts
  * ═══════════════════════════
- * Creates a MercadoPago checkout preference for product purchase.
- * Supports PIX and credit card payments.
+ * Creates a MercadoPago order via Orders API for transparent checkout.
+ * Supports PIX (bank_transfer) and credit card payments.
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
@@ -38,29 +38,21 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return jsonResponse({ error: "Invalid token" }, 401);
     }
 
-    // Get MercadoPago access token
     const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
     if (!accessToken) {
-      return jsonResponse(
-        { error: "MercadoPago not configured" },
-        500
-      );
+      return jsonResponse({ error: "MercadoPago not configured" }, 500);
     }
 
-    // Parse request body
     const body = await req.json();
-    const { productId, variantId, quantity, successUrl, cancelUrl } = body;
+    const { productId, variantId, quantity, paymentMethod, cardToken, installments, payerEmail } = body;
 
-    if (!productId || !quantity || quantity < 1) {
-      return jsonResponse({ error: "Invalid request: productId and quantity required" }, 400);
+    if (!productId || !quantity || quantity < 1 || !paymentMethod) {
+      return jsonResponse({ error: "Missing required fields: productId, quantity, paymentMethod" }, 400);
     }
 
     // Fetch product
@@ -80,106 +72,144 @@ serve(async (req) => {
       return jsonResponse({ error: "Product not found" }, 404);
     }
 
-    // Fetch variant if specified
-    let variantName = "";
     let unitPrice = Number(product.base_price);
+    let variantName = "";
 
     if (variantId) {
-      const { data: variant, error: variantError } = await adminClient
+      const { data: variant } = await adminClient
         .from("product_variants")
         .select("*")
         .eq("id", variantId)
         .eq("product_id", productId)
         .single();
 
-      if (variantError || !variant) {
-        return jsonResponse({ error: "Variant not found" }, 404);
+      if (variant) {
+        if (variant.stock < quantity) {
+          return jsonResponse({ error: "Estoque insuficiente" }, 400);
+        }
+        unitPrice = Number(variant.price) || unitPrice;
+        variantName = variant.color_name || "";
       }
-
-      if (variant.stock < quantity) {
-        return jsonResponse({ error: "Insufficient stock" }, 400);
-      }
-
-      unitPrice = Number(variant.price) || unitPrice;
-      variantName = variant.color_name ? ` - ${variant.color_name}` : "";
     }
 
-    const origin = req.headers.get("origin") || "https://peptlabs.lovable.app";
+    const totalAmount = (unitPrice * quantity).toFixed(2);
+    const email = payerEmail || user.email || "";
+    const idempotencyKey = crypto.randomUUID();
 
-    // Create MercadoPago preference
-    const preference = {
-      items: [
-        {
-          title: `${product.name}${variantName}`,
-          quantity: Number(quantity),
-          unit_price: unitPrice,
-          currency_id: "BRL",
-        },
-      ],
-      payer: {
-        email: user.email || "",
-      },
-      payment_methods: {
-        excluded_payment_types: [],
-        installments: 12,
-      },
-      back_urls: {
-        success: successUrl || `${origin}/app/store?payment=success`,
-        failure: `${origin}/app/store?payment=failure`,
-        pending: `${origin}/app/store?payment=pending`,
-      },
-      auto_return: "approved",
+    // Build order payload based on payment method
+    let orderPayload: any = {
+      type: "online",
+      processing_mode: "automatic",
+      total_amount: totalAmount,
       external_reference: JSON.stringify({
         userId: user.id,
         productId,
         variantId: variantId || null,
         quantity,
       }),
-      statement_descriptor: "PeptiLab",
+      payer: {
+        email,
+      },
+      transactions: {
+        payments: [] as any[],
+      },
+      description: `${product.name}${variantName ? ` - ${variantName}` : ""} x${quantity}`,
     };
 
-    const mpResponse = await fetch(
-      "https://api.mercadopago.com/checkout/preferences",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+    if (paymentMethod === "pix") {
+      orderPayload.transactions.payments.push({
+        amount: totalAmount,
+        payment_method: {
+          id: "pix",
+          type: "bank_transfer",
         },
-        body: JSON.stringify(preference),
+      });
+    } else if (paymentMethod === "credit_card") {
+      if (!cardToken) {
+        return jsonResponse({ error: "Card token required for credit card payment" }, 400);
       }
-    );
+      orderPayload.transactions.payments.push({
+        amount: totalAmount,
+        payment_method: {
+          id: "master", // Will be auto-detected from token
+          type: "credit_card",
+          token: cardToken,
+          installments: installments || 1,
+        },
+      });
+    } else {
+      return jsonResponse({ error: "Invalid payment method. Use 'pix' or 'credit_card'" }, 400);
+    }
+
+    // Create order via MercadoPago Orders API
+    const mpResponse = await fetch("https://api.mercadopago.com/v1/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        "X-Idempotency-Key": idempotencyKey,
+      },
+      body: JSON.stringify(orderPayload),
+    });
 
     const mpData = await mpResponse.json();
 
     if (!mpResponse.ok) {
-      console.error("MercadoPago error:", mpData);
-      return jsonResponse(
-        { error: "Failed to create checkout", details: mpData.message },
-        500
-      );
+      console.error("MercadoPago Orders API error:", JSON.stringify(mpData));
+      return jsonResponse({
+        error: "Payment processing failed",
+        details: mpData.message || mpData.error || "Unknown error",
+        mpStatus: mpResponse.status,
+      }, 400);
     }
 
     // Log billing event
     await adminClient.from("billing_events").insert({
       user_id: user.id,
-      event_type: "store_checkout_created",
+      event_type: "store_order_created",
       provider: "mercadopago",
       payload: {
+        orderId: mpData.id,
         productId,
         variantId,
         quantity,
-        unitPrice,
-        total: unitPrice * quantity,
-        preferenceId: mpData.id,
+        totalAmount,
+        paymentMethod,
+        status: mpData.status,
       },
     });
 
-    return jsonResponse({
-      checkoutUrl: mpData.init_point,
-      sandboxUrl: mpData.sandbox_init_point,
-      preferenceId: mpData.id,
-    });
+    // Extract relevant response data
+    const payment = mpData.transactions?.payments?.[0];
+    const responseData: any = {
+      orderId: mpData.id,
+      status: mpData.status,
+      paymentStatus: payment?.status,
+    };
+
+    // For PIX, return QR code data
+    if (paymentMethod === "pix" && payment) {
+      const pixData = payment.payment_method?.digital_wallet?.transaction_data ||
+                      payment.point_of_interaction?.transaction_data;
+      if (pixData) {
+        responseData.pix = {
+          qrCode: pixData.qr_code,
+          qrCodeBase64: pixData.qr_code_base64,
+          ticketUrl: pixData.ticket_url,
+        };
+      }
+    }
+
+    // For card, return approval status
+    if (paymentMethod === "credit_card" && payment) {
+      responseData.card = {
+        status: payment.status,
+        statusDetail: payment.status_detail,
+        authorizationCode: payment.authorization_code,
+      };
+    }
+
+    return jsonResponse(responseData);
   } catch (err) {
     if (err instanceof Response) return err;
     console.error("create-mp-checkout error:", err);
