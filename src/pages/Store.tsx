@@ -71,7 +71,6 @@ export default function Store() {
             </Link>
           ))}
         </div>
-        </div>
       )}
     </div>
   );
