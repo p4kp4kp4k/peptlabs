@@ -34,6 +34,7 @@ const Learn = lazy(() => import("./pages/Learn"));
 const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const Templates = lazy(() => import("./pages/Templates"));
 const StackDetail = lazy(() => import("./pages/StackDetail"));
+const Store = lazy(() => import("./pages/Store"));
 
 const queryClient = new QueryClient();
 
@@ -102,6 +103,7 @@ const App = () => (
             <Route path="/app/admin" element={<AppRoute requireAdmin><Admin /></AppRoute>} />
             <Route path="/app/admin/billing" element={<AppRoute requireAdmin><AdminBilling /></AppRoute>} />
             <Route path="/app/templates" element={<AppRoute><Templates /></AppRoute>} />
+            <Route path="/app/store" element={<AppRoute><Store /></AppRoute>} />
             <Route path="/peptide/:slug" element={<AppRoute><PeptideDetail /></AppRoute>} />
 
             <Route path="*" element={<NotFound />} />
