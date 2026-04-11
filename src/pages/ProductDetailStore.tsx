@@ -80,17 +80,17 @@ function ProductView({ product }: { product: Product }) {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { toast } = useToast();
 
-  // Load MercadoPago public key from gateway settings
-  const { data: mpPublicKey } = useQuery({
-    queryKey: ["mp-public-key"],
+  // Load MercadoPago public config via backend-safe endpoint
+  const { data: mpConfig } = useQuery({
+    queryKey: ["mp-public-config"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("gateway_settings")
-        .select("config")
-        .eq("provider", "mercadopago")
-        .eq("is_active", true)
-        .single();
-      return (data?.config as any)?.public_key || null;
+      const { data, error } = await supabase.functions.invoke("get-mp-public-config");
+      if (error) throw error;
+      return (data ?? null) as {
+        publicKey: string | null;
+        cardEnabled: boolean;
+        environment: string | null;
+      } | null;
     },
   });
 
@@ -239,7 +239,7 @@ function ProductView({ product }: { product: Product }) {
         variantName={selectedVariant?.color_name || null}
         unitPrice={Number(displayPrice)}
         quantity={quantity}
-        publicKey={mpPublicKey || null}
+        publicKey={mpConfig?.cardEnabled ? mpConfig.publicKey : null}
       />
     </div>
   );
