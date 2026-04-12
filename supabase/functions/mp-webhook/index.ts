@@ -94,32 +94,27 @@ function mapOrderStatus(mpStatus: string): string {
   }
 }
 
-/* ── Stock deduction (idempotent via metadata flag) ── */
+/* ── Stock deduction (atomic + idempotent) ── */
 async function decrementStock(
   adminClient: ReturnType<typeof createClient>,
   order: { variant_id: string | null; quantity: number; metadata: Record<string, unknown> | null },
-  orderId: string,
 ) {
-  if (!order.variant_id) return;
+  if (!order.variant_id) return false;
   const meta = (order.metadata ?? {}) as Record<string, unknown>;
-  if (meta.stock_decremented === true) return; // already done
+  if (meta.stock_decremented === true) return false; // already done
 
-  const { data: variant } = await adminClient
-    .from("product_variants")
-    .select("stock")
-    .eq("id", order.variant_id)
-    .single();
+  /* Atomic decrement via DB function — prevents race conditions */
+  const { error } = await adminClient.rpc("decrement_stock_safe", {
+    p_variant_id: order.variant_id,
+    p_quantity: order.quantity,
+  });
 
-  if (variant) {
-    const newStock = Math.max(0, (variant.stock ?? 0) - order.quantity);
-    await adminClient
-      .from("product_variants")
-      .update({ stock: newStock })
-      .eq("id", order.variant_id);
+  if (error) {
+    console.error("decrement_stock_safe error:", error.message);
+    return false;
   }
 
-  // Mark flag in metadata (merged in caller's update)
-  return true; // signals caller to include stock_decremented
+  return true; // signals caller to set stock_decremented flag
 }
 
 /* ── Main handler ── */
@@ -137,6 +132,27 @@ serve(async (req) => {
       return new Response("ok", { status: 200, headers: corsHeaders });
     }
 
+    /* ── Idempotency check ── */
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const mpOrderId = String(data.id);
+    const eventKey = `${action || "order"}:${mpOrderId}`;
+    const { data: existingEvent } = await adminClient
+      .from("webhook_events")
+      .select("id")
+      .eq("provider", "mercadopago")
+      .eq("provider_event_id", eventKey)
+      .eq("processed", true)
+      .maybeSingle();
+
+    if (existingEvent) {
+      console.log("Duplicate webhook — already processed:", eventKey);
+      return new Response("ok", { status: 200, headers: corsHeaders });
+    }
+
     const isValid = await validateSignature(req, String(data.id));
     if (!isValid) {
       console.error("Invalid webhook signature — rejecting");
@@ -149,12 +165,8 @@ serve(async (req) => {
       return new Response("ok", { status: 200, headers: corsHeaders });
     }
 
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
-    const orderId = String(data.id);
+    const orderId = mpOrderId;
     const orderResponse = await fetch(`https://api.mercadopago.com/v1/orders/${orderId}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -186,7 +198,7 @@ serve(async (req) => {
     await adminClient.from("webhook_events").insert({
       provider: "mercadopago",
       event_type: action || `order.${order.status}`,
-      provider_event_id: orderId,
+      provider_event_id: eventKey,
       payload: {
         orderId: order.id,
         status: order.status,
@@ -249,7 +261,7 @@ serve(async (req) => {
       /* ── Stock deduction on approval ── */
       let stockDecremented = (existingOrder.metadata as any)?.stock_decremented === true;
       if (paymentStatus === "approved" && !stockDecremented) {
-        const did = await decrementStock(adminClient, existingOrder, existingOrder.id);
+        const did = await decrementStock(adminClient, existingOrder);
         if (did) stockDecremented = true;
       }
 
