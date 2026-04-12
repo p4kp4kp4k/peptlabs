@@ -209,11 +209,27 @@ export default function CheckoutDialog({
           from { opacity: 0; transform: translateY(12px) scale(0.98); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
+        .checkout-modal-inner {
+          padding: 28px 28px 24px;
+        }
+        .checkout-card-container {
+          padding: 24px;
+          border-radius: 20px;
+        }
+        @media (max-width: 480px) {
+          .checkout-modal-inner {
+            padding: 20px 16px 18px;
+          }
+          .checkout-card-container {
+            padding: 14px;
+            border-radius: 14px;
+          }
+        }
       `}</style>
 
       <div className="flex min-h-full items-start justify-center sm:items-center">
         <div
-          className="relative w-full max-w-[420px]"
+          className="relative w-full max-w-[420px] box-border"
           style={{
             background: "#0A0E13",
             border: "1px solid rgba(255,255,255,0.06)",
@@ -231,7 +247,7 @@ export default function CheckoutDialog({
             }}
           />
 
-          <div style={{ padding: "28px 28px 24px" }}>
+          <div className="checkout-modal-inner">
             {/* Close button */}
             <button
               type="button"
@@ -425,11 +441,10 @@ export default function CheckoutDialog({
             <div style={{ display: tab === "card" ? "block" : "none" }}>
               {/* Premium payment card container */}
               <div
+                className="checkout-card-container"
                 style={{
                   background: "linear-gradient(180deg, #0B1220 0%, #0A0F1A 100%)",
                   border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: "20px",
-                  padding: "24px",
                   boxShadow: "0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03)",
                   position: "relative",
                   overflow: "hidden",
