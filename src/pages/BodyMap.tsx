@@ -169,14 +169,6 @@ export default function BodyMap() {
   <FreeGateOverlay
     pageTitle="Mapa de Aplicação Corporal"
     description="Assine para acessar o mapa interativo de locais de injeção com técnica detalhada e diário de rotação semanal."
-    comparisonRows={[
-      ["Mapa interativo de locais", "✗", "✓"],
-      ["Técnica detalhada por local", "✗", "✓"],
-      ["Diário de rotação semanal", "✗", "✓"],
-      ["Sugestão automática de próximo local", "✗", "✓"],
-      ["Ângulos e tipos de agulha", "✗", "✓"],
-      ["Prevenção de lipohipertrofia", "✗", "✓"],
-    ]}
   >
     <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
       {/* Header */}
