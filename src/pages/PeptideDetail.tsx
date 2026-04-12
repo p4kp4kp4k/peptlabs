@@ -207,6 +207,7 @@ export default function PeptideDetail() {
   const { isAdmin, isPro } = useEntitlements();
   const { user } = useAuth();
   const hasAccess = isAdmin || isPro;
+  const canViewFullContent = hasAccess; // Free & anonymous users see locked sections
   const { data: allPeptides = [] } = usePeptides();
 
   const { data: peptide, isLoading } = useQuery({
