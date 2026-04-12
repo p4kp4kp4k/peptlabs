@@ -231,9 +231,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               )}
             </nav>
             <div className="absolute bottom-0 left-0 right-0 border-t border-border p-2.5">
-              <button onClick={handleSignOut} className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary">
-                <LogOut className="h-3 w-3" /> Sair
-              </button>
+              {user ? (
+                <button onClick={handleSignOut} className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary">
+                  <LogOut className="h-3 w-3" /> Sair
+                </button>
+              ) : (
+                <Button size="sm" className="w-full gap-1.5 text-xs h-8" onClick={() => { setSidebarOpen(false); navigate("/auth"); }}>
+                  Criar Conta <ArrowRight className="h-3 w-3" />
+                </Button>
+              )}
             </div>
           </aside>
         </div>
