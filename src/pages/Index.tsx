@@ -148,7 +148,7 @@ const Index = () => {
           {appMainNav.map((item) => (
             <Link
               key={item.path}
-              to={user ? item.path : "/auth"}
+              to={item.path}
               className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             >
               <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
@@ -161,7 +161,7 @@ const Index = () => {
           {appBottomNav.map((item) => (
             <Link
               key={item.path}
-              to={user ? item.path : "/auth"}
+              to={item.path}
               className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             >
               <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
