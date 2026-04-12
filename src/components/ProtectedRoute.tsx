@@ -21,8 +21,12 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Props
     );
   }
 
-  if (!user) return <Navigate to="/auth" replace />;
-  if (requireAdmin && !isAdmin) return <Navigate to="/app/dashboard" replace />;
+  // Admin routes still require auth
+  if (requireAdmin) {
+    if (!user) return <Navigate to="/auth" replace />;
+    if (!isAdmin) return <Navigate to="/app/dashboard" replace />;
+  }
 
+  // Non-admin routes: allow anonymous users through — gating handles access
   return <>{children}</>;
 }

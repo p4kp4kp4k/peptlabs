@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Syringe, Search, ArrowLeftRight,
   Calculator, Layers, MapPin, History, Settings, CreditCard,
-  Shield, Menu, X, LogOut, FlaskConical, Zap, BookOpen, Palette, FileText, Home, ShoppingBag
+  Shield, Menu, X, LogOut, FlaskConical, Zap, BookOpen, Palette, FileText, Home, ShoppingBag, ArrowRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -166,21 +166,34 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </PopoverContent>
           </Popover>
 
-          <div className="flex items-center gap-2 px-2.5 py-1.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-              {(profile?.display_name || user?.email || "U")[0].toUpperCase()}
+          {user ? (
+            <>
+              <div className="flex items-center gap-2 px-2.5 py-1.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                  {(profile?.display_name || user?.email || "U")[0].toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-xs font-medium text-foreground">{profile?.display_name || user?.email?.split("@")[0]}</p>
+                  <p className="truncate text-[10px] text-muted-foreground">{user?.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              >
+                <LogOut className="h-3 w-3" /> Sair
+              </button>
+            </>
+          ) : (
+            <div className="space-y-1.5 px-1">
+              <Button size="sm" className="w-full gap-1.5 text-xs h-8" onClick={() => navigate("/auth")}>
+                Criar Conta <ArrowRight className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" className="w-full text-xs h-7 text-muted-foreground" onClick={() => navigate("/auth")}>
+                Entrar
+              </Button>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="truncate text-xs font-medium text-foreground">{profile?.display_name || user?.email?.split("@")[0]}</p>
-              <p className="truncate text-[10px] text-muted-foreground">{user?.email}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleSignOut}
-            className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-          >
-            <LogOut className="h-3 w-3" /> Sair
-          </button>
+          )}
         </div>
       </aside>
 
@@ -218,9 +231,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               )}
             </nav>
             <div className="absolute bottom-0 left-0 right-0 border-t border-border p-2.5">
-              <button onClick={handleSignOut} className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary">
-                <LogOut className="h-3 w-3" /> Sair
-              </button>
+              {user ? (
+                <button onClick={handleSignOut} className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary">
+                  <LogOut className="h-3 w-3" /> Sair
+                </button>
+              ) : (
+                <Button size="sm" className="w-full gap-1.5 text-xs h-8" onClick={() => { setSidebarOpen(false); navigate("/auth"); }}>
+                  Criar Conta <ArrowRight className="h-3 w-3" />
+                </Button>
+              )}
             </div>
           </aside>
         </div>
