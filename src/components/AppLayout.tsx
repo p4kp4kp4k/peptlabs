@@ -274,11 +274,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="flex-1 overflow-y-auto scrollbar-thin">
-          {user ? children : (
-            <FreeGateOverlay>
-              {children}
-            </FreeGateOverlay>
-          )}
+          {children}
         </main>
       </div>
     </div>
