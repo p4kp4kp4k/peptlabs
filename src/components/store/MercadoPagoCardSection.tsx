@@ -330,6 +330,22 @@ export default function MercadoPagoCardSection({
     );
   }
 
+  /* Validate key format before attempting to render */
+  const isValidKey = publicKey.startsWith("APP_USR-") || publicKey.startsWith("TEST-");
+  if (!isValidKey) {
+    return (
+      <div className="space-y-2 py-4 text-center">
+        <AlertCircle className="mx-auto h-8 w-8 text-destructive" />
+        <p className="text-xs font-medium text-destructive">
+          Configuração do Mercado Pago inválida
+        </p>
+        <p className="text-[10px] text-muted-foreground">
+          Public key incompatível (prefixo: {publicKey.substring(0, 8)}…). Verifique as credenciais no painel administrativo.
+        </p>
+      </div>
+    );
+  }
+
   if (cardResult?.card?.status === "approved") {
     return (
       <div className="space-y-2 py-6 text-center">
