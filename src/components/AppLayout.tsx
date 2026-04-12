@@ -14,23 +14,6 @@ import FreeGateOverlay from "@/components/FreeGateOverlay";
 import { useThemeColor, themeOptions } from "@/hooks/useThemeColor";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-const gateMessages: Record<string, { title: string; desc: string }> = {
-  "/app/dashboard": { title: "Seu painel personalizado", desc: "Cadastre-se para acessar seu dashboard com estatísticas e atalhos." },
-  "/app/peptides": { title: "Biblioteca de Peptídeos", desc: "Cadastre-se para explorar 80+ peptídeos com protocolos e referências." },
-  "/app/finder": { title: "Finder de Protocolos", desc: "Cadastre-se para gerar protocolos personalizados com IA." },
-  "/app/compare": { title: "Comparador de Peptídeos", desc: "Cadastre-se para comparar peptídeos lado a lado." },
-  "/app/calculator": { title: "Calculadora de Dosagem", desc: "Cadastre-se para calcular dosagens e reconstituição." },
-  "/app/stacks": { title: "Stacks Sinérgicos", desc: "Cadastre-se para explorar combinações otimizadas de peptídeos." },
-  "/app/body-map": { title: "Mapa de Aplicação Corporal", desc: "Cadastre-se para acessar o mapa interativo de locais de injeção." },
-  "/app/interactions": { title: "Verificação de Interações", desc: "Cadastre-se para verificar interações entre peptídeos." },
-  "/app/learn": { title: "Central de Aprendizado", desc: "Cadastre-se para acessar guias e conteúdo educacional." },
-  "/app/templates": { title: "Templates de Protocolos", desc: "Cadastre-se para acessar templates prontos." },
-  "/app/store": { title: "Loja PeptiLab", desc: "Cadastre-se para acessar a loja." },
-  "/app/history": { title: "Seu Histórico", desc: "Cadastre-se para salvar e acessar seu histórico." },
-  "/app/settings": { title: "Configurações", desc: "Cadastre-se para personalizar sua experiência." },
-  "/app/billing": { title: "Planos e Assinatura", desc: "Cadastre-se para ver os planos disponíveis." },
-};
-
 const mainNav = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/app/dashboard" },
   { label: "Biblioteca", icon: Syringe, path: "/app/peptides" },
@@ -293,8 +276,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-y-auto scrollbar-thin">
           {user ? children : (
             <FreeGateOverlay
-              pageTitle={gateMessages[location.pathname]?.title || "Crie sua conta para acessar"}
-              description={gateMessages[location.pathname]?.desc || "Cadastre-se gratuitamente para explorar a plataforma."}
+              pageTitle="Crie sua conta para acessar"
+              description="Cadastre-se gratuitamente para explorar a plataforma. Veja peptídeos, protocolos e ferramentas avançadas."
             >
               {children}
             </FreeGateOverlay>
