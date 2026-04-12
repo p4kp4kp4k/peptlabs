@@ -172,6 +172,11 @@ export default function FreeGateOverlay({
       </div>
     );
   }
+  return (
+    <div className="relative isolate min-h-[400px]">
+      <div aria-hidden className="pointer-events-none select-none blur-[4px] brightness-[0.5] saturate-[0.3]">
+        {children}
+      </div>
 
       <div className="absolute inset-0 flex items-start justify-center overflow-y-auto pt-3 px-3">
         <div className="w-full max-w-md rounded-xl border border-border/60 bg-card shadow-2xl relative">
