@@ -132,6 +132,27 @@ serve(async (req) => {
       return new Response("ok", { status: 200, headers: corsHeaders });
     }
 
+    /* ── Idempotency check ── */
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const mpOrderId = String(data.id);
+    const eventKey = `${action || "order"}:${mpOrderId}`;
+    const { data: existingEvent } = await adminClient
+      .from("webhook_events")
+      .select("id")
+      .eq("provider", "mercadopago")
+      .eq("provider_event_id", eventKey)
+      .eq("processed", true)
+      .maybeSingle();
+
+    if (existingEvent) {
+      console.log("Duplicate webhook — already processed:", eventKey);
+      return new Response("ok", { status: 200, headers: corsHeaders });
+    }
+
     const isValid = await validateSignature(req, String(data.id));
     if (!isValid) {
       console.error("Invalid webhook signature — rejecting");
