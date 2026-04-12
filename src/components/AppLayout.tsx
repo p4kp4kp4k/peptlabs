@@ -274,7 +274,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="flex-1 overflow-y-auto scrollbar-thin">
-          {children}
+          {user ? children : (
+            <FreeGateOverlay
+              pageTitle="Crie sua conta para acessar"
+              description="Cadastre-se gratuitamente para explorar a plataforma. Veja peptídeos, protocolos e ferramentas avançadas."
+            >
+              {children}
+            </FreeGateOverlay>
+          )}
         </main>
       </div>
     </div>
