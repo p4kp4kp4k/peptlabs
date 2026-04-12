@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { CheckCircle2, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 
 declare global {
   interface Window {
@@ -332,7 +331,7 @@ export default function MercadoPagoCardSection({
 
   if (!publicKey) {
     return (
-      <div className="py-6 text-center text-[12px] text-white/30">
+      <div className="py-6 text-center text-[12px]" style={{ color: "rgba(255,255,255,0.2)" }}>
         Pagamento por cartão não configurado.
       </div>
     );
@@ -342,11 +341,11 @@ export default function MercadoPagoCardSection({
   if (!isValidKey) {
     return (
       <div className="space-y-2 py-6 text-center">
-        <AlertCircle className="mx-auto h-8 w-8 text-red-400/80" />
-        <p className="text-[12px] font-medium text-red-400/80">
+        <AlertCircle className="mx-auto h-7 w-7" style={{ color: "rgba(248,113,113,0.6)" }} />
+        <p className="text-[12px] font-medium" style={{ color: "rgba(248,113,113,0.7)" }}>
           Configuração do Mercado Pago inválida
         </p>
-        <p className="text-[10px] text-white/25">
+        <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.18)" }}>
           Public key incompatível (prefixo: {publicKey.substring(0, 8)}…). Verifique as credenciais.
         </p>
       </div>
@@ -355,36 +354,50 @@ export default function MercadoPagoCardSection({
 
   if (cardResult?.card?.status === "approved") {
     return (
-      <div className="space-y-3 py-8 text-center animate-fade-in">
+      <div className="space-y-3 py-8 text-center">
         <div
           className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
-          style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+          style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.15)" }}
         >
-          <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+          <CheckCircle2 className="h-7 w-7" style={{ color: "#34D399" }} />
         </div>
-        <p className="text-[15px] font-semibold text-white" style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif" }}>
+        <p
+          className="text-[16px] font-semibold text-white"
+          style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif" }}
+        >
           Pagamento aprovado!
         </p>
-        <p className="text-[11px] text-white/30">Pedido #{cardResult.orderId}</p>
+        <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.22)" }}>
+          Pedido #{cardResult.orderId}
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
+      {/* Error state */}
       {mountError && (
-        <div className="space-y-2 animate-fade-in">
+        <div className="space-y-2">
           <div
             className="flex items-center gap-2 rounded-xl p-3 text-[12px]"
-            style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", color: "#F87171" }}
+            style={{
+              background: "rgba(239,68,68,0.05)",
+              border: "1px solid rgba(239,68,68,0.12)",
+              color: "#F87171",
+            }}
           >
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             {mountError}
           </div>
           <button
             onClick={handleRetry}
-            className="w-full h-9 rounded-xl text-[12px] font-medium text-white/60 flex items-center justify-center gap-1.5 transition-all duration-200 hover:text-white/80"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+            className="w-full h-9 rounded-xl text-[12px] font-medium flex items-center justify-center gap-1.5 transition-all duration-200"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.05)",
+              color: "rgba(255,255,255,0.45)",
+            }}
           >
             <RefreshCw className="h-3 w-3" />
             Tentar novamente
@@ -392,43 +405,47 @@ export default function MercadoPagoCardSection({
         </div>
       )}
 
+      {/* Loading state */}
       {!brickReady && !mountError && active && (
-        <div className="flex items-center justify-center gap-2 py-4 text-[12px] text-white/30 animate-fade-in">
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-400/60" />
+        <div className="flex items-center justify-center gap-2 py-5 text-[12px]" style={{ color: "rgba(255,255,255,0.22)" }}>
+          <Loader2 className="h-4 w-4 animate-spin" style={{ color: "rgba(165,180,252,0.5)" }} />
           Carregando formulário seguro…
         </div>
       )}
 
-      {/* Brick container — premium payment card */}
+      {/* Brick container — premium embedded card */}
       <div
         className="overflow-hidden transition-all duration-500"
         style={{
           background: brickReady
-            ? "linear-gradient(180deg, rgba(15,23,32,0.95), rgba(15,23,32,0.85))"
+            ? "rgba(15,23,32,0.6)"
             : "transparent",
-          border: brickReady ? "1px solid rgba(99,102,241,0.12)" : "1px solid transparent",
+          border: brickReady
+            ? "1px solid rgba(255,255,255,0.05)"
+            : "1px solid transparent",
           borderRadius: "16px",
-          padding: brickReady ? "2px" : "0",
-          opacity: brickReady ? 1 : 0.5,
+          padding: brickReady ? "4px" : "0",
+          opacity: brickReady ? 1 : 0.4,
           boxShadow: brickReady
-            ? "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)"
+            ? "0 4px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.02)"
             : "none",
         }}
       >
         <div
           id={BRICK_CONTAINER_ID}
           style={{
-            minHeight: brickReady ? "auto" : 420,
+            minHeight: brickReady ? "auto" : 380,
             width: "100%",
-            borderRadius: "14px",
+            borderRadius: "12px",
             overflow: "hidden",
           }}
         />
       </div>
 
+      {/* Processing overlay */}
       {processing && (
-        <div className="flex items-center justify-center gap-2 py-2 text-[12px] text-white/30 animate-fade-in">
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-400/60" />
+        <div className="flex items-center justify-center gap-2 py-2 text-[12px]" style={{ color: "rgba(255,255,255,0.22)" }}>
+          <Loader2 className="h-4 w-4 animate-spin" style={{ color: "rgba(165,180,252,0.5)" }} />
           Processando pagamento…
         </div>
       )}
