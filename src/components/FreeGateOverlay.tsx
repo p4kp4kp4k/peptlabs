@@ -117,16 +117,24 @@ function getPageContext(pathname: string) {
 
 export default function FreeGateOverlay({
   children,
-  pageTitle,
-  description,
+  pageTitle: pageTitleProp,
+  description: descriptionProp,
   features,
   comparisonRows = DEFAULT_COMPARISON,
   bypass,
 }: Props) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAdmin, isPro } = useEntitlements();
   const { user } = useAuth();
   const [isDismissed, setIsDismissed] = useState(false);
+
+  // Get contextual info based on current route
+  const pageContext = useMemo(() => getPageContext(location.pathname), [location.pathname]);
+  const PageIcon = pageContext?.icon || UserPlus;
+  const pageTitle = pageTitleProp || pageContext?.title || "Conteúdo Premium";
+  const description = descriptionProp || pageContext?.description || "Cadastre-se gratuitamente para explorar a plataforma completa de peptídeos.";
+  const highlightFeature = pageContext?.highlightFeature;
 
   const hasAccess = bypass || isAdmin || isPro;
 
