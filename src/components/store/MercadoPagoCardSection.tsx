@@ -413,28 +413,18 @@ export default function MercadoPagoCardSection({
         </div>
       )}
 
-      {/* Brick container — premium embedded card */}
+      {/* Brick container */}
       <div
         className="overflow-hidden transition-all duration-500"
         style={{
-          background: brickReady
-            ? "rgba(15,23,32,0.6)"
-            : "transparent",
-          border: brickReady
-            ? "1px solid rgba(255,255,255,0.05)"
-            : "1px solid transparent",
-          borderRadius: "16px",
-          padding: brickReady ? "4px" : "0",
+          borderRadius: "12px",
           opacity: brickReady ? 1 : 0.4,
-          boxShadow: brickReady
-            ? "0 4px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.02)"
-            : "none",
         }}
       >
         <div
           id={BRICK_CONTAINER_ID}
           style={{
-            minHeight: brickReady ? "auto" : 380,
+            minHeight: brickReady ? "auto" : 360,
             width: "100%",
             borderRadius: "12px",
             overflow: "hidden",
