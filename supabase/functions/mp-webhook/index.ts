@@ -94,32 +94,27 @@ function mapOrderStatus(mpStatus: string): string {
   }
 }
 
-/* ── Stock deduction (idempotent via metadata flag) ── */
+/* ── Stock deduction (atomic + idempotent) ── */
 async function decrementStock(
   adminClient: ReturnType<typeof createClient>,
   order: { variant_id: string | null; quantity: number; metadata: Record<string, unknown> | null },
-  orderId: string,
 ) {
-  if (!order.variant_id) return;
+  if (!order.variant_id) return false;
   const meta = (order.metadata ?? {}) as Record<string, unknown>;
-  if (meta.stock_decremented === true) return; // already done
+  if (meta.stock_decremented === true) return false; // already done
 
-  const { data: variant } = await adminClient
-    .from("product_variants")
-    .select("stock")
-    .eq("id", order.variant_id)
-    .single();
+  /* Atomic decrement via DB function — prevents race conditions */
+  const { error } = await adminClient.rpc("decrement_stock_safe", {
+    p_variant_id: order.variant_id,
+    p_quantity: order.quantity,
+  });
 
-  if (variant) {
-    const newStock = Math.max(0, (variant.stock ?? 0) - order.quantity);
-    await adminClient
-      .from("product_variants")
-      .update({ stock: newStock })
-      .eq("id", order.variant_id);
+  if (error) {
+    console.error("decrement_stock_safe error:", error.message);
+    return false;
   }
 
-  // Mark flag in metadata (merged in caller's update)
-  return true; // signals caller to include stock_decremented
+  return true; // signals caller to set stock_decremented flag
 }
 
 /* ── Main handler ── */
