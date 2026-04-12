@@ -287,6 +287,7 @@ serve(async (req) => {
             mp_status_detail: order.status_detail,
             payments: order.transactions?.payments ?? [],
             stock_decremented: stockDecremented,
+            ...(stockInsufficient ? { stock_insufficient: true } : {}),
           },
         })
         .eq("id", existingOrder.id);
