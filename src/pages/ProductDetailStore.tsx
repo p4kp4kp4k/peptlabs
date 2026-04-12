@@ -170,18 +170,12 @@ function ProductView({ product }: { product: Product }) {
             </div>
           )}
 
-          {/* Stock */}
-          {selectedVariant && (
+          {/* Stock - Hidden per admin request */}
+          {selectedVariant && selectedVariant.stock <= 0 && (
             <div>
-              {selectedVariant.stock > 0 ? (
-                <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-400/30">
-                  {selectedVariant.stock} em estoque
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">
-                  Esgotado
-                </Badge>
-              )}
+              <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">
+                Esgotado
+              </Badge>
             </div>
           )}
 
