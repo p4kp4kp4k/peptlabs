@@ -422,12 +422,13 @@ export default function CheckoutDialog({
           </div>
 
           {/* Footer */}
-          <div className="mt-5 flex items-center justify-center gap-1.5">
-            <ShieldCheck className="h-3 w-3 text-white/15" />
+          <div className="mt-5 pt-4 flex items-center justify-center gap-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+            <ShieldCheck className="h-3 w-3 text-white/10" />
             <p className="text-[10px] text-white/15 tracking-wide">
               Pagamento processado com segurança pelo Mercado Pago
             </p>
           </div>
+          </div>{/* end padding div */}
         </div>
       </div>
     </div>,
