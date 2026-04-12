@@ -419,6 +419,7 @@ export default function MercadoPagoCardSection({
         style={{
           borderRadius: "12px",
           opacity: brickReady ? 1 : 0.4,
+          maxWidth: "100%",
         }}
       >
         <div
@@ -426,8 +427,10 @@ export default function MercadoPagoCardSection({
           style={{
             minHeight: brickReady ? "auto" : 360,
             width: "100%",
+            maxWidth: "100%",
             borderRadius: "12px",
             overflow: "hidden",
+            boxSizing: "border-box",
           }}
         />
       </div>
