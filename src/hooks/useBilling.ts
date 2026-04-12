@@ -29,7 +29,7 @@ export function useBilling() {
     mutationFn: (params: { planId: PlanId; provider?: PaymentProvider }) =>
       createCheckout({
         planId: params.planId,
-        provider: params.provider || "stripe",
+        ...(params.provider ? { provider: params.provider } : {}),
         successUrl: `${window.location.origin}/app/billing?success=true`,
         cancelUrl: `${window.location.origin}/app/billing?canceled=true`,
       }),
