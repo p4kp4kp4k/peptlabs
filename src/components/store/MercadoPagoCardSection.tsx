@@ -34,7 +34,7 @@ interface CheckoutFunctionResponse {
 }
 
 const BRICK_CONTAINER_ID = "mp-card-payment-brick-container";
-const BRICK_READY_TIMEOUT = 20_000; // 20 seconds
+const BRICK_READY_TIMEOUT = 20_000;
 
 const log = (step: string, ...args: any[]) =>
   console.log(`[MP-Brick] ${step}`, ...args);
@@ -64,7 +64,6 @@ export default function MercadoPagoCardSection({
   const mountIdRef = useRef(0);
   const readyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /* Stable refs for values used inside Brick callbacks */
   const productIdRef = useRef(productId);
   productIdRef.current = productId;
   const variantIdRef = useRef(variantId);
@@ -94,12 +93,10 @@ export default function MercadoPagoCardSection({
       }
     }
     brickControllerRef.current = null;
-
     const el = document.getElementById(BRICK_CONTAINER_ID);
     if (el) el.innerHTML = "";
   }, [clearReadyTimeout]);
 
-  /* Reset everything when the dialog closes */
   useEffect(() => {
     if (!open) {
       log("dialog-closed", "resetting state");
@@ -112,7 +109,6 @@ export default function MercadoPagoCardSection({
     }
   }, [open, destroyBrick]);
 
-  /* Main mount effect */
   useEffect(() => {
     if (!open || !active || !publicKey) {
       log("effect-guard", { open, active, hasPublicKey: !!publicKey });
@@ -125,7 +121,6 @@ export default function MercadoPagoCardSection({
     log("effect-start", { mountId, publicKey: publicKey.substring(0, 20) + "...", totalAmount });
 
     const run = async () => {
-      /* ── 1. SDK availability ─────────────────────────── */
       log("step-1", "checking SDK availability");
       if (typeof window.MercadoPago === "undefined") {
         let waited = 0;
@@ -140,12 +135,8 @@ export default function MercadoPagoCardSection({
         }
       }
       log("step-1", "SDK found ✓", typeof window.MercadoPago);
-      if (cancelled || mountId !== mountIdRef.current) {
-        log("step-1", "cancelled after SDK wait");
-        return;
-      }
+      if (cancelled || mountId !== mountIdRef.current) return;
 
-      /* ── 2. Create MP instance ───────────────────────── */
       log("step-2", "creating MP instance");
       try {
         mpInstanceRef.current = new window.MercadoPago(publicKey, { locale: "pt-BR" });
@@ -155,18 +146,11 @@ export default function MercadoPagoCardSection({
         if (!cancelled) setMountError("Falha ao inicializar o Mercado Pago.");
         return;
       }
-      if (cancelled || mountId !== mountIdRef.current) {
-        log("step-2", "cancelled after MP init");
-        return;
-      }
+      if (cancelled || mountId !== mountIdRef.current) return;
 
-      /* ── 3. Prepare container ────────────────────────── */
       log("step-3", "preparing container");
       await destroyBrick();
-      if (cancelled || mountId !== mountIdRef.current) {
-        log("step-3", "cancelled after destroyBrick");
-        return;
-      }
+      if (cancelled || mountId !== mountIdRef.current) return;
 
       const container = document.getElementById(BRICK_CONTAINER_ID);
       if (!container) {
@@ -186,26 +170,18 @@ export default function MercadoPagoCardSection({
 
       container.innerHTML = "";
 
-      /* Wait for paint */
       await new Promise<void>((r) =>
         requestAnimationFrame(() => requestAnimationFrame(() => r())),
       );
-      if (cancelled || mountId !== mountIdRef.current) {
-        log("step-3", "cancelled after rAF");
-        return;
-      }
+      if (cancelled || mountId !== mountIdRef.current) return;
 
-      /* ── 4. Mount Brick ──────────────────────────────── */
       log("step-4", "creating cardPayment Brick", { amount: totalAmount });
 
-      /* Set a timeout: if onReady doesn't fire within BRICK_READY_TIMEOUT, show error */
       clearReadyTimeout();
       readyTimeoutRef.current = setTimeout(() => {
         if (!cancelled && mountId === mountIdRef.current) {
           log("timeout", "Brick did NOT become ready within timeout");
-          setMountError(
-            "O formulário do cartão não carregou a tempo. Verifique sua conexão e tente novamente."
-          );
+          setMountError("O formulário do cartão não carregou a tempo. Verifique sua conexão e tente novamente.");
         }
       }, BRICK_READY_TIMEOUT);
 
@@ -312,7 +288,6 @@ export default function MercadoPagoCardSection({
     };
   }, [active, open, publicKey, totalAmount, destroyBrick, clearReadyTimeout, retryCount]);
 
-  /* ── Retry handler ── */
   const handleRetry = () => {
     log("retry", "user triggered retry");
     setMountError(null);
@@ -320,27 +295,26 @@ export default function MercadoPagoCardSection({
     setRetryCount((c) => c + 1);
   };
 
-  /* ── Render ────────────────────────────────────────── */
+  /* ── Render ── */
 
   if (!publicKey) {
     return (
-      <div className="py-4 text-center text-xs text-muted-foreground">
+      <div className="py-6 text-center text-[12px] text-white/30">
         Pagamento por cartão não configurado.
       </div>
     );
   }
 
-  /* Validate key format before attempting to render */
   const isValidKey = publicKey.startsWith("APP_USR-") || publicKey.startsWith("TEST-");
   if (!isValidKey) {
     return (
-      <div className="space-y-2 py-4 text-center">
-        <AlertCircle className="mx-auto h-8 w-8 text-destructive" />
-        <p className="text-xs font-medium text-destructive">
+      <div className="space-y-2 py-6 text-center">
+        <AlertCircle className="mx-auto h-8 w-8 text-red-400/80" />
+        <p className="text-[12px] font-medium text-red-400/80">
           Configuração do Mercado Pago inválida
         </p>
-        <p className="text-[10px] text-muted-foreground">
-          Public key incompatível (prefixo: {publicKey.substring(0, 8)}…). Verifique as credenciais no painel administrativo.
+        <p className="text-[10px] text-white/25">
+          Public key incompatível (prefixo: {publicKey.substring(0, 8)}…). Verifique as credenciais.
         </p>
       </div>
     );
@@ -348,10 +322,17 @@ export default function MercadoPagoCardSection({
 
   if (cardResult?.card?.status === "approved") {
     return (
-      <div className="space-y-2 py-6 text-center">
-        <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
-        <p className="text-sm font-semibold text-foreground">Pagamento aprovado!</p>
-        <p className="text-[10px] text-muted-foreground">Pedido #{cardResult.orderId}</p>
+      <div className="space-y-3 py-8 text-center animate-fade-in">
+        <div
+          className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
+          style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+        >
+          <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+        </div>
+        <p className="text-[15px] font-semibold text-white" style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif" }}>
+          Pagamento aprovado!
+        </p>
+        <p className="text-[11px] text-white/30">Pedido #{cardResult.orderId}</p>
       </div>
     );
   }
@@ -359,38 +340,50 @@ export default function MercadoPagoCardSection({
   return (
     <div className="space-y-3">
       {mountError && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+        <div className="space-y-2 animate-fade-in">
+          <div
+            className="flex items-center gap-2 rounded-xl p-3 text-[12px]"
+            style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", color: "#F87171" }}
+          >
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             {mountError}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full gap-1.5 text-xs"
+          <button
             onClick={handleRetry}
+            className="w-full h-9 rounded-xl text-[12px] font-medium text-white/60 flex items-center justify-center gap-1.5 transition-all duration-200 hover:text-white/80"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
           >
             <RefreshCw className="h-3 w-3" />
             Tentar novamente
-          </Button>
+          </button>
         </div>
       )}
 
       {!brickReady && !mountError && active && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          Carregando formulário seguro do cartão…
+        <div className="flex items-center justify-center gap-2 py-4 text-[12px] text-white/30 animate-fade-in">
+          <Loader2 className="h-4 w-4 animate-spin text-indigo-400/60" />
+          Carregando formulário seguro…
         </div>
       )}
 
+      {/* Brick container with premium styling */}
       <div
-        id={BRICK_CONTAINER_ID}
-        style={{ minHeight: brickReady ? "auto" : 420, width: "100%" }}
-      />
+        className="rounded-2xl overflow-hidden transition-opacity duration-300"
+        style={{
+          background: "rgba(255,255,255,0.02)",
+          padding: brickReady ? "20px" : "0",
+          opacity: brickReady ? 1 : 0.6,
+        }}
+      >
+        <div
+          id={BRICK_CONTAINER_ID}
+          style={{ minHeight: brickReady ? "auto" : 420, width: "100%" }}
+        />
+      </div>
 
       {processing && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        <div className="flex items-center justify-center gap-2 py-2 text-[12px] text-white/30 animate-fade-in">
+          <Loader2 className="h-4 w-4 animate-spin text-indigo-400/60" />
           Processando pagamento…
         </div>
       )}
