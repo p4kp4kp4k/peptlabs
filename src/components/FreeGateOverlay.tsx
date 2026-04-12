@@ -25,7 +25,29 @@ export default function FreeGateOverlay({
 
   const hasAccess = bypass || isAdmin || isPro;
 
-  if (hasAccess || dismissed) return <>{children}</>;
+  if (hasAccess) return <>{children}</>;
+
+  // Dismissed: show only ~20% of the content with a hard cutoff
+  if (dismissed) {
+    return (
+      <div className="relative">
+        <div className="max-h-[220px] overflow-hidden pointer-events-none select-none">
+          {children}
+        </div>
+        {/* Gradient fade + CTA to sign up */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/95 to-transparent flex items-end justify-center pb-4">
+          <Button
+            size="sm"
+            className="gap-1.5 text-xs h-8 shadow-lg"
+            onClick={() => navigate("/auth")}
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            Cadastre-se para ver tudo
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative isolate min-h-[400px]">
