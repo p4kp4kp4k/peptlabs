@@ -1,9 +1,9 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Crown, UserPlus, Star, Check, X } from "lucide-react";
+import { Crown, UserPlus, Star, Check, X, Calculator, Syringe, Layers, FileText, BookOpen, MapPin, Zap, ArrowLeftRight } from "lucide-react";
 
 interface Props {
   children: React.ReactNode;
@@ -14,6 +14,81 @@ interface Props {
   bypass?: boolean;
 }
 
+// Contextual messages for different pages
+const PAGE_CONTEXTS: Record<string, {
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  highlightFeature?: string;
+}> = {
+  "/app/peptides": {
+    title: "Biblioteca de Peptídeos",
+    description: "Explore 80+ peptídeos com dados científicos, mecanismos de ação e protocolos detalhados.",
+    icon: Syringe,
+    highlightFeature: "1 peptídeo completo grátis",
+  },
+  "/app/calculator": {
+    title: "Calculadora de Dosagem",
+    description: "Calcule reconstituição, dosagem e volumes com precisão para seus protocolos.",
+    icon: Calculator,
+    highlightFeature: "1 cálculo/mês grátis",
+  },
+  "/app/stacks": {
+    title: "Stacks Sinérgicos",
+    description: "Combinações otimizadas de peptídeos para objetivos específicos com timing e dosagens.",
+    icon: Layers,
+    highlightFeature: "1 stack/mês grátis",
+  },
+  "/app/templates": {
+    title: "Templates de Protocolos",
+    description: "Modelos prontos de protocolos clinicamente revisados para diferentes objetivos.",
+    icon: FileText,
+    highlightFeature: "1 template/mês grátis",
+  },
+  "/app/learn": {
+    title: "Centro de Aprendizado",
+    description: "Guia completo sobre peptídeos: fundamentos, aplicações e referências científicas.",
+    icon: BookOpen,
+    highlightFeature: "Conteúdo básico grátis",
+  },
+  "/app/body-map": {
+    title: "Mapa Corporal",
+    description: "Visualize locais de aplicação e dosagens recomendadas por região do corpo.",
+    icon: MapPin,
+    highlightFeature: "Apenas PRO",
+  },
+  "/app/compare": {
+    title: "Comparador de Peptídeos",
+    description: "Compare múltiplos peptídeos lado a lado: mecanismos, meia-vida, aplicações.",
+    icon: ArrowLeftRight,
+    highlightFeature: "1 comparação/mês grátis",
+  },
+  "/app/interactions": {
+    title: "Verificador de Interações",
+    description: "Analise interações entre peptíltides e identifique sinergias ou contraindicações.",
+    icon: Zap,
+    highlightFeature: "1 verificação/mês grátis",
+  },
+  "/app/dashboard": {
+    title: "Dashboard",
+    description: "Acompanhe seus protocolos, histórico e acesso rápido às ferramentas.",
+    icon: Crown,
+    highlightFeature: "Visão limitada grátis",
+  },
+  "/app/history": {
+    title: "Histórico Completo",
+    description: "Registro completo de protocolos, cálculos e pesquisas realizadas na plataforma.",
+    icon: Crown,
+    highlightFeature: "Apenas PRO",
+  },
+  "/app/finder": {
+    title: "Finder Inteligente",
+    description: "Encontre peptídeos por objetivo, mecanismo ou condição com filtros avançados.",
+    icon: Syringe,
+    highlightFeature: "Busca limitada grátis",
+  },
+};
+
 const DEFAULT_COMPARISON: [string, string, string][] = [
   ["Peptídeos na biblioteca", "1", "80+"],
   ["Protocolos/mês", "1", "Ilimitados"],
@@ -23,23 +98,43 @@ const DEFAULT_COMPARISON: [string, string, string][] = [
   ["Templates/mês", "1", "Todos"],
   ["Exportação PDF", "1/mês", "Ilimitada"],
   ["Interações/mês", "1", "Ilimitada"],
-  ["Mapa corporal", "✗", "✓"],
-  ["Histórico", "✗", "✓"],
-  ["PubMed refs", "✗", "✓"],
+  ["Mapa corporal", "—", "✓"],
+  ["Histórico", "—", "✓"],
+  ["PubMed refs", "—", "✓"],
 ];
+
+function getPageContext(pathname: string) {
+  // Find exact match or closest parent route
+  const exactMatch = PAGE_CONTEXTS[pathname];
+  if (exactMatch) return exactMatch;
+  
+  // Check for parent routes (e.g., /app/peptides/something -> /app/peptides)
+  const parentRoute = Object.keys(PAGE_CONTEXTS).find(route => pathname.startsWith(route + "/"));
+  if (parentRoute) return PAGE_CONTEXTS[parentRoute];
+  
+  return null;
+}
 
 export default function FreeGateOverlay({
   children,
-  pageTitle,
-  description,
+  pageTitle: pageTitleProp,
+  description: descriptionProp,
   features,
   comparisonRows = DEFAULT_COMPARISON,
   bypass,
 }: Props) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAdmin, isPro } = useEntitlements();
   const { user } = useAuth();
   const [isDismissed, setIsDismissed] = useState(false);
+
+  // Get contextual info based on current route
+  const pageContext = useMemo(() => getPageContext(location.pathname), [location.pathname]);
+  const PageIcon = pageContext?.icon || UserPlus;
+  const pageTitle = pageTitleProp || pageContext?.title || "Conteúdo Premium";
+  const description = descriptionProp || pageContext?.description || "Cadastre-se gratuitamente para explorar a plataforma completa de peptídeos.";
+  const highlightFeature = pageContext?.highlightFeature;
 
   const hasAccess = bypass || isAdmin || isPro;
 
@@ -65,17 +160,23 @@ export default function FreeGateOverlay({
           {/* Header */}
           <div className="px-5 pt-5 pb-3 text-center">
             <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
-              <UserPlus className="h-5 w-5 text-primary" />
+              <PageIcon className="h-5 w-5 text-primary" />
             </div>
             <h2
               className="text-base font-bold text-foreground"
               style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
-              {pageTitle || "Conteúdo Premium"}
+              {pageTitle}
             </h2>
             <p className="mt-1 text-[11px] text-muted-foreground max-w-xs mx-auto leading-relaxed">
-              {description || "Cadastre-se gratuitamente para explorar a plataforma completa de peptídeos."}
+              {description}
             </p>
+            {highlightFeature && (
+              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-medium text-primary">
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                {highlightFeature}
+              </div>
+            )}
           </div>
 
           {/* Social proof bar */}
