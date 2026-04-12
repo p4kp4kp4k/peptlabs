@@ -138,13 +138,40 @@ export default function FreeGateOverlay({
 
   const hasAccess = bypass || isAdmin || isPro;
 
-  if (hasAccess || isDismissed) return <>{children}</>;
+  if (hasAccess) return <>{children}</>;
 
-  return (
-    <div className="relative isolate min-h-[400px]">
-      <div aria-hidden className="pointer-events-none select-none blur-[4px] brightness-[0.5] saturate-[0.3]">
-        {children}
+  // Dismissed state: show ~30% content, blur the rest
+  if (isDismissed) {
+    return (
+      <div className="relative">
+        {/* Visible portion (~30%) */}
+        <div className="max-h-[35vh] overflow-hidden">
+          {children}
+        </div>
+        {/* Blurred/blocked remainder */}
+        <div className="relative">
+          <div aria-hidden className="pointer-events-none select-none blur-[5px] brightness-[0.4] saturate-[0.2] max-h-[65vh] overflow-hidden">
+            {children}
+          </div>
+          {/* Gradient fade from visible to blurred */}
+          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-background to-transparent z-10" />
+          {/* CTA bar at the bottom of the blurred area */}
+          <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-background via-background/95 to-transparent pt-12 pb-6 px-4 flex flex-col items-center gap-3">
+            <p className="text-xs text-muted-foreground text-center max-w-sm">
+              Cadastre-se gratuitamente para desbloquear o conteúdo completo.
+            </p>
+            <Button
+              className="gap-2 h-9 text-xs font-bold px-8"
+              onClick={() => navigate("/auth")}
+            >
+              <Crown className="h-3.5 w-3.5" />
+              Criar Conta Gratuita
+            </Button>
+          </div>
+        </div>
       </div>
+    );
+  }
 
       <div className="absolute inset-0 flex items-start justify-center overflow-y-auto pt-3 px-3">
         <div className="w-full max-w-md rounded-xl border border-border/60 bg-card shadow-2xl relative">
