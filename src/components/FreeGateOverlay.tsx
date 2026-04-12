@@ -1,9 +1,9 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Crown, UserPlus, Star, Check, X } from "lucide-react";
+import { Crown, UserPlus, Star, Check, X, Calculator, Syringe, Layers, FileText, BookOpen, MapPin, Zap, ArrowLeftRight } from "lucide-react";
 
 interface Props {
   children: React.ReactNode;
@@ -14,6 +14,81 @@ interface Props {
   bypass?: boolean;
 }
 
+// Contextual messages for different pages
+const PAGE_CONTEXTS: Record<string, {
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  highlightFeature?: string;
+}> = {
+  "/app/peptides": {
+    title: "Biblioteca de Peptídeos",
+    description: "Explore 80+ peptídeos com dados científicos, mecanismos de ação e protocolos detalhados.",
+    icon: Syringe,
+    highlightFeature: "1 peptídeo completo grátis",
+  },
+  "/app/calculator": {
+    title: "Calculadora de Dosagem",
+    description: "Calcule reconstituição, dosagem e volumes com precisão para seus protocolos.",
+    icon: Calculator,
+    highlightFeature: "1 cálculo/mês grátis",
+  },
+  "/app/stacks": {
+    title: "Stacks Sinérgicos",
+    description: "Combinações otimizadas de peptídeos para objetivos específicos com timing e dosagens.",
+    icon: Layers,
+    highlightFeature: "1 stack/mês grátis",
+  },
+  "/app/templates": {
+    title: "Templates de Protocolos",
+    description: "Modelos prontos de protocolos clinicamente revisados para diferentes objetivos.",
+    icon: FileText,
+    highlightFeature: "1 template/mês grátis",
+  },
+  "/app/learn": {
+    title: "Centro de Aprendizado",
+    description: "Guia completo sobre peptídeos: fundamentos, aplicações e referências científicas.",
+    icon: BookOpen,
+    highlightFeature: "Conteúdo básico grátis",
+  },
+  "/app/body-map": {
+    title: "Mapa Corporal",
+    description: "Visualize locais de aplicação e dosagens recomendadas por região do corpo.",
+    icon: MapPin,
+    highlightFeature: "Apenas PRO",
+  },
+  "/app/compare": {
+    title: "Comparador de Peptídeos",
+    description: "Compare múltiplos peptídeos lado a lado: mecanismos, meia-vida, aplicações.",
+    icon: ArrowLeftRight,
+    highlightFeature: "1 comparação/mês grátis",
+  },
+  "/app/interactions": {
+    title: "Verificador de Interações",
+    description: "Analise interações entre peptíltides e identifique sinergias ou contraindicações.",
+    icon: Zap,
+    highlightFeature: "1 verificação/mês grátis",
+  },
+  "/app/dashboard": {
+    title: "Dashboard",
+    description: "Acompanhe seus protocolos, histórico e acesso rápido às ferramentas.",
+    icon: Crown,
+    highlightFeature: "Visão limitada grátis",
+  },
+  "/app/history": {
+    title: "Histórico Completo",
+    description: "Registro completo de protocolos, cálculos e pesquisas realizadas na plataforma.",
+    icon: Crown,
+    highlightFeature: "Apenas PRO",
+  },
+  "/app/finder": {
+    title: "Finder Inteligente",
+    description: "Encontre peptídeos por objetivo, mecanismo ou condição com filtros avançados.",
+    icon: Syringe,
+    highlightFeature: "Busca limitada grátis",
+  },
+};
+
 const DEFAULT_COMPARISON: [string, string, string][] = [
   ["Peptídeos na biblioteca", "1", "80+"],
   ["Protocolos/mês", "1", "Ilimitados"],
@@ -23,10 +98,22 @@ const DEFAULT_COMPARISON: [string, string, string][] = [
   ["Templates/mês", "1", "Todos"],
   ["Exportação PDF", "1/mês", "Ilimitada"],
   ["Interações/mês", "1", "Ilimitada"],
-  ["Mapa corporal", "✗", "✓"],
-  ["Histórico", "✗", "✓"],
-  ["PubMed refs", "✗", "✓"],
+  ["Mapa corporal", "—", "✓"],
+  ["Histórico", "—", "✓"],
+  ["PubMed refs", "—", "✓"],
 ];
+
+function getPageContext(pathname: string) {
+  // Find exact match or closest parent route
+  const exactMatch = PAGE_CONTEXTS[pathname];
+  if (exactMatch) return exactMatch;
+  
+  // Check for parent routes (e.g., /app/peptides/something -> /app/peptides)
+  const parentRoute = Object.keys(PAGE_CONTEXTS).find(route => pathname.startsWith(route + "/"));
+  if (parentRoute) return PAGE_CONTEXTS[parentRoute];
+  
+  return null;
+}
 
 export default function FreeGateOverlay({
   children,
