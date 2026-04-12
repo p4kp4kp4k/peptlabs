@@ -110,8 +110,11 @@ export default function CheckoutDialog({
           .single();
 
         if (data && data.payment_status !== "pending") {
-          const s = data.payment_status as typeof pixStatus;
-          setPixStatus(s === "approved" ? "approved" : s === "cancelled" ? "cancelled" : s === "rejected" ? "rejected" : "expired");
+          const s = data.payment_status;
+          if (s === "approved") setPixStatus("approved");
+          else if (s === "cancelled") setPixStatus("cancelled");
+          else if (s === "rejected") setPixStatus("rejected");
+          else setPixStatus("expired");
         }
       } catch {
         /* ignore transient errors */
