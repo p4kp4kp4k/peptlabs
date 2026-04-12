@@ -170,14 +170,7 @@ function ProductView({ product }: { product: Product }) {
             </div>
           )}
 
-          {/* Stock - Hidden per admin request */}
-          {selectedVariant && selectedVariant.stock <= 0 && (
-            <div>
-              <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">
-                Esgotado
-              </Badge>
-            </div>
-          )}
+          {/* Stock info completely hidden per admin request */}
 
           {/* Quantity selector */}
           <div className="space-y-2">
