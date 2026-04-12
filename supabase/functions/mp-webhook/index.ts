@@ -198,7 +198,7 @@ serve(async (req) => {
     await adminClient.from("webhook_events").insert({
       provider: "mercadopago",
       event_type: action || `order.${order.status}`,
-      provider_event_id: orderId,
+      provider_event_id: eventKey,
       payload: {
         orderId: order.id,
         status: order.status,
@@ -261,7 +261,7 @@ serve(async (req) => {
       /* ── Stock deduction on approval ── */
       let stockDecremented = (existingOrder.metadata as any)?.stock_decremented === true;
       if (paymentStatus === "approved" && !stockDecremented) {
-        const did = await decrementStock(adminClient, existingOrder, existingOrder.id);
+        const did = await decrementStock(adminClient, existingOrder);
         if (did) stockDecremented = true;
       }
 
