@@ -200,58 +200,82 @@ export default function CheckoutDialog({
         <div
           className="relative w-full max-w-md animate-scale-in"
           style={{
-            background: "linear-gradient(180deg, rgba(15,23,32,0.98), rgba(11,15,20,0.99))",
-            border: "1px solid rgba(255,255,255,0.06)",
-            borderRadius: "18px",
-            padding: "28px 24px 20px",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.45), 0 0 80px rgba(79,70,229,0.04)",
+            background: "linear-gradient(180deg, #111827 0%, #0B0F14 100%)",
+            border: "1px solid rgba(99,102,241,0.1)",
+            borderRadius: "20px",
+            padding: "0",
+            boxShadow: "0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03), 0 0 80px rgba(99,102,241,0.06)",
           }}
         >
+          {/* Top accent line */}
+          <div
+            style={{
+              height: "2px",
+              background: "linear-gradient(90deg, transparent 0%, #6366F1 30%, #06B6D4 70%, transparent 100%)",
+              borderRadius: "20px 20px 0 0",
+              opacity: 0.6,
+            }}
+          />
+
+          <div style={{ padding: "24px 24px 20px" }}>
           {/* Close */}
           <button
             type="button"
             aria-label="Fechar checkout"
             onClick={() => onOpenChange(false)}
-            className="absolute right-4 top-4 rounded-full p-1 opacity-50 transition-all duration-200 hover:opacity-100 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="absolute right-4 top-5 rounded-full p-1.5 opacity-40 transition-all duration-200 hover:opacity-90 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
           >
             <X className="h-4 w-4 text-white" />
           </button>
 
           {/* Header */}
           <div className="mb-5">
-            <h2
-              className="text-lg font-semibold tracking-tight text-white"
-              style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif" }}
-            >
-              Finalizar Compra
-            </h2>
-            <p className="text-[11px] text-white/30 mt-0.5">Pagamento seguro e criptografado</p>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="h-6 w-6 rounded-lg flex items-center justify-center" style={{ background: "rgba(99,102,241,0.12)" }}>
+                <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" />
+              </div>
+              <h2
+                className="text-[17px] font-semibold tracking-tight text-white"
+                style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif" }}
+              >
+                Finalizar Compra
+              </h2>
+            </div>
+            <p className="text-[11px] text-white/25 ml-8">Pagamento seguro e criptografado</p>
           </div>
 
           {/* Summary */}
           <div
-            className="rounded-xl p-4 space-y-1.5 mb-5"
+            className="rounded-xl p-3.5 mb-5"
             style={{
               background: "rgba(255,255,255,0.02)",
-              border: "1px solid rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.04)",
             }}
           >
-            <p className="text-[13px] font-medium text-white/90">
-              {product.name}
-              {variantName ? <span className="text-white/40"> — {variantName}</span> : ""}
-            </p>
-            <p className="text-[11px] text-white/35">
-              {quantity}× R$ {unitPrice.toFixed(2).replace(".", ",")}
-            </p>
-            <p
-              className="text-xl font-bold pt-1"
-              style={{
-                fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif",
-                color: "#22D3EE",
-              }}
-            >
-              R$ {totalAmount.toFixed(2).replace(".", ",")}
-            </p>
+            <div className="flex items-start justify-between">
+              <div className="space-y-0.5 flex-1 min-w-0">
+                <p className="text-[13px] font-medium text-white/90 truncate">
+                  {product.name}
+                </p>
+                {variantName && (
+                  <p className="text-[11px] text-white/30">{variantName}</p>
+                )}
+                <p className="text-[11px] text-white/25">
+                  {quantity}× R$ {unitPrice.toFixed(2).replace(".", ",")}
+                </p>
+              </div>
+              <p
+                className="text-xl font-bold shrink-0 ml-3"
+                style={{
+                  fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif",
+                  background: "linear-gradient(135deg, #A5B4FC, #22D3EE)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                R$ {totalAmount.toFixed(2).replace(".", ",")}
+              </p>
+            </div>
           </div>
 
           {/* Tab switcher */}
@@ -398,12 +422,13 @@ export default function CheckoutDialog({
           </div>
 
           {/* Footer */}
-          <div className="mt-5 flex items-center justify-center gap-1.5">
-            <ShieldCheck className="h-3 w-3 text-white/15" />
+          <div className="mt-5 pt-4 flex items-center justify-center gap-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+            <ShieldCheck className="h-3 w-3 text-white/10" />
             <p className="text-[10px] text-white/15 tracking-wide">
               Pagamento processado com segurança pelo Mercado Pago
             </p>
           </div>
+          </div>{/* end padding div */}
         </div>
       </div>
     </div>,
