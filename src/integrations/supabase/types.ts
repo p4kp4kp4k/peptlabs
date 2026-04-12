@@ -1039,6 +1039,10 @@ export type Database = {
       }
     }
     Functions: {
+      decrement_stock_safe: {
+        Args: { p_quantity: number; p_variant_id: string }
+        Returns: number
+      }
       has_role:
         | {
             Args: { _role: Database["public"]["Enums"]["app_role"] }
