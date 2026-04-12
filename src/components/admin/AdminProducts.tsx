@@ -481,17 +481,7 @@ export default function AdminProducts() {
                             className="h-7 text-[10px]"
                           />
                         </div>
-                        <div className="space-y-1">
-                          <Label className="text-[10px]">Estoque</Label>
-                          <Input
-                            type="number"
-                            value={v.stock}
-                            onChange={(e) => updateVariant(idx, "stock", e.target.value)}
-                            placeholder="0"
-                            className="h-7 text-[10px]"
-                          />
                         </div>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
