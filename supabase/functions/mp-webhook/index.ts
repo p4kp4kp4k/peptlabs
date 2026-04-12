@@ -94,27 +94,32 @@ function mapOrderStatus(mpStatus: string): string {
   }
 }
 
-/* ── Stock deduction (atomic + idempotent) ── */
+/* ── Stock deduction (atomic + idempotent + oversell-safe) ── */
 async function decrementStock(
   adminClient: ReturnType<typeof createClient>,
   order: { variant_id: string | null; quantity: number; metadata: Record<string, unknown> | null },
-) {
-  if (!order.variant_id) return false;
+): Promise<"ok" | "already" | "insufficient" | "error"> {
+  if (!order.variant_id) return "ok"; // no variant → nothing to decrement
   const meta = (order.metadata ?? {}) as Record<string, unknown>;
-  if (meta.stock_decremented === true) return false; // already done
+  if (meta.stock_decremented === true) return "already";
 
-  /* Atomic decrement via DB function — prevents race conditions */
-  const { error } = await adminClient.rpc("decrement_stock_safe", {
+  const { data, error } = await adminClient.rpc("decrement_stock_safe", {
     p_variant_id: order.variant_id,
     p_quantity: order.quantity,
   });
 
   if (error) {
     console.error("decrement_stock_safe error:", error.message);
-    return false;
+    return "error";
   }
 
-  return true; // signals caller to set stock_decremented flag
+  /* data === -1 means insufficient stock */
+  if (data === -1) {
+    console.warn(`Insufficient stock for variant ${order.variant_id} (requested ${order.quantity})`);
+    return "insufficient";
+  }
+
+  return "ok";
 }
 
 /* ── Main handler ── */
