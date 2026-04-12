@@ -199,7 +199,40 @@ export default function MercadoPagoCardSection({
             },
             locale: "pt-BR",
             customization: {
-              visual: { hideFormTitle: true },
+              visual: {
+                hideFormTitle: true,
+                style: {
+                  theme: "dark" as any,
+                  customVariables: {
+                    formBackgroundColor: "#0F1720",
+                    baseColor: "#A5B4FC",
+                    baseColorFirstVariant: "#818CF8",
+                    baseColorSecondVariant: "#6366F1",
+                    textPrimaryColor: "#E2E8F0",
+                    textSecondaryColor: "#94A3B8",
+                    inputBackgroundColor: "#1A2332",
+                    outlinePrimaryColor: "#6366F1",
+                    outlineSecondaryColor: "#334155",
+                    errorColor: "#F87171",
+                    successColor: "#34D399",
+                    borderRadiusMedium: "12px",
+                    borderRadiusLarge: "14px",
+                    borderRadiusFull: "9999px",
+                    inputVerticalPadding: "12px",
+                    inputHorizontalPadding: "14px",
+                    inputFocusedBoxShadow: "0 0 0 2px rgba(99,102,241,0.3)",
+                    buttonTextColor: "#FFFFFF",
+                  },
+                },
+                texts: {
+                  formSubmit: "Pagar com Cartão",
+                  cardNumber: { label: "Número do cartão" },
+                  expirationDate: { label: "Validade" },
+                  securityCode: { label: "CVV" },
+                  cardholderName: { label: "Nome no cartão", placeholder: "Como aparece no cartão" },
+                  email: { label: "E-mail", placeholder: "seu@email.com" },
+                },
+              },
               paymentMethods: {
                 maxInstallments: 12,
                 minInstallments: 1,
@@ -366,18 +399,30 @@ export default function MercadoPagoCardSection({
         </div>
       )}
 
-      {/* Brick container with premium styling */}
+      {/* Brick container — premium payment card */}
       <div
-        className="rounded-2xl overflow-hidden transition-opacity duration-300"
+        className="overflow-hidden transition-all duration-500"
         style={{
-          background: "rgba(255,255,255,0.02)",
-          padding: brickReady ? "20px" : "0",
-          opacity: brickReady ? 1 : 0.6,
+          background: brickReady
+            ? "linear-gradient(180deg, rgba(15,23,32,0.95), rgba(15,23,32,0.85))"
+            : "transparent",
+          border: brickReady ? "1px solid rgba(99,102,241,0.12)" : "1px solid transparent",
+          borderRadius: "16px",
+          padding: brickReady ? "2px" : "0",
+          opacity: brickReady ? 1 : 0.5,
+          boxShadow: brickReady
+            ? "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)"
+            : "none",
         }}
       >
         <div
           id={BRICK_CONTAINER_ID}
-          style={{ minHeight: brickReady ? "auto" : 420, width: "100%" }}
+          style={{
+            minHeight: brickReady ? "auto" : 420,
+            width: "100%",
+            borderRadius: "14px",
+            overflow: "hidden",
+          }}
         />
       </div>
 
