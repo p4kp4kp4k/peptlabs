@@ -496,6 +496,37 @@ export default function PeptideDetail() {
         </Section>
       )}
 
+      {/* ── PREMIUM GATE: locked sections for free/anonymous users ── */}
+      {!canViewFullContent ? (
+        <>
+          {/* Premium gate card */}
+          <PremiumGateCard user={user} navigate={navigate} />
+
+          {/* Locked section placeholders */}
+          {timelineData && timelineData.length > 0 && (
+            <LockedSectionPlaceholder icon={Clock} title="Timeline de Resultados" iconColor="text-sky-400" navigateTo={navigate} />
+          )}
+          {(dosageRows?.length || p.dosage_info) && (
+            <LockedSectionPlaceholder icon={Syringe} title="Dosagem" navigateTo={navigate} />
+          )}
+          {phases && phases.length > 0 && (
+            <LockedSectionPlaceholder icon={ListChecks} title="Fases do Protocolo" navigateTo={navigate} />
+          )}
+          {p.reconstitution_steps && p.reconstitution_steps.length > 0 && (
+            <LockedSectionPlaceholder icon={Beaker} title="Reconstituição" navigateTo={navigate} />
+          )}
+          {stacksData && stacksData.length > 0 && (
+            <LockedSectionPlaceholder icon={Layers} title="Stacks Recomendados" navigateTo={navigate} />
+          )}
+          {allInteractions.length > 0 && (
+            <LockedSectionPlaceholder icon={GitMerge} title="Interações" navigateTo={navigate} />
+          )}
+          {refs && refs.length > 0 && (
+            <LockedSectionPlaceholder icon={BookOpen} title="Referências Científicas" navigateTo={navigate} />
+          )}
+        </>
+      ) : (
+        <>
       {/* ── TIMELINE ── */}
       {timelineData && timelineData.length > 0 && (
         <Section collapseSignal={collapseSignal} id="timeline" icon={Clock} title="Timeline de Resultados" iconColor="text-sky-400">
@@ -654,6 +685,8 @@ export default function PeptideDetail() {
             ))}
           </div>
         </Section>
+      )}
+        </>
       )}
 
       <div className="h-6" />
