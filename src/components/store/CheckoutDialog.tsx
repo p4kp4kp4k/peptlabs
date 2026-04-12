@@ -423,25 +423,91 @@ export default function CheckoutDialog({
 
             {/* ── Card tab ── */}
             <div style={{ display: tab === "card" ? "block" : "none" }}>
-              {/* Card section label */}
-              <div className="flex items-center gap-2 mb-3">
-                <Lock className="h-3 w-3" style={{ color: "rgba(255,255,255,0.18)" }} />
-                <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.25)" }}>
-                  Dados do cartão
-                </span>
-                <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.04)" }} />
-              </div>
+              {/* Premium payment card container */}
+              <div
+                style={{
+                  background: "linear-gradient(180deg, #0B1220 0%, #0A0F1A 100%)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: "20px",
+                  padding: "24px",
+                  boxShadow: "0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03)",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Top edge glow */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: "10%",
+                    right: "10%",
+                    height: "1px",
+                    background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.25), rgba(6,182,212,0.2), transparent)",
+                  }}
+                />
 
-              <MercadoPagoCardSection
-                active={tab === "card"}
-                open={open}
-                publicKey={publicKey}
-                productId={product.id}
-                variantId={variantId}
-                quantity={quantity}
-                totalAmount={totalAmount}
-                initialEmail={payerEmail}
-              />
+                {/* Section header */}
+                <div className="flex items-center gap-2.5 mb-5">
+                  <div
+                    className="flex items-center justify-center"
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 8,
+                      background: "rgba(99,102,241,0.08)",
+                      border: "1px solid rgba(99,102,241,0.12)",
+                    }}
+                  >
+                    <Lock className="h-3.5 w-3.5" style={{ color: "#818CF8" }} />
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-semibold text-white/90" style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif" }}>
+                      Dados do cartão
+                    </p>
+                    <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      Ambiente seguro • Criptografia TLS
+                    </p>
+                  </div>
+                </div>
+
+                {/* Brick wrapper */}
+                <div
+                  style={{
+                    background: "rgba(255,255,255,0.015)",
+                    border: "1px solid rgba(255,255,255,0.04)",
+                    borderRadius: "16px",
+                    padding: "4px",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.015)",
+                  }}
+                >
+                  <MercadoPagoCardSection
+                    active={tab === "card"}
+                    open={open}
+                    publicKey={publicKey}
+                    productId={product.id}
+                    variantId={variantId}
+                    quantity={quantity}
+                    totalAmount={totalAmount}
+                    initialEmail={payerEmail}
+                  />
+                </div>
+
+                {/* Bottom trust badges */}
+                <div className="flex items-center justify-center gap-4 mt-5">
+                  {[
+                    { icon: ShieldCheck, text: "SSL 256-bit" },
+                    { icon: Lock, text: "PCI DSS" },
+                  ].map(({ icon: Ic, text }) => (
+                    <div key={text} className="flex items-center gap-1">
+                      <Ic className="h-3 w-3" style={{ color: "rgba(255,255,255,0.12)" }} />
+                      <span className="text-[9px] font-medium tracking-wide uppercase" style={{ color: "rgba(255,255,255,0.15)" }}>
+                        {text}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Footer */}
