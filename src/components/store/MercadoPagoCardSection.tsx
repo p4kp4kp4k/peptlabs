@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { CheckCircle2, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 declare global {
   interface Window {
@@ -33,6 +34,10 @@ interface CheckoutFunctionResponse {
 }
 
 const BRICK_CONTAINER_ID = "mp-card-payment-brick-container";
+const BRICK_READY_TIMEOUT = 20_000; // 20 seconds
+
+const log = (step: string, ...args: any[]) =>
+  console.log(`[MP-Brick] ${step}`, ...args);
 
 export default function MercadoPagoCardSection({
   active,
@@ -52,10 +57,12 @@ export default function MercadoPagoCardSection({
   const [processing, setProcessing] = useState(false);
   const [cardResult, setCardResult] = useState<CheckoutFunctionResponse | null>(null);
   const [mountError, setMountError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const mpInstanceRef = useRef<any>(null);
   const brickControllerRef = useRef<any>(null);
   const mountIdRef = useRef(0);
+  const readyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* Stable refs for values used inside Brick callbacks */
   const productIdRef = useRef(productId);
@@ -67,94 +74,151 @@ export default function MercadoPagoCardSection({
   const emailRef = useRef(initialEmail);
   emailRef.current = initialEmail;
 
+  const clearReadyTimeout = useCallback(() => {
+    if (readyTimeoutRef.current) {
+      clearTimeout(readyTimeoutRef.current);
+      readyTimeoutRef.current = null;
+    }
+  }, []);
+
   const destroyBrick = useCallback(async () => {
+    log("destroyBrick", "starting cleanup");
+    clearReadyTimeout();
     setBrickReady(false);
     if (brickControllerRef.current?.unmount) {
       try {
         await brickControllerRef.current.unmount();
-      } catch {
-        /* SDK may throw if already unmounted */
+        log("destroyBrick", "unmount OK");
+      } catch (e) {
+        log("destroyBrick", "unmount error (ignored)", e);
       }
     }
     brickControllerRef.current = null;
 
-    /* Clear stale iframe/content the SDK may have left behind */
     const el = document.getElementById(BRICK_CONTAINER_ID);
     if (el) el.innerHTML = "";
-  }, []);
+  }, [clearReadyTimeout]);
 
   /* Reset everything when the dialog closes */
   useEffect(() => {
     if (!open) {
+      log("dialog-closed", "resetting state");
       setCardResult(null);
       setProcessing(false);
       setMountError(null);
+      setRetryCount(0);
       void destroyBrick();
       mpInstanceRef.current = null;
     }
   }, [open, destroyBrick]);
 
-  /*
-   * Single combined effect: SDK check → MP init → Brick mount.
-   * The SDK script is already in index.html so window.MercadoPago
-   * should exist.  If not we bail with an error message.
-   */
+  /* Main mount effect */
   useEffect(() => {
-    if (!open || !active || !publicKey) return;
+    if (!open || !active || !publicKey) {
+      log("effect-guard", { open, active, hasPublicKey: !!publicKey });
+      return;
+    }
 
     let cancelled = false;
     const mountId = ++mountIdRef.current;
 
+    log("effect-start", { mountId, publicKey: publicKey.substring(0, 20) + "...", totalAmount });
+
     const run = async () => {
       /* ── 1. SDK availability ─────────────────────────── */
+      log("step-1", "checking SDK availability");
       if (typeof window.MercadoPago === "undefined") {
-        /* SDK not loaded yet – wait up to 5 s */
         let waited = 0;
-        while (typeof window.MercadoPago === "undefined" && waited < 5000) {
-          await new Promise((r) => setTimeout(r, 250));
-          waited += 250;
+        while (typeof window.MercadoPago === "undefined" && waited < 8000) {
+          await new Promise((r) => setTimeout(r, 300));
+          waited += 300;
         }
         if (typeof window.MercadoPago === "undefined") {
+          log("step-1", "SDK NOT found after 8s");
           if (!cancelled) setMountError("SDK do Mercado Pago não carregou. Recarregue a página.");
           return;
         }
       }
-      if (cancelled || mountId !== mountIdRef.current) return;
+      log("step-1", "SDK found ✓", typeof window.MercadoPago);
+      if (cancelled || mountId !== mountIdRef.current) {
+        log("step-1", "cancelled after SDK wait");
+        return;
+      }
 
       /* ── 2. Create MP instance ───────────────────────── */
+      log("step-2", "creating MP instance");
       try {
         mpInstanceRef.current = new window.MercadoPago(publicKey, { locale: "pt-BR" });
+        log("step-2", "MP instance created ✓");
       } catch (err) {
-        console.error("[MP] SDK init error:", err);
+        log("step-2", "MP init FAILED", err);
         if (!cancelled) setMountError("Falha ao inicializar o Mercado Pago.");
         return;
       }
-      if (cancelled || mountId !== mountIdRef.current) return;
+      if (cancelled || mountId !== mountIdRef.current) {
+        log("step-2", "cancelled after MP init");
+        return;
+      }
 
       /* ── 3. Prepare container ────────────────────────── */
+      log("step-3", "preparing container");
       await destroyBrick();
-      if (cancelled || mountId !== mountIdRef.current) return;
+      if (cancelled || mountId !== mountIdRef.current) {
+        log("step-3", "cancelled after destroyBrick");
+        return;
+      }
 
       const container = document.getElementById(BRICK_CONTAINER_ID);
       if (!container) {
+        log("step-3", "container NOT found in DOM");
         if (!cancelled) setMountError("Container do formulário de cartão não encontrado.");
         return;
       }
+
+      const rect = container.getBoundingClientRect();
+      log("step-3", "container found ✓", {
+        width: rect.width,
+        height: rect.height,
+        visible: rect.width > 0,
+        display: getComputedStyle(container).display,
+        parentDisplay: container.parentElement ? getComputedStyle(container.parentElement).display : "n/a",
+      });
+
       container.innerHTML = "";
 
-      /* Two animation frames ensure the empty container has been painted */
+      /* Wait for paint */
       await new Promise<void>((r) =>
         requestAnimationFrame(() => requestAnimationFrame(() => r())),
       );
-      if (cancelled || mountId !== mountIdRef.current) return;
+      if (cancelled || mountId !== mountIdRef.current) {
+        log("step-3", "cancelled after rAF");
+        return;
+      }
 
       /* ── 4. Mount Brick ──────────────────────────────── */
+      log("step-4", "creating cardPayment Brick", { amount: totalAmount });
+
+      /* Set a timeout: if onReady doesn't fire within BRICK_READY_TIMEOUT, show error */
+      clearReadyTimeout();
+      readyTimeoutRef.current = setTimeout(() => {
+        if (!cancelled && mountId === mountIdRef.current) {
+          log("timeout", "Brick did NOT become ready within timeout");
+          setMountError(
+            "O formulário do cartão não carregou a tempo. Verifique sua conexão e tente novamente."
+          );
+        }
+      }, BRICK_READY_TIMEOUT);
+
       try {
-        brickControllerRef.current = await mpInstanceRef.current
-          .bricks()
-          .create("cardPayment", BRICK_CONTAINER_ID, {
+        const bricksBuilder = mpInstanceRef.current.bricks();
+        log("step-4", "bricksBuilder obtained ✓");
+
+        brickControllerRef.current = await bricksBuilder.create(
+          "cardPayment",
+          BRICK_CONTAINER_ID,
+          {
             initialization: {
-              amount: totalAmount,
+              amount: Number(totalAmount),
               ...(emailRef.current ? { payer: { email: emailRef.current } } : {}),
             },
             locale: "pt-BR",
@@ -163,23 +227,26 @@ export default function MercadoPagoCardSection({
               paymentMethods: {
                 maxInstallments: 12,
                 minInstallments: 1,
-                types: { included: ["credit_card"] },
               },
             },
             callbacks: {
               onReady: () => {
+                log("onReady", "Brick is READY ✓", { mountId, currentMountId: mountIdRef.current });
+                clearReadyTimeout();
                 if (!cancelled && mountId === mountIdRef.current) {
                   setBrickReady(true);
                   setMountError(null);
                 }
               },
               onError: (error: any) => {
-                console.error("[MP] Brick error:", error);
+                log("onError", "Brick error:", error);
+                clearReadyTimeout();
                 if (!cancelled && mountId === mountIdRef.current) {
                   setMountError(error?.message || "Erro no formulário do cartão.");
                 }
               },
               onSubmit: async (cardData: any) => {
+                log("onSubmit", "card data received, processing payment");
                 setProcessing(true);
                 try {
                   const res = await supabase.functions.invoke("create-mp-checkout", {
@@ -222,9 +289,12 @@ export default function MercadoPagoCardSection({
                 }
               },
             },
-          });
+          },
+        );
+        log("step-4", "bricks.create() resolved ✓", { controller: !!brickControllerRef.current });
       } catch (error: any) {
-        console.error("[MP] Brick create error:", error);
+        log("step-4", "bricks.create() FAILED", error);
+        clearReadyTimeout();
         if (!cancelled && mountId === mountIdRef.current) {
           setMountError(error?.message || "Não foi possível montar o formulário do cartão.");
         }
@@ -234,11 +304,21 @@ export default function MercadoPagoCardSection({
     void run();
 
     return () => {
+      log("cleanup", "cancelling mountId", mountId);
       cancelled = true;
+      clearReadyTimeout();
       void destroyBrick();
       mpInstanceRef.current = null;
     };
-  }, [active, open, publicKey, totalAmount, destroyBrick]);
+  }, [active, open, publicKey, totalAmount, destroyBrick, clearReadyTimeout, retryCount]);
+
+  /* ── Retry handler ── */
+  const handleRetry = () => {
+    log("retry", "user triggered retry");
+    setMountError(null);
+    setBrickReady(false);
+    setRetryCount((c) => c + 1);
+  };
 
   /* ── Render ────────────────────────────────────────── */
 
@@ -263,9 +343,20 @@ export default function MercadoPagoCardSection({
   return (
     <div className="space-y-3">
       {mountError && (
-        <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-          {mountError}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            {mountError}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-1.5 text-xs"
+            onClick={handleRetry}
+          >
+            <RefreshCw className="h-3 w-3" />
+            Tentar novamente
+          </Button>
         </div>
       )}
 
@@ -276,7 +367,10 @@ export default function MercadoPagoCardSection({
         </div>
       )}
 
-      <div id={BRICK_CONTAINER_ID} style={{ minHeight: 420, width: "100%" }} />
+      <div
+        id={BRICK_CONTAINER_ID}
+        style={{ minHeight: brickReady ? "auto" : 420, width: "100%" }}
+      />
 
       {processing && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
