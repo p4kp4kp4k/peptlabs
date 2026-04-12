@@ -107,6 +107,67 @@ function Section({ id, icon, title, iconColor = "text-primary", action, children
   );
 }
 
+/* ─── Locked section placeholder (for anonymous/free users) ─── */
+function LockedSectionPlaceholder({ icon, title, iconColor = "text-primary", navigateTo }: {
+  icon: React.ElementType; title: string; iconColor?: string; navigateTo: (path: string) => void;
+}) {
+  const Icon = icon;
+  return (
+    <ScrollReveal>
+      <section className="rounded-xl border border-border bg-card card-line overflow-hidden relative">
+        <div className="p-4 sm:px-5 sm:py-3.5">
+          <h3 className="text-sm font-bold text-foreground/40 flex items-center gap-2">
+            <div className={`flex h-6 w-6 items-center justify-center rounded-md bg-muted/30 text-muted-foreground/40`}>
+              <Icon className="h-3.5 w-3.5" />
+            </div>
+            {title}
+            <Lock className="h-3.5 w-3.5 text-muted-foreground/40 ml-auto" />
+          </h3>
+        </div>
+        {/* Blurred placeholder content */}
+        <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+          <div className="space-y-2 pointer-events-none select-none blur-[4px] brightness-[0.5]">
+            <div className="h-3 bg-muted/20 rounded w-3/4" />
+            <div className="h-3 bg-muted/20 rounded w-1/2" />
+            <div className="h-3 bg-muted/20 rounded w-2/3" />
+          </div>
+        </div>
+      </section>
+    </ScrollReveal>
+  );
+}
+
+/* ─── Premium gate card (inserted between free and locked sections) ─── */
+function PremiumGateCard({ user, navigate }: { user: any; navigate: (path: string) => void }) {
+  return (
+    <div className="rounded-xl border border-primary/30 bg-card overflow-hidden">
+      <div className="flex flex-col items-center text-center py-8 px-6">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
+          <Lock className="h-6 w-6 text-primary" />
+          <Crown className="h-3 w-3 text-primary absolute translate-x-3 -translate-y-3" />
+        </div>
+        <h3 className="text-sm font-bold text-foreground mb-1.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          Conteúdo completo exclusivo Premium
+        </h3>
+        <p className="text-[11px] text-muted-foreground max-w-xs leading-relaxed mb-5">
+          Acesse dosagens detalhadas, protocolos completos, interações verificadas e referências científicas.
+        </p>
+        <Button
+          className="gap-2 h-10 text-xs font-bold px-8"
+          onClick={() => navigate(user ? "/app/billing" : "/auth")}
+        >
+          <Crown className="h-4 w-4" />
+          {user ? "Desbloquear com Premium" : "Criar Conta Gratuita"}
+        </Button>
+        <div className="flex items-center gap-4 mt-3 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> Acesso imediato</span>
+          <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Cancele quando quiser</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StatusBadge({ status }: { status: string }) {
   const u = status.toUpperCase();
   if (u.includes("SINÉR") || u.includes("SINERG")) return <Badge className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 font-bold px-2">SINÉRGICO</Badge>;
