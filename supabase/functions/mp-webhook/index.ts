@@ -6,6 +6,23 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/* ── Valid status transitions (prevents regressions) ── */
+const VALID_NEXT: Record<string, string[]> = {
+  pending: ["approved", "cancelled", "rejected"],
+  approved: ["refunded", "charged_back"],
+  cancelled: [],
+  rejected: [],
+  refunded: [],
+  charged_back: [],
+};
+
+function isTransitionValid(from: string, to: string): boolean {
+  if (from === to) return false; // no-op
+  const allowed = VALID_NEXT[from];
+  return allowed ? allowed.includes(to) : true; // unknown → allow
+}
+
+/* ── HMAC signature validation ── */
 async function validateSignature(req: Request, dataId: string): Promise<boolean> {
   const webhookSecret = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET");
   if (!webhookSecret) {
@@ -15,7 +32,6 @@ async function validateSignature(req: Request, dataId: string): Promise<boolean>
 
   const xSignature = req.headers.get("x-signature");
   const xRequestId = req.headers.get("x-request-id");
-
   if (!xSignature) {
     console.warn("Missing x-signature header");
     return false;
@@ -47,28 +63,69 @@ async function validateSignature(req: Request, dataId: string): Promise<boolean>
     false,
     ["sign"],
   );
-
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(manifest));
   const computed = Array.from(new Uint8Array(signature))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 
   if (computed !== v1) {
-    console.error("Signature mismatch! Possible spoofed notification.");
+    console.error("Signature mismatch — possible spoofed notification");
     return false;
   }
-
   return true;
 }
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+/* ── Map MP order status to internal status ── */
+function mapOrderStatus(mpStatus: string): string {
+  switch (mpStatus) {
+    case "processed":
+      return "approved";
+    case "cancelled":
+      return "cancelled";
+    case "expired":
+      return "rejected";
+    case "refunded":
+      return "refunded";
+    case "charged_back":
+    case "chargedback":
+      return "charged_back";
+    default:
+      return "pending";
+  }
+}
+
+/* ── Stock deduction (idempotent via metadata flag) ── */
+async function decrementStock(
+  adminClient: ReturnType<typeof createClient>,
+  order: { variant_id: string | null; quantity: number; metadata: Record<string, unknown> | null },
+  orderId: string,
+) {
+  if (!order.variant_id) return;
+  const meta = (order.metadata ?? {}) as Record<string, unknown>;
+  if (meta.stock_decremented === true) return; // already done
+
+  const { data: variant } = await adminClient
+    .from("product_variants")
+    .select("stock")
+    .eq("id", order.variant_id)
+    .single();
+
+  if (variant) {
+    const newStock = Math.max(0, (variant.stock ?? 0) - order.quantity);
+    await adminClient
+      .from("product_variants")
+      .update({ stock: newStock })
+      .eq("id", order.variant_id);
   }
 
-  if (req.method === "GET") {
-    return new Response("ok", { status: 200, headers: corsHeaders });
-  }
+  // Mark flag in metadata (merged in caller's update)
+  return true; // signals caller to include stock_decremented
+}
+
+/* ── Main handler ── */
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "GET") return new Response("ok", { status: 200, headers: corsHeaders });
 
   try {
     const body = await req.json();
@@ -82,7 +139,7 @@ serve(async (req) => {
 
     const isValid = await validateSignature(req, String(data.id));
     if (!isValid) {
-      console.error("Invalid webhook signature — rejecting notification");
+      console.error("Invalid webhook signature — rejecting");
       return new Response("Forbidden", { status: 403, headers: corsHeaders });
     }
 
@@ -110,9 +167,8 @@ serve(async (req) => {
     const order = await orderResponse.json();
     console.log("Order fetched:", JSON.stringify({ id: order.id, status: order.status }));
 
-    const rawExternalReference = typeof order.external_reference === "string"
-      ? order.external_reference.trim()
-      : "";
+    const rawExternalReference =
+      typeof order.external_reference === "string" ? order.external_reference.trim() : "";
 
     let legacyRefData: Record<string, string> = {};
     if (rawExternalReference.startsWith("{")) {
@@ -123,10 +179,10 @@ serve(async (req) => {
       }
     }
 
-    const localOrderId = rawExternalReference && !rawExternalReference.startsWith("{")
-      ? rawExternalReference
-      : null;
+    const localOrderId =
+      rawExternalReference && !rawExternalReference.startsWith("{") ? rawExternalReference : null;
 
+    // Log in webhook_events
     await adminClient.from("webhook_events").insert({
       provider: "mercadopago",
       event_type: action || `order.${order.status}`,
@@ -137,49 +193,67 @@ serve(async (req) => {
         statusDetail: order.status_detail,
         totalAmount: order.total_amount,
         externalReference: rawExternalReference || null,
-        payments: order.transactions?.payments?.map((payment: any) => ({
-          id: payment.id,
-          status: payment.status,
-          statusDetail: payment.status_detail,
-          amount: payment.amount,
+        payments: order.transactions?.payments?.map((p: any) => ({
+          id: p.id,
+          status: p.status,
+          statusDetail: p.status_detail,
+          amount: p.amount,
         })),
       },
       processed: true,
       processed_at: new Date().toISOString(),
     });
 
-    const paymentStatus =
-      order.status === "processed"
-        ? "approved"
-        : order.status === "cancelled"
-          ? "cancelled"
-          : order.status === "expired"
-            ? "rejected"
-            : "pending";
+    const paymentStatus = mapOrderStatus(order.status);
 
-    let existingOrder:
-      | { id: string; user_id: string; product_id: string | null; variant_id: string | null; quantity: number; payment_method: string }
-      | null = null;
+    /* ── Find existing local order ── */
+    type LocalOrder = {
+      id: string;
+      user_id: string;
+      product_id: string | null;
+      variant_id: string | null;
+      quantity: number;
+      payment_method: string;
+      payment_status: string;
+      metadata: Record<string, unknown> | null;
+    };
+
+    const orderFields = "id, user_id, product_id, variant_id, quantity, payment_method, payment_status, metadata";
+
+    let existingOrder: LocalOrder | null = null;
 
     const byMpOrder = await adminClient
       .from("orders")
-      .select("id, user_id, product_id, variant_id, quantity, payment_method")
+      .select(orderFields)
       .eq("mp_order_id", orderId)
       .maybeSingle();
-
-    existingOrder = byMpOrder.data;
+    existingOrder = byMpOrder.data as LocalOrder | null;
 
     if (!existingOrder && localOrderId) {
       const byLocalId = await adminClient
         .from("orders")
-        .select("id, user_id, product_id, variant_id, quantity, payment_method")
+        .select(orderFields)
         .eq("id", localOrderId)
         .maybeSingle();
-
-      existingOrder = byLocalId.data;
+      existingOrder = byLocalId.data as LocalOrder | null;
     }
 
     if (existingOrder) {
+      /* ── State transition validation ── */
+      const currentStatus = existingOrder.payment_status || "pending";
+      if (!isTransitionValid(currentStatus, paymentStatus)) {
+        console.warn(`Ignoring invalid transition: ${currentStatus} → ${paymentStatus} for order ${existingOrder.id}`);
+        return new Response("ok", { status: 200, headers: corsHeaders });
+      }
+
+      /* ── Stock deduction on approval ── */
+      let stockDecremented = (existingOrder.metadata as any)?.stock_decremented === true;
+      if (paymentStatus === "approved" && !stockDecremented) {
+        const did = await decrementStock(adminClient, existingOrder, existingOrder.id);
+        if (did) stockDecremented = true;
+      }
+
+      /* ── Update order ── */
       await adminClient
         .from("orders")
         .update({
@@ -187,10 +261,12 @@ serve(async (req) => {
           total_amount: Number(order.total_amount || 0),
           payment_status: paymentStatus,
           metadata: {
+            ...(existingOrder.metadata as Record<string, unknown> || {}),
             external_reference: rawExternalReference || null,
             mp_status: order.status,
             mp_status_detail: order.status_detail,
             payments: order.transactions?.payments ?? [],
+            stock_decremented: stockDecremented,
           },
         })
         .eq("id", existingOrder.id);
@@ -207,6 +283,7 @@ serve(async (req) => {
           quantity: existingOrder.quantity,
           paymentMethod: existingOrder.payment_method,
           status: order.status,
+          paymentStatus,
         },
       });
     } else if (legacyRefData.userId) {
@@ -224,6 +301,7 @@ serve(async (req) => {
           mp_status: order.status,
           mp_status_detail: order.status_detail,
           payments: order.transactions?.payments ?? [],
+          stock_decremented: false,
         },
       });
 
@@ -238,13 +316,14 @@ serve(async (req) => {
           quantity: legacyRefData.quantity,
           paymentMethod: legacyRefData.paymentMethod,
           status: order.status,
+          paymentStatus,
         },
       });
     } else {
-      console.warn("Webhook received for order without matching local record:", JSON.stringify({
-        orderId,
-        externalReference: rawExternalReference || null,
-      }));
+      console.warn(
+        "Webhook for order without matching local record:",
+        JSON.stringify({ orderId, externalReference: rawExternalReference || null }),
+      );
     }
 
     return new Response("ok", { status: 200, headers: corsHeaders });

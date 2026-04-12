@@ -18,7 +18,7 @@ export type SubscriptionStatus =
 
 export interface CheckoutRequest {
   planId: PlanId;
-  provider: PaymentProvider;
+  provider?: PaymentProvider;
   successUrl: string;
   cancelUrl: string;
 }
