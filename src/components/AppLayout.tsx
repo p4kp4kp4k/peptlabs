@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import FreeGateOverlay from "@/components/FreeGateOverlay";
 import { useThemeColor, themeOptions } from "@/hooks/useThemeColor";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
