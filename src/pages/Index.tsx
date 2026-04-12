@@ -128,85 +128,58 @@ const Index = () => {
 
         {/* Nav Items */}
         <nav className="flex-1 overflow-y-auto scrollbar-thin py-3 px-2.5 space-y-px">
-          {user ? (
+          {/* Início (scroll to top) */}
+          <button
+            onClick={() => scrollTo("hero")}
+            className={cn(
+              "w-full group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150 mb-1",
+              active === "hero"
+                ? "bg-primary/[0.08] text-primary"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <Home className="h-[15px] w-[15px] shrink-0" />
+            <span>Início</span>
+            {active === "hero" && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
+          </button>
+
+          {/* App navigation — always visible */}
+          <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Principal</p>
+          {appMainNav.map((item) => (
+            <Link
+              key={item.path}
+              to={user ? item.path : "/auth"}
+              className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            >
+              <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
+              <span className="truncate">{item.label}</span>
+            </Link>
+          ))}
+
+          <div className="my-3 mx-2 border-t border-border/15" />
+          <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Conta</p>
+          {appBottomNav.map((item) => (
+            <Link
+              key={item.path}
+              to={user ? item.path : "/auth"}
+              className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            >
+              <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
+              <span className="truncate">{item.label}</span>
+            </Link>
+          ))}
+
+          {user && isAdmin && (
             <>
-              {/* Início (scroll to top) */}
-              <button
-                onClick={() => scrollTo("hero")}
-                className={cn(
-                  "w-full group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150 mb-1",
-                  active === "hero"
-                    ? "bg-primary/[0.08] text-primary"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                )}
-              >
-                <Home className="h-[15px] w-[15px] shrink-0" />
-                <span>Início</span>
-                {active === "hero" && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
-              </button>
-
-              {/* App navigation */}
-              <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Principal</p>
-              {appMainNav.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                >
-                  <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              ))}
-
               <div className="my-3 mx-2 border-t border-border/15" />
-              <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Conta</p>
-              {appBottomNav.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                >
-                  <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              ))}
-
-              {isAdmin && (
-                <>
-                  <div className="my-3 mx-2 border-t border-border/15" />
-                  <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Admin</p>
-                  <Link
-                    to="/app/admin"
-                    className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-card/50 hover:text-foreground transition-colors"
-                  >
-                    <Shield className="h-[15px] w-[15px] shrink-0" />
-                    <span>Painel Admin</span>
-                  </Link>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              {navItems.map((item) => {
-                const isActiveSection = active === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => scrollTo(item.id)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 group ${
-                      isActiveSection
-                        ? "bg-primary/[0.08] text-primary border border-primary/15"
-                        : "text-muted-foreground hover:text-foreground hover:bg-card/50 border border-transparent"
-                    }`}
-                  >
-                    <item.icon className={`h-3.5 w-3.5 transition-colors ${isActiveSection ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
-                    {item.label}
-                    {isActiveSection && (
-                      <ChevronRight className="h-3 w-3 ml-auto text-primary/60" />
-                    )}
-                  </button>
-                );
-              })}
+              <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Admin</p>
+              <Link
+                to="/app/admin"
+                className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-card/50 hover:text-foreground transition-colors"
+              >
+                <Shield className="h-[15px] w-[15px] shrink-0" />
+                <span>Painel Admin</span>
+              </Link>
             </>
           )}
         </nav>
