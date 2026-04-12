@@ -160,17 +160,23 @@ export default function FreeGateOverlay({
           {/* Header */}
           <div className="px-5 pt-5 pb-3 text-center">
             <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
-              <UserPlus className="h-5 w-5 text-primary" />
+              <PageIcon className="h-5 w-5 text-primary" />
             </div>
             <h2
               className="text-base font-bold text-foreground"
               style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
-              {pageTitle || "Conteúdo Premium"}
+              {pageTitle}
             </h2>
             <p className="mt-1 text-[11px] text-muted-foreground max-w-xs mx-auto leading-relaxed">
-              {description || "Cadastre-se gratuitamente para explorar a plataforma completa de peptídeos."}
+              {description}
             </p>
+            {highlightFeature && (
+              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-medium text-primary">
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                {highlightFeature}
+              </div>
+            )}
           </div>
 
           {/* Social proof bar */}
