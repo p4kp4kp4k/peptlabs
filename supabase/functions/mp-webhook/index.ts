@@ -165,12 +165,8 @@ serve(async (req) => {
       return new Response("ok", { status: 200, headers: corsHeaders });
     }
 
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
-    const orderId = String(data.id);
+    const orderId = mpOrderId;
     const orderResponse = await fetch(`https://api.mercadopago.com/v1/orders/${orderId}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
