@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntitlements } from "@/hooks/useEntitlements";
-import FreeGateOverlay from "@/components/FreeGateOverlay";
+
 import { useThemeColor, themeOptions } from "@/hooks/useThemeColor";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -274,11 +274,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="flex-1 overflow-y-auto scrollbar-thin">
-          {user ? children : (
-            <FreeGateOverlay>
-              {children}
-            </FreeGateOverlay>
-          )}
+          {children}
         </main>
       </div>
     </div>
