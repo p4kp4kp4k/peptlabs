@@ -265,9 +265,12 @@ serve(async (req) => {
 
       /* ── Stock deduction on approval ── */
       let stockDecremented = (existingOrder.metadata as any)?.stock_decremented === true;
+      let stockInsufficient = false;
       if (paymentStatus === "approved" && !stockDecremented) {
-        const did = await decrementStock(adminClient, existingOrder);
-        if (did) stockDecremented = true;
+        const result = await decrementStock(adminClient, existingOrder);
+        if (result === "ok") stockDecremented = true;
+        else if (result === "insufficient") stockInsufficient = true;
+        // "already" and "error" keep stockDecremented unchanged
       }
 
       /* ── Update order ── */
