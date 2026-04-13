@@ -40,7 +40,7 @@ export default function AdminPlanLinks() {
 
   const updateMutation = useMutation({
     mutationFn: async (link: Partial<PlanLink> & { id: string }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("plan_links")
         .update({
           checkout_url: link.checkout_url,
