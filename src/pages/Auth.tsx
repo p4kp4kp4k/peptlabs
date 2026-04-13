@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { FlaskConical, Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,10 +19,13 @@ export default function Auth() {
   const { signIn, signUp, resetPassword, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planParam = searchParams.get("plan");
+  const redirectAfterAuth = planParam ? "/app/billing" : "/app/dashboard";
 
   // If already logged in, redirect
   if (user) {
-    navigate("/app/dashboard", { replace: true });
+    navigate(redirectAfterAuth, { replace: true });
     return null;
   }
 
@@ -33,7 +36,7 @@ export default function Auth() {
       if (mode === "login") {
         const { error } = await signIn(email, password);
         if (error) throw error;
-        navigate("/app/dashboard");
+        navigate(redirectAfterAuth);
       } else if (mode === "register") {
         const { error } = await signUp(email, password, displayName);
         if (error) throw error;
