@@ -158,6 +158,9 @@ export default function Admin() {
           <TabsTrigger value="webhooks" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Webhook className="h-3.5 w-3.5" /> Webhooks
           </TabsTrigger>
+          <TabsTrigger value="plan-links" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Link2 className="h-3.5 w-3.5" /> Links Planos
+          </TabsTrigger>
         </TabsList>
 
         {/* Users Tab */}
