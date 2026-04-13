@@ -332,6 +332,11 @@ export default function Admin() {
         <TabsContent value="webhooks">
           <AdminWebhooks />
         </TabsContent>
+
+        {/* Plan Links Tab */}
+        <TabsContent value="plan-links">
+          <AdminPlanLinks />
+        </TabsContent>
       </Tabs>
     </div>
   );
