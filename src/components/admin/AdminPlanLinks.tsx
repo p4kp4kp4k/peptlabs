@@ -249,25 +249,39 @@ function PlanLinkRow({
         </div>
       </div>
 
-      <div className="space-y-1">
-        <Label className="text-[10px] text-muted-foreground">URL de Checkout (Kiwify)</Label>
-        <div className="flex gap-2">
+      <div className="grid grid-cols-[1fr_140px] gap-3">
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">URL de Checkout (Kiwify)</Label>
+          <div className="flex gap-2">
+            <Input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://pay.kiwify.com.br/..."
+              className="h-8 text-xs font-mono flex-1"
+            />
+            {url && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => window.open(url, "_blank")}
+              >
+                <ExternalLink className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Preço (R$)</Label>
           <Input
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://pay.kiwify.com.br/..."
-            className="h-8 text-xs font-mono flex-1"
+            type="number"
+            step="0.01"
+            min="0"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder="0.00"
+            className="h-8 text-xs font-mono"
           />
-          {url && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => window.open(url, "_blank")}
-            >
-              <ExternalLink className="h-3 w-3" />
-            </Button>
-          )}
         </div>
       </div>
 
