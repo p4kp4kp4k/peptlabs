@@ -313,7 +313,7 @@ function PlanLinkRow({
           className="h-7 text-[10px] gap-1"
           disabled={!hasChanges || isSaving}
           onClick={() =>
-            onSave({ checkout_url: url, label, is_active: active, kiwify_product_id: kiwifyId || null })
+            onSave({ checkout_url: url, label, is_active: active, kiwify_product_id: kiwifyId || null, price: Number(price) || 0 })
           }
         >
           {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
