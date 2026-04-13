@@ -146,7 +146,7 @@ const PricingSection = () => {
                         ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30"
                         : "border-foreground/30 text-foreground hover:border-primary/40 hover:bg-primary/[0.08]"
                     }`}
-                    onClick={() => navigate("/auth")}
+                    onClick={() => navigate(plan.name === "Explorer" ? "/auth" : `/auth?plan=${plan.name === "PRO Mensal" ? "pro_monthly" : "pro_lifetime"}`)}
                   >
                     {plan.cta}
                   </Button>
