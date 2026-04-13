@@ -209,8 +209,8 @@ serve(async (req) => {
     // ── 4. Resolve (or create) Supabase user ───────────────────────────────
     const email = buyer.email.trim().toLowerCase();
     const displayName = buyer.name
-      ?? `${buyer.first_name ?? ""} ${buyer.last_name ?? ""}`.trim()
-      || undefined;
+      ?? (`${buyer.first_name ?? ""} ${buyer.last_name ?? ""}`.trim()
+      || undefined);
 
     // Check if user already exists
     const { data: existingUsers } = await adminClient.auth.admin.listUsers();
