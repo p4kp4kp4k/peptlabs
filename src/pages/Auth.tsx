@@ -24,10 +24,13 @@ export default function Auth() {
   const redirectAfterAuth = planParam ? "/app/billing" : "/app/dashboard";
 
   // If already logged in, redirect
-  if (user) {
-    navigate(redirectAfterAuth, { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      navigate(redirectAfterAuth, { replace: true });
+    }
+  }, [user, navigate, redirectAfterAuth]);
+
+  if (user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
