@@ -277,6 +277,9 @@ const Index = () => {
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 border-b border-border/20 bg-background/80 backdrop-blur-2xl">
         <div className="flex items-center justify-between px-4 h-12">
           <div className="flex items-center gap-2">
+            <button onClick={() => setMobileOpen(true)}>
+              <Menu className="h-5 w-5 text-muted-foreground" />
+            </button>
             <FlaskConical className="h-4 w-4 text-primary" />
             <span className="text-sm font-bold font-display">
               Pepti<span className="text-gradient-primary">Lab</span>
@@ -286,23 +289,135 @@ const Index = () => {
             {user ? "Painel" : "Criar Conta"}
           </Button>
         </div>
-        {/* Mobile nav scroll */}
-        <div className="flex gap-1 px-3 pb-2 overflow-x-auto scrollbar-thin">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => scrollTo(item.id)}
-              className={`shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
-                active === item.id
-                  ? "bg-primary/[0.1] text-primary border border-primary/20"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
       </div>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <div className="fixed inset-0 z-[60] md:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="absolute left-0 top-0 h-full w-64 border-r border-border/20 bg-background/95 backdrop-blur-2xl flex flex-col"
+            >
+              {/* Logo + Close */}
+              <div className="flex h-12 items-center justify-between px-4 border-b border-border/15">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
+                    <FlaskConical className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <span className="text-sm font-bold font-display">
+                    Pepti<span className="text-gradient-primary">Lab</span>
+                  </span>
+                </div>
+                <button onClick={() => setMobileOpen(false)} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Nav */}
+              <nav className="flex-1 overflow-y-auto scrollbar-thin py-3 px-2.5 space-y-px">
+                <button
+                  onClick={() => { scrollTo("hero"); setMobileOpen(false); }}
+                  className={cn(
+                    "w-full group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150 mb-1",
+                    active === "hero"
+                      ? "bg-primary/[0.08] text-primary"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  <Home className="h-[15px] w-[15px] shrink-0" />
+                  <span>Início</span>
+                  {active === "hero" && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
+                </button>
+
+                <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Principal</p>
+                {appMainNav.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileOpen(false)}
+                    className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  >
+                    <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                ))}
+
+                <div className="my-3 mx-2 border-t border-border/15" />
+                <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Conta</p>
+                {appBottomNav.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileOpen(false)}
+                    className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  >
+                    <item.icon className="h-[15px] w-[15px] shrink-0 text-muted-foreground group-hover:text-foreground" />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                ))}
+
+                {user && isAdmin && (
+                  <>
+                    <div className="my-3 mx-2 border-t border-border/15" />
+                    <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Admin</p>
+                    <Link
+                      to="/app/admin"
+                      onClick={() => setMobileOpen(false)}
+                      className="group flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                    >
+                      <Shield className="h-[15px] w-[15px] shrink-0" />
+                      <span>Painel Admin</span>
+                    </Link>
+                  </>
+                )}
+              </nav>
+
+              {/* Bottom */}
+              <div className="border-t border-border/15 p-2.5 space-y-1">
+                {user ? (
+                  <>
+                    <div className="flex items-center gap-2 px-2.5 py-1.5">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                        {(profile?.display_name || user?.email || "U")[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-xs font-medium text-foreground">{profile?.display_name || user?.email?.split("@")[0]}</p>
+                        <p className="truncate text-[10px] text-muted-foreground">{user?.email}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={async () => { await signOut(); setMobileOpen(false); navigate("/"); }}
+                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                    >
+                      <LogOut className="h-3 w-3" /> Sair
+                    </button>
+                  </>
+                ) : (
+                  <div className="space-y-2 pt-1">
+                    <Button size="sm" className="w-full gap-1.5 text-xs h-9 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" onClick={() => { setMobileOpen(false); navigate("/auth"); }}>
+                      Criar Conta <ArrowRight className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full text-xs h-8 text-muted-foreground hover:text-foreground" onClick={() => { setMobileOpen(false); navigate("/auth"); }}>
+                      Entrar
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Main Scrollable Content */}
       <main ref={mainRef} className="relative z-10 flex-1 overflow-y-auto scrollbar-thin pt-0 md:pt-0">
