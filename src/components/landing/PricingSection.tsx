@@ -4,71 +4,78 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollReveal } from "@/components/ScrollReveal";
-
-const plans = [
-  {
-    name: "Explorer",
-    price: "R$ 0",
-    period: "/sempre",
-    icon: Shield,
-    desc: "Explore o poder dos peptídeos",
-    features: [
-      "Acesso a 1 peptídeo completo",
-      "1 protocolo por mês",
-      "1 comparação por mês",
-      "1 cálculo de dosagem por mês",
-      "1 stack por mês",
-      "1 template por mês",
-      "1 exportação PDF por mês",
-      "1 verificação de interação por mês",
-    ],
-    cta: "Começar Grátis",
-    highlight: false,
-  },
-  {
-    name: "PRO Mensal",
-    price: "R$ 59,90",
-    period: "/mês",
-    icon: Zap,
-    desc: "Acesso total. Cancele quando quiser.",
-    features: [
-      "Biblioteca completa (78+ peptídeos)",
-      "Protocolos e comparações ilimitados",
-      "Calculadora avançada + presets",
-      "Stacks sinérgicos exclusivos",
-      "Histórico e export ilimitados",
-      "Templates premium + IA",
-      "Body Map interativo",
-      "Suporte prioritário",
-    ],
-    cta: "Ativar PRO Mensal",
-    highlight: false,
-  },
-  {
-    name: "PRO Vitalício",
-    price: "R$ 397",
-    period: "único",
-    icon: Crown,
-    desc: "Pague uma vez. Use para sempre.",
-    originalPrice: "R$ 794",
-    discount: "-50% OFF",
-    features: [
-      "Tudo do PRO Mensal, mais:",
-      "Acesso vitalício — pague uma vez, use para sempre",
-      "Contato direto com fornecedores parceiros",
-      "Atualizações e novos peptídeos inclusos",
-      "Guias práticos atualizados mensalmente",
-      "Stacks ilimitados (sem cap de 10/mês)",
-      "Export PRO com timeline visual",
-      "Suporte VIP dedicado",
-    ],
-    cta: "Garantir Acesso Vitalício",
-    highlight: true,
-  },
-];
+import { usePlanPrices } from "@/hooks/usePlanPrices";
 
 const PricingSection = () => {
   const navigate = useNavigate();
+  const {
+    proDisplay,
+    lifetimeDisplay,
+    originalLifetimeDisplay,
+    savings,
+  } = usePlanPrices();
+
+  const plans = [
+    {
+      name: "Explorer",
+      price: "R$ 0",
+      period: "/sempre",
+      icon: Shield,
+      desc: "Explore o poder dos peptídeos",
+      features: [
+        "Acesso a 1 peptídeo completo",
+        "1 protocolo por mês",
+        "1 comparação por mês",
+        "1 cálculo de dosagem por mês",
+        "1 stack por mês",
+        "1 template por mês",
+        "1 exportação PDF por mês",
+        "1 verificação de interação por mês",
+      ],
+      cta: "Começar Grátis",
+      highlight: false,
+    },
+    {
+      name: "PRO Mensal",
+      price: proDisplay.display,
+      period: "/mês",
+      icon: Zap,
+      desc: "Acesso total. Cancele quando quiser.",
+      features: [
+        "Biblioteca completa (78+ peptídeos)",
+        "Protocolos e comparações ilimitados",
+        "Calculadora avançada + presets",
+        "Stacks sinérgicos exclusivos",
+        "Histórico e export ilimitados",
+        "Templates premium + IA",
+        "Body Map interativo",
+        "Suporte prioritário",
+      ],
+      cta: "Ativar PRO Mensal",
+      highlight: false,
+    },
+    {
+      name: "PRO Vitalício",
+      price: lifetimeDisplay.display,
+      period: "único",
+      icon: Crown,
+      desc: "Pague uma vez. Use para sempre.",
+      originalPrice: originalLifetimeDisplay,
+      discount: "-50% OFF",
+      features: [
+        "Tudo do PRO Mensal, mais:",
+        "Acesso vitalício — pague uma vez, use para sempre",
+        "Contato direto com fornecedores parceiros",
+        "Atualizações e novos peptídeos inclusos",
+        "Guias práticos atualizados mensalmente",
+        "Stacks ilimitados (sem cap de 10/mês)",
+        "Export PRO com timeline visual",
+        "Suporte VIP dedicado",
+      ],
+      cta: "Garantir Acesso Vitalício",
+      highlight: true,
+    },
+  ];
 
   return (
     <section id="pricing" className="relative border-y border-border/20 bg-card/10 px-4 py-16 sm:px-6 sm:py-20">
@@ -120,7 +127,7 @@ const PricingSection = () => {
 
                   {plan.highlight && (
                     <p className="text-[10px] text-emerald-400 mb-3 font-medium flex items-center gap-1">
-                      <Gift className="h-3 w-3 shrink-0" /> Economize R$ 321,80 vs mensal no 1º ano
+                      <Gift className="h-3 w-3 shrink-0" /> {savings}
                     </p>
                   )}
 

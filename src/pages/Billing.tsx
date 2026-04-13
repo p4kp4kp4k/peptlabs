@@ -3,13 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useBilling } from "@/hooks/useBilling";
+import { usePlanPrices } from "@/hooks/usePlanPrices";
 import { motion } from "framer-motion";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 /* ─── Feature comparison rows ─── */
 const comparisonRows: { label: string; free: string; proMonthly: string; proLifetime: string }[] = [
