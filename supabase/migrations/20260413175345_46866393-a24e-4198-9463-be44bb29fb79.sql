@@ -1,0 +1,1 @@
+ALTER TABLE public.plan_links ADD COLUMN kiwify_product_id text;
