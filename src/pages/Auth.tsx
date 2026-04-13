@@ -36,7 +36,7 @@ export default function Auth() {
       if (mode === "login") {
         const { error } = await signIn(email, password);
         if (error) throw error;
-        navigate("/app/dashboard");
+        navigate(redirectAfterAuth);
       } else if (mode === "register") {
         const { error } = await signUp(email, password, displayName);
         if (error) throw error;
