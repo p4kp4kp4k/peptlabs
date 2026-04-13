@@ -212,12 +212,14 @@ function PlanLinkRow({
   const [label, setLabel] = useState(link.label);
   const [active, setActive] = useState(link.is_active);
   const [kiwifyId, setKiwifyId] = useState(link.kiwify_product_id ?? "");
+  const [price, setPrice] = useState(String(link.price ?? 0));
 
   const hasChanges =
     url !== link.checkout_url ||
     label !== link.label ||
     active !== link.is_active ||
-    kiwifyId !== (link.kiwify_product_id ?? "");
+    kiwifyId !== (link.kiwify_product_id ?? "") ||
+    Number(price) !== (link.price ?? 0);
 
   return (
     <div className="rounded-lg border border-border/40 bg-secondary/20 p-4 space-y-3">
