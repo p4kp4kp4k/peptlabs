@@ -5,7 +5,7 @@ import {
   FlaskConical, ArrowRight, Sparkles, Home, Users, Zap,
   Calculator, BookOpen, Layers, CreditCard, HelpCircle, ChevronRight, Palette,
   LayoutDashboard, Syringe, Search, ArrowLeftRight, MapPin, History, Settings,
-  FileText, Shield, LogOut
+  FileText, Shield, LogOut, Menu, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
