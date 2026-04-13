@@ -147,7 +147,19 @@ const PricingSection = () => {
                         ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30"
                         : "border-foreground/30 text-foreground hover:border-primary/40 hover:bg-primary/[0.08]"
                     }`}
-                    onClick={() => navigate(plan.name === "Explorer" ? "/auth" : `/auth?plan=${plan.name === "PRO Mensal" ? "pro_monthly" : "pro_lifetime"}`)}
+                    onClick={() => {
+                      if (plan.name === "Explorer") {
+                        navigate("/auth");
+                        return;
+                      }
+                      const planId = plan.name === "PRO Mensal" ? "pro_monthly" : "pro_lifetime";
+                      const link = getLink(planId);
+                      if (link) {
+                        window.open(link, "_blank");
+                      } else {
+                        navigate("/auth");
+                      }
+                    }}
                   >
                     {plan.cta}
                   </Button>
