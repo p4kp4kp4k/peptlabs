@@ -5,7 +5,7 @@ import {
   FlaskConical, ArrowRight, Sparkles, Home, Users, Zap,
   Calculator, BookOpen, Layers, CreditCard, HelpCircle, ChevronRight, Palette,
   LayoutDashboard, Syringe, Search, ArrowLeftRight, MapPin, History, Settings,
-  FileText, Shield, LogOut, Menu, X
+  FileText, Shield, LogOut, Menu, X, ShoppingBag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -44,6 +44,7 @@ const appMainNav = [
   { label: "Interações", icon: Zap, path: "/app/interactions" },
   { label: "Aprender", icon: BookOpen, path: "/app/learn" },
   { label: "Templates", icon: FileText, path: "/app/templates" },
+  { label: "Loja", icon: ShoppingBag, path: "/app/store" },
 ];
 
 const appBottomNav = [
