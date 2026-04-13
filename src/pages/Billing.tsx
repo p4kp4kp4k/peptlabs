@@ -116,6 +116,20 @@ export default function Billing() {
   const { checkout, isCheckingOut, cancel, isCanceling, canUpgradeTo } = useBilling();
   const [searchParams] = useSearchParams();
 
+  // Fetch admin-configured plan links
+  const { data: planLinks = [] } = useQuery({
+    queryKey: ["plan-links"],
+    queryFn: async () => {
+      const { data } = await supabase.from("plan_links").select("*");
+      return (data ?? []) as { plan_id: string; checkout_url: string; is_active: boolean }[];
+    },
+  });
+
+  const getPlanLink = (planId: string) => {
+    const link = planLinks.find((l) => l.plan_id === planId && l.is_active && l.checkout_url);
+    return link?.checkout_url ?? null;
+  };
+
   useEffect(() => {
     if (searchParams.get("success") === "true") {
       toast.success("Pagamento confirmado! Bem-vindo ao PRO 🎉");
