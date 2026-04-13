@@ -107,11 +107,11 @@ const Index = () => {
           playsInline
           preload="metadata"
           className="h-full w-full object-cover"
-          style={{ filter: "brightness(0.18) saturate(1.4)" }}
+          style={{ filter: "brightness(0.25) saturate(1.4)" }}
         >
           <source src="/videos/hero-bg.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/30 to-background/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/20 to-background/60" />
       </div>
       <ParticleBackground />
 
