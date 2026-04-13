@@ -9,6 +9,7 @@ import { usePlanPrices } from "@/hooks/usePlanPrices";
 const PricingSection = () => {
   const navigate = useNavigate();
   const {
+    getLink,
     proDisplay,
     lifetimeDisplay,
     originalLifetimeDisplay,
