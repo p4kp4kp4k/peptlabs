@@ -262,6 +262,11 @@ export default function Billing() {
                       if (p.id === "free") return;
                       if (isCurrent) return;
                       const planId = p.id === "lifetime" ? "pro_lifetime" : "pro_monthly";
+                      const externalLink = getPlanLink(planId);
+                      if (externalLink) {
+                        window.open(externalLink, "_blank");
+                        return;
+                      }
                       checkout({ planId: planId as any });
                     }}
                   >
