@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Link2, Save, Loader2, Plus, Trash2, ExternalLink } from "lucide-react";
+import { Link2, Save, Loader2, Plus, Trash2, ExternalLink, Info } from "lucide-react";
 import { toast } from "sonner";
 
 interface PlanLink {
@@ -16,6 +16,7 @@ interface PlanLink {
   label: string;
   checkout_url: string;
   is_active: boolean;
+  kiwify_product_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +46,7 @@ export default function AdminPlanLinks() {
           checkout_url: link.checkout_url,
           label: link.label,
           is_active: link.is_active,
+          kiwify_product_id: link.kiwify_product_id || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", link.id);
@@ -64,6 +66,7 @@ export default function AdminPlanLinks() {
         label: newLabel || "Novo Plano",
         checkout_url: "",
         is_active: false,
+        kiwify_product_id: null,
       });
       if (error) throw error;
     },
@@ -98,6 +101,28 @@ export default function AdminPlanLinks() {
 
   return (
     <div className="space-y-4">
+      {/* Kiwify info card */}
+      <Card className="border-blue-500/20 bg-blue-500/5">
+        <CardContent className="p-4 flex gap-3">
+          <Info className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-blue-300">Integração Kiwify</p>
+            <p className="text-[11px] text-muted-foreground">
+              Configure o <strong>ID do Produto Kiwify</strong> em cada plano para que o sistema
+              identifique automaticamente qual plano liberar ao receber um webhook da Kiwify.
+              O ID do produto está disponível no painel da Kiwify em <em>Produtos → [seu produto] → ID</em>.
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              <strong>URL do webhook Kiwify:</strong>{" "}
+              <code className="text-[10px] bg-muted/40 px-1 py-0.5 rounded font-mono">
+                {`${window.location.origin.replace("3000", "54321")}/functions/v1/kiwify-webhook`}
+              </code>
+              {" "}— configure em <em>Kiwify → Webhooks</em>.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-border/40 bg-card/80">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
@@ -185,7 +210,13 @@ function PlanLinkRow({
   const [url, setUrl] = useState(link.checkout_url);
   const [label, setLabel] = useState(link.label);
   const [active, setActive] = useState(link.is_active);
-  const hasChanges = url !== link.checkout_url || label !== link.label || active !== link.is_active;
+  const [kiwifyId, setKiwifyId] = useState(link.kiwify_product_id ?? "");
+
+  const hasChanges =
+    url !== link.checkout_url ||
+    label !== link.label ||
+    active !== link.is_active ||
+    kiwifyId !== (link.kiwify_product_id ?? "");
 
   return (
     <div className="rounded-lg border border-border/40 bg-secondary/20 p-4 space-y-3">
@@ -216,12 +247,12 @@ function PlanLinkRow({
       </div>
 
       <div className="space-y-1">
-        <Label className="text-[10px] text-muted-foreground">URL de Checkout</Label>
+        <Label className="text-[10px] text-muted-foreground">URL de Checkout (Kiwify)</Label>
         <div className="flex gap-2">
           <Input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://pay.exemplo.com/checkout/..."
+            placeholder="https://pay.kiwify.com.br/..."
             className="h-8 text-xs font-mono flex-1"
           />
           {url && (
@@ -235,6 +266,19 @@ function PlanLinkRow({
             </Button>
           )}
         </div>
+      </div>
+
+      <div className="space-y-1">
+        <Label className="text-[10px] text-muted-foreground">
+          ID do Produto Kiwify
+          <span className="ml-1 text-muted-foreground/60">(para mapeamento automático do webhook)</span>
+        </Label>
+        <Input
+          value={kiwifyId}
+          onChange={(e) => setKiwifyId(e.target.value)}
+          placeholder="ex: prod_AbCdEfGhIj"
+          className="h-8 text-xs font-mono"
+        />
       </div>
 
       <div className="flex items-center justify-between pt-1">
@@ -251,7 +295,9 @@ function PlanLinkRow({
           size="sm"
           className="h-7 text-[10px] gap-1"
           disabled={!hasChanges || isSaving}
-          onClick={() => onSave({ checkout_url: url, label, is_active: active })}
+          onClick={() =>
+            onSave({ checkout_url: url, label, is_active: active, kiwify_product_id: kiwifyId || null })
+          }
         >
           {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
           Salvar
