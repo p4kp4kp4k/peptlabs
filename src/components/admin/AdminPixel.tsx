@@ -17,11 +17,11 @@ export default function AdminPixel() {
     queryKey: ["app-setting-facebook-pixel"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("app_settings")
+        .from("app_settings" as any)
         .select("value")
         .eq("key", "facebook_pixel_id")
         .maybeSingle();
-      return (data?.value as string | null) ?? "";
+      return ((data as any)?.value as string | null) ?? "";
     },
   });
 
@@ -31,7 +31,7 @@ export default function AdminPixel() {
   /* ── Save mutation ── */
   const saveMutation = useMutation({
     mutationFn: async (value: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("app_settings")
         .upsert(
           { key: "facebook_pixel_id", value: value.trim() || null, updated_at: new Date().toISOString() },

@@ -40,13 +40,13 @@ export default function AdminPlanLinks() {
 
   const updateMutation = useMutation({
     mutationFn: async (link: Partial<PlanLink> & { id: string }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("plan_links")
         .update({
           checkout_url: link.checkout_url,
           label: link.label,
           is_active: link.is_active,
-          kiwify_product_id: link.kiwify_product_id || null,
+          kiwify_product_id: (link as any).kiwify_product_id || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", link.id);
@@ -66,8 +66,7 @@ export default function AdminPlanLinks() {
         label: newLabel || "Novo Plano",
         checkout_url: "",
         is_active: false,
-        kiwify_product_id: null,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
