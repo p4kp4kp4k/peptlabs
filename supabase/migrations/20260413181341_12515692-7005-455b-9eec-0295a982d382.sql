@@ -1,0 +1,1 @@
+ALTER TABLE public.plan_links ADD COLUMN price numeric NOT NULL DEFAULT 0;

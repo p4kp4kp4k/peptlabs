@@ -17,6 +17,7 @@ interface PlanLink {
   checkout_url: string;
   is_active: boolean;
   kiwify_product_id: string | null;
+  price: number;
   created_at: string;
   updated_at: string;
 }
@@ -47,6 +48,7 @@ export default function AdminPlanLinks() {
           label: link.label,
           is_active: link.is_active,
           kiwify_product_id: (link as any).kiwify_product_id || null,
+          price: (link as any).price ?? 0,
           updated_at: new Date().toISOString(),
         })
         .eq("id", link.id);
@@ -210,12 +212,14 @@ function PlanLinkRow({
   const [label, setLabel] = useState(link.label);
   const [active, setActive] = useState(link.is_active);
   const [kiwifyId, setKiwifyId] = useState(link.kiwify_product_id ?? "");
+  const [price, setPrice] = useState(String(link.price ?? 0));
 
   const hasChanges =
     url !== link.checkout_url ||
     label !== link.label ||
     active !== link.is_active ||
-    kiwifyId !== (link.kiwify_product_id ?? "");
+    kiwifyId !== (link.kiwify_product_id ?? "") ||
+    Number(price) !== (link.price ?? 0);
 
   return (
     <div className="rounded-lg border border-border/40 bg-secondary/20 p-4 space-y-3">
@@ -245,25 +249,39 @@ function PlanLinkRow({
         </div>
       </div>
 
-      <div className="space-y-1">
-        <Label className="text-[10px] text-muted-foreground">URL de Checkout (Kiwify)</Label>
-        <div className="flex gap-2">
+      <div className="grid grid-cols-[1fr_140px] gap-3">
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">URL de Checkout (Kiwify)</Label>
+          <div className="flex gap-2">
+            <Input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://pay.kiwify.com.br/..."
+              className="h-8 text-xs font-mono flex-1"
+            />
+            {url && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => window.open(url, "_blank")}
+              >
+                <ExternalLink className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Preço (R$)</Label>
           <Input
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://pay.kiwify.com.br/..."
-            className="h-8 text-xs font-mono flex-1"
+            type="number"
+            step="0.01"
+            min="0"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder="0.00"
+            className="h-8 text-xs font-mono"
           />
-          {url && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => window.open(url, "_blank")}
-            >
-              <ExternalLink className="h-3 w-3" />
-            </Button>
-          )}
         </div>
       </div>
 
@@ -295,7 +313,7 @@ function PlanLinkRow({
           className="h-7 text-[10px] gap-1"
           disabled={!hasChanges || isSaving}
           onClick={() =>
-            onSave({ checkout_url: url, label, is_active: active, kiwify_product_id: kiwifyId || null })
+            onSave({ checkout_url: url, label, is_active: active, kiwify_product_id: kiwifyId || null, price: Number(price) || 0 })
           }
         >
           {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}

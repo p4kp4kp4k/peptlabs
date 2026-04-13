@@ -422,6 +422,7 @@ export type Database = {
           kiwify_product_id: string | null
           label: string
           plan_id: string
+          price: number
           updated_at: string
         }
         Insert: {
@@ -432,6 +433,7 @@ export type Database = {
           kiwify_product_id?: string | null
           label: string
           plan_id: string
+          price?: number
           updated_at?: string
         }
         Update: {
@@ -442,6 +444,7 @@ export type Database = {
           kiwify_product_id?: string | null
           label?: string
           plan_id?: string
+          price?: number
           updated_at?: string
         }
         Relationships: []
