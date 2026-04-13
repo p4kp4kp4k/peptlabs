@@ -1,7 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, ArrowRight, Zap } from "lucide-react";
+import { Crown, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { usePlanPrices } from "@/hooks/usePlanPrices";
 
 interface Props {
   open: boolean;
@@ -12,6 +13,7 @@ interface Props {
 
 export default function PremiumGateModal({ open, onClose, reason }: Props) {
   const navigate = useNavigate();
+  const { lifetimeDisplay } = usePlanPrices();
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -45,7 +47,7 @@ export default function PremiumGateModal({ open, onClose, reason }: Props) {
 
         <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-center">
           <p className="text-[11px] text-emerald-400 font-medium">
-            💡 PRO Vitalício: R$ 397 único — pague uma vez, use para sempre + contato com fornecedores
+            💡 PRO Vitalício: {lifetimeDisplay.display} único — pague uma vez, use para sempre + contato com fornecedores
           </p>
         </div>
 
