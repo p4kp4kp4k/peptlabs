@@ -3,6 +3,7 @@ import AdminProducts from "@/components/admin/AdminProducts";
 import AdminOrders from "@/components/admin/AdminOrders";
 import AdminWebhooks from "@/components/admin/AdminWebhooks";
 import AdminPayments from "@/components/admin/AdminPayments";
+import AdminPlanLinks from "@/components/admin/AdminPlanLinks";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
