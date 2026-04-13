@@ -121,7 +121,7 @@ export default function Billing() {
     queryKey: ["plan-links"],
     queryFn: async () => {
       const { data } = await supabase.from("plan_links").select("*");
-      return (data ?? []) as { plan_id: string; checkout_url: string; is_active: boolean }[];
+      return (data ?? []) as { plan_id: string; checkout_url: string; is_active: boolean; price: number }[];
     },
   });
 
@@ -129,6 +129,54 @@ export default function Billing() {
     const link = planLinks.find((l) => l.plan_id === planId && l.is_active && l.checkout_url);
     return link?.checkout_url ?? null;
   };
+
+  const getPlanPrice = (planId: string) => {
+    const link = planLinks.find((l) => l.plan_id === planId && l.is_active && l.price > 0);
+    return link?.price ?? null;
+  };
+
+  // Dynamic prices from admin panel
+  const dynamicProPrice = getPlanPrice("pro_monthly");
+  const dynamicLifetimePrice = getPlanPrice("pro_lifetime");
+
+  // Format price helper
+  const formatPrice = (value: number) => {
+    const intPart = Math.floor(value);
+    const cents = Math.round((value - intPart) * 100);
+    return { main: `R$ ${intPart}`, cents: cents > 0 ? `,${cents.toString().padStart(2, "0")}` : "" };
+  };
+
+  // Override plan display prices if admin configured them
+  const displayPlans = plans.map((p) => {
+    if (p.id === "pro" && dynamicProPrice) {
+      const { main, cents } = formatPrice(dynamicProPrice);
+      const annualTotal = (dynamicProPrice * 12).toFixed(2).replace(".", ",");
+      return {
+        ...p,
+        price: main,
+        priceCents: cents || undefined,
+        annualEquiv: `Equivale a R$ ${annualTotal} por ano`,
+      };
+    }
+    if (p.id === "lifetime" && dynamicLifetimePrice) {
+      const { main } = formatPrice(dynamicLifetimePrice);
+      const originalPrice = dynamicLifetimePrice * 2;
+      const savingsVsMonthly = dynamicProPrice
+        ? ((dynamicProPrice * 12) - dynamicLifetimePrice).toFixed(2).replace(".", ",")
+        : null;
+      return {
+        ...p,
+        price: main,
+        priceCents: undefined,
+        originalPrice: `R$ ${Math.floor(originalPrice)}`,
+        installments: `ou 12x de R$ ${(dynamicLifetimePrice / 12).toFixed(2).replace(".", ",")} no cartão`,
+        savings: savingsVsMonthly && Number(savingsVsMonthly.replace(",", ".")) > 0
+          ? `Você economiza R$ ${savingsVsMonthly} comparado ao plano mensal no 1º ano.`
+          : p.savings,
+      };
+    }
+    return p;
+  });
 
   useEffect(() => {
     if (searchParams.get("success") === "true") {
@@ -172,7 +220,7 @@ export default function Billing() {
 
       {/* ── Plan Cards ── */}
       <div className="grid gap-5 md:grid-cols-3 mb-12">
-        {plans.map((p, idx) => {
+        {displayPlans.map((p, idx) => {
           const isCurrent = (p.id === "lifetime" && currentPlan === "lifetime") || (p.id === "pro" && currentPlan === "pro") || (p.id === "free" && currentPlan === "free");
           return (
             <ScrollReveal key={p.id} delay={idx * 0.1}>
