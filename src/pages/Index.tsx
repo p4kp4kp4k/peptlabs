@@ -54,6 +54,7 @@ const appBottomNav = [
 
 const Index = () => {
   const [active, setActive] = useState("hero");
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const { user, profile, signOut, isAdmin: authIsAdmin } = useAuth();
   const { theme, setTheme } = useThemeColor();
