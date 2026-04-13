@@ -114,64 +114,34 @@ export default function Billing() {
   const { plan, billingType, isActive, isAdmin, isLifetime, currentPeriodEnd } = useEntitlements();
   const { checkout, isCheckingOut, cancel, isCanceling, canUpgradeTo } = useBilling();
   const [searchParams] = useSearchParams();
+  const {
+    getLink: getPlanLink,
+    proDisplay,
+    lifetimeDisplay,
+    originalLifetimeDisplay,
+    installments,
+    annualEquiv,
+    savingsFull,
+  } = usePlanPrices();
 
-  // Fetch admin-configured plan links
-  const { data: planLinks = [] } = useQuery({
-    queryKey: ["plan-links"],
-    queryFn: async () => {
-      const { data } = await supabase.from("plan_links").select("*");
-      return (data ?? []) as { plan_id: string; checkout_url: string; is_active: boolean; price: number }[];
-    },
-  });
-
-  const getPlanLink = (planId: string) => {
-    const link = planLinks.find((l) => l.plan_id === planId && l.is_active && l.checkout_url);
-    return link?.checkout_url ?? null;
-  };
-
-  const getPlanPrice = (planId: string) => {
-    const link = planLinks.find((l) => l.plan_id === planId && l.is_active && l.price > 0);
-    return link?.price ?? null;
-  };
-
-  // Dynamic prices from admin panel
-  const dynamicProPrice = getPlanPrice("pro_monthly");
-  const dynamicLifetimePrice = getPlanPrice("pro_lifetime");
-
-  // Format price helper
-  const formatPrice = (value: number) => {
-    const intPart = Math.floor(value);
-    const cents = Math.round((value - intPart) * 100);
-    return { main: `R$ ${intPart}`, cents: cents > 0 ? `,${cents.toString().padStart(2, "0")}` : "" };
-  };
-
-  // Override plan display prices if admin configured them
+  // Override plan display prices dynamically
   const displayPlans = plans.map((p) => {
-    if (p.id === "pro" && dynamicProPrice) {
-      const { main, cents } = formatPrice(dynamicProPrice);
-      const annualTotal = (dynamicProPrice * 12).toFixed(2).replace(".", ",");
+    if (p.id === "pro") {
       return {
         ...p,
-        price: main,
-        priceCents: cents || undefined,
-        annualEquiv: `Equivale a R$ ${annualTotal} por ano`,
+        price: proDisplay.main,
+        priceCents: proDisplay.cents || undefined,
+        annualEquiv,
       };
     }
-    if (p.id === "lifetime" && dynamicLifetimePrice) {
-      const { main } = formatPrice(dynamicLifetimePrice);
-      const originalPrice = dynamicLifetimePrice * 2;
-      const savingsVsMonthly = dynamicProPrice
-        ? ((dynamicProPrice * 12) - dynamicLifetimePrice).toFixed(2).replace(".", ",")
-        : null;
+    if (p.id === "lifetime") {
       return {
         ...p,
-        price: main,
-        priceCents: undefined,
-        originalPrice: `R$ ${Math.floor(originalPrice)}`,
-        installments: `ou 12x de R$ ${(dynamicLifetimePrice / 12).toFixed(2).replace(".", ",")} no cartão`,
-        savings: savingsVsMonthly && Number(savingsVsMonthly.replace(",", ".")) > 0
-          ? `Você economiza R$ ${savingsVsMonthly} comparado ao plano mensal no 1º ano.`
-          : p.savings,
+        price: lifetimeDisplay.main,
+        priceCents: lifetimeDisplay.cents || undefined,
+        originalPrice: originalLifetimeDisplay,
+        installments,
+        savings: savingsFull,
       };
     }
     return p;
