@@ -19,10 +19,13 @@ export default function Auth() {
   const { signIn, signUp, resetPassword, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planParam = searchParams.get("plan");
+  const redirectAfterAuth = planParam ? "/app/billing" : "/app/dashboard";
 
   // If already logged in, redirect
   if (user) {
-    navigate("/app/dashboard", { replace: true });
+    navigate(redirectAfterAuth, { replace: true });
     return null;
   }
 
