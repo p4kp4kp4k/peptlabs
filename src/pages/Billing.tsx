@@ -8,6 +8,8 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ─── Feature comparison rows ─── */
 const comparisonRows: { label: string; free: string; proMonthly: string; proLifetime: string }[] = [
