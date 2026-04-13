@@ -220,7 +220,7 @@ export default function Billing() {
 
       {/* ── Plan Cards ── */}
       <div className="grid gap-5 md:grid-cols-3 mb-12">
-        {plans.map((p, idx) => {
+        {displayPlans.map((p, idx) => {
           const isCurrent = (p.id === "lifetime" && currentPlan === "lifetime") || (p.id === "pro" && currentPlan === "pro") || (p.id === "free" && currentPlan === "free");
           return (
             <ScrollReveal key={p.id} delay={idx * 0.1}>
