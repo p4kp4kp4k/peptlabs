@@ -48,6 +48,7 @@ export default function AdminPlanLinks() {
           label: link.label,
           is_active: link.is_active,
           kiwify_product_id: (link as any).kiwify_product_id || null,
+          price: (link as any).price ?? 0,
           updated_at: new Date().toISOString(),
         })
         .eq("id", link.id);
