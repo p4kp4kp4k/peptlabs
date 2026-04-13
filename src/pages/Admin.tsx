@@ -3,6 +3,7 @@ import AdminProducts from "@/components/admin/AdminProducts";
 import AdminOrders from "@/components/admin/AdminOrders";
 import AdminWebhooks from "@/components/admin/AdminWebhooks";
 import AdminPayments from "@/components/admin/AdminPayments";
+import AdminPlanLinks from "@/components/admin/AdminPlanLinks";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Users, Layers, BookOpen, Shield, TrendingUp, Search, Trash2, Edit,
-  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag, CreditCard, Package, Copy, Webhook
+  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag, CreditCard, Package, Copy, Webhook, Link2
 } from "lucide-react";
 import { fetchAllProfiles, fetchProfileCount } from "@/services/userService";
 import { fetchPeptides, fetchPeptideCount, deletePeptide } from "@/services/peptideService";
@@ -156,6 +157,9 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="webhooks" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Webhook className="h-3.5 w-3.5" /> Webhooks
+          </TabsTrigger>
+          <TabsTrigger value="plan-links" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Link2 className="h-3.5 w-3.5" /> Links Planos
           </TabsTrigger>
         </TabsList>
 
@@ -327,6 +331,11 @@ export default function Admin() {
         {/* Webhooks Tab */}
         <TabsContent value="webhooks">
           <AdminWebhooks />
+        </TabsContent>
+
+        {/* Plan Links Tab */}
+        <TabsContent value="plan-links">
+          <AdminPlanLinks />
         </TabsContent>
       </Tabs>
     </div>

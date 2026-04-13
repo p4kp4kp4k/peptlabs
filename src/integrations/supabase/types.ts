@@ -413,6 +413,36 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_links: {
+        Row: {
+          checkout_url: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          plan_id: string
+          updated_at: string
+        }
+        Insert: {
+          checkout_url: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          plan_id: string
+          updated_at?: string
+        }
+        Update: {
+          checkout_url?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          plan_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_variants: {
         Row: {
           color_hex: string | null

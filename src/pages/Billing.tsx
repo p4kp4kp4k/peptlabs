@@ -8,6 +8,8 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ─── Feature comparison rows ─── */
 const comparisonRows: { label: string; free: string; proMonthly: string; proLifetime: string }[] = [
@@ -113,6 +115,20 @@ export default function Billing() {
   const { plan, billingType, isActive, isAdmin, isLifetime, currentPeriodEnd } = useEntitlements();
   const { checkout, isCheckingOut, cancel, isCanceling, canUpgradeTo } = useBilling();
   const [searchParams] = useSearchParams();
+
+  // Fetch admin-configured plan links
+  const { data: planLinks = [] } = useQuery({
+    queryKey: ["plan-links"],
+    queryFn: async () => {
+      const { data } = await supabase.from("plan_links").select("*");
+      return (data ?? []) as { plan_id: string; checkout_url: string; is_active: boolean }[];
+    },
+  });
+
+  const getPlanLink = (planId: string) => {
+    const link = planLinks.find((l) => l.plan_id === planId && l.is_active && l.checkout_url);
+    return link?.checkout_url ?? null;
+  };
 
   useEffect(() => {
     if (searchParams.get("success") === "true") {
@@ -246,6 +262,11 @@ export default function Billing() {
                       if (p.id === "free") return;
                       if (isCurrent) return;
                       const planId = p.id === "lifetime" ? "pro_lifetime" : "pro_monthly";
+                      const externalLink = getPlanLink(planId);
+                      if (externalLink) {
+                        window.open(externalLink, "_blank");
+                        return;
+                      }
                       checkout({ planId: planId as any });
                     }}
                   >
