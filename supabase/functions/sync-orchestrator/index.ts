@@ -3,13 +3,28 @@
  * ═════════════════
  * Orchestrates synchronization from external scientific APIs.
  * Records changes in detected_changes and sync_runs tables.
- * Detects new peptides and queues them for import.
+ * Populates peptide_source_checks per peptide per source.
  *
  * POST body:
  *   { source?: "uniprot"|"pubmed"|"pdb"|"openfda"|"all", mode?: "manual"|"semi_auto"|"auto" }
  */
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
+
+// ── Canonical source names ──
+const SOURCE_NAMES: Record<string, string> = {
+  pubmed: "PubMed",
+  uniprot: "UniProt",
+  pdb: "PDB",
+  openfda: "openFDA",
+  peptipedia: "Peptipedia",
+  dramp: "DRAMP",
+  apd: "APD",
+};
+
+function canonicalSource(slug: string): string {
+  return SOURCE_NAMES[slug] || slug;
+}
 
 // ── Constants ──
 const NCBI_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
@@ -66,7 +81,7 @@ Deno.serve(async (req) => {
       const result = await syncSource(sb, source, peptides || [], mode);
       allResults[source.slug] = result;
 
-      // Update source status
+      // Update source status — records_count = peptides actually processed in THIS run
       const syncStatus = result.processed === 0 && result.errors > 0
         ? "error"
         : result.errors > 0
@@ -75,7 +90,7 @@ Deno.serve(async (req) => {
       await sb.from("integration_sources").update({
         last_sync_at: new Date().toISOString(),
         last_sync_status: syncStatus,
-        records_count: result.processed,
+        records_count: result.processed, // overwrite, not accumulate
       }).eq("id", source.id);
     }
 
@@ -145,6 +160,29 @@ async function syncSource(sb: SupabaseClient, source: any, peptides: any[], mode
   return { processed, added, updated, conflicts, errors };
 }
 
+// ── Record peptide_source_checks per peptide ──
+
+async function upsertSourceCheck(
+  sb: SupabaseClient,
+  peptideId: string,
+  sourceProvider: string,
+  status: "strong_match" | "weak_match" | "no_match" | "error",
+  confidence: number,
+  matchedRecordId: string | null = null,
+  matchedRecordName: string | null = null
+) {
+  await sb.from("peptide_source_checks").upsert({
+    peptide_id: peptideId,
+    source_provider: canonicalSource(sourceProvider),
+    lookup_status: status,
+    confidence_score: confidence,
+    matched_record_id: matchedRecordId,
+    matched_record_name: matchedRecordName,
+    last_checked_at: new Date().toISOString(),
+    suggestion_generated: status === "strong_match",
+  }, { onConflict: "peptide_id,source_provider" });
+}
+
 // ── UniProt Adapter ──
 
 async function syncUniProt(sb: SupabaseClient, source: any, peptides: any[], runId: string | null) {
@@ -152,9 +190,11 @@ async function syncUniProt(sb: SupabaseClient, source: any, peptides: any[], run
 
   for (const pep of peptides.slice(0, 50)) {
     try {
-      // Use general text search — peptide_name field doesn't exist in UniProt
       const searchName = pep.name.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
-      if (!searchName || searchName.length < 2) { continue; }
+      if (!searchName || searchName.length < 2) {
+        await upsertSourceCheck(sb, pep.id, "uniprot", "no_match", 0);
+        continue;
+      }
 
       const query = encodeURIComponent(`${searchName} AND (length:[2 TO 100])`);
       const res = await fetch(`${UNIPROT_BASE}/search?query=${query}&size=3&format=json&fields=accession,protein_name,organism_name,sequence,cc_function`, {
@@ -163,9 +203,9 @@ async function syncUniProt(sb: SupabaseClient, source: any, peptides: any[], run
       });
 
       if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        console.warn(`UniProt ${pep.name}: HTTP ${res.status} - ${txt.substring(0, 100)}`);
+        await res.text().catch(() => "");
         errors++;
+        await upsertSourceCheck(sb, pep.id, "uniprot", "error", 0);
         await sleep(500);
         continue;
       }
@@ -174,14 +214,25 @@ async function syncUniProt(sb: SupabaseClient, source: any, peptides: any[], run
       const results = data?.results || [];
       processed++;
 
-      if (results.length === 0) continue;
+      if (results.length === 0) {
+        await upsertSourceCheck(sb, pep.id, "uniprot", "no_match", 0);
+        continue;
+      }
 
       const best = results[0];
       const uniSeq = best.sequence?.value || null;
-      const uniOrganism = best.organism?.scientificName || null;
       const uniAccession = best.primaryAccession || null;
 
-      // Detect changes
+      // Record source check with match info
+      await upsertSourceCheck(
+        sb, pep.id, "uniprot",
+        uniSeq ? "strong_match" : "weak_match",
+        uniSeq ? 75 : 30,
+        uniAccession,
+        best.proteinDescription?.recommendedName?.fullName?.value || null
+      );
+
+      // Detect changes — store FULL sequences, no truncation
       if (uniSeq && pep.sequence && uniSeq !== pep.sequence) {
         await recordChange(sb, {
           sync_run_id: runId,
@@ -189,8 +240,8 @@ async function syncUniProt(sb: SupabaseClient, source: any, peptides: any[], run
           peptide_id: pep.id,
           change_type: "sequence_change",
           field_name: "sequence",
-          old_value: pep.sequence,
-          new_value: uniSeq,
+          old_value: pep.sequence, // full sequence
+          new_value: uniSeq,       // full sequence
           severity: "critical",
           metadata: { uniprot_accession: uniAccession },
         });
@@ -203,7 +254,7 @@ async function syncUniProt(sb: SupabaseClient, source: any, peptides: any[], run
           change_type: "new_data",
           field_name: "sequence",
           old_value: null,
-          new_value: uniSeq,
+          new_value: uniSeq, // full sequence
           severity: "low",
         });
         added++;
@@ -213,6 +264,7 @@ async function syncUniProt(sb: SupabaseClient, source: any, peptides: any[], run
     } catch (e: any) {
       console.warn(`UniProt sync error for ${pep.name}:`, e.message);
       errors++;
+      await upsertSourceCheck(sb, pep.id, "uniprot", "error", 0);
     }
   }
 
@@ -236,7 +288,13 @@ async function syncPubMed(sb: SupabaseClient, source: any, peptides: any[], runI
       const ids: string[] = searchData?.esearchresult?.idlist || [];
       processed++;
 
-      if (ids.length === 0) continue;
+      if (ids.length === 0) {
+        await upsertSourceCheck(sb, pep.id, "pubmed", "no_match", 0);
+        continue;
+      }
+
+      // Record source check — found articles
+      await upsertSourceCheck(sb, pep.id, "pubmed", "strong_match", 80, ids[0], `${ids.length} artigo(s)`);
 
       // Check which PMIDs are new
       const { data: existingRefs } = await sb.from("peptide_references")
@@ -280,7 +338,6 @@ async function syncPDB(sb: SupabaseClient, source: any, peptides: any[], runId: 
 
   for (const pep of peptides.slice(0, 30)) {
     try {
-      // Search PDB for peptide structures
       const searchBody = {
         query: {
           type: "terminal",
@@ -304,44 +361,52 @@ async function syncPDB(sb: SupabaseClient, source: any, peptides: any[], runId: 
 
       processed++;
 
-      if (!res.ok) { await res.text(); continue; }
+      if (!res.ok) {
+        await res.text();
+        await upsertSourceCheck(sb, pep.id, "pdb", "no_match", 0);
+        continue;
+      }
       const data = await res.json();
       const hits = data?.result_set || [];
 
-      if (hits.length > 0) {
-        const currentStructure = pep.structure_info;
-        const pdbIds = hits.map((h: any) => h.identifier).filter(Boolean);
+      if (hits.length === 0) {
+        await upsertSourceCheck(sb, pep.id, "pdb", "no_match", 0);
+        continue;
+      }
 
-        if (!currentStructure || !currentStructure.pdb_ids?.length) {
+      const pdbIds = hits.map((h: any) => h.identifier).filter(Boolean);
+      await upsertSourceCheck(sb, pep.id, "pdb", "strong_match", 70, pdbIds[0], `${pdbIds.length} estrutura(s)`);
+
+      const currentStructure = pep.structure_info;
+      if (!currentStructure || !currentStructure.pdb_ids?.length) {
+        await recordChange(sb, {
+          sync_run_id: runId,
+          source_id: source.id,
+          peptide_id: pep.id,
+          change_type: "structure_update",
+          field_name: "structure_info",
+          old_value: null,
+          new_value: pdbIds.join(", "),
+          severity: "low",
+          metadata: { pdb_ids: pdbIds },
+        });
+        added++;
+      } else {
+        const existingIds = new Set(currentStructure.pdb_ids || []);
+        const newIds = pdbIds.filter((id: string) => !existingIds.has(id));
+        if (newIds.length > 0) {
           await recordChange(sb, {
             sync_run_id: runId,
             source_id: source.id,
             peptide_id: pep.id,
             change_type: "structure_update",
             field_name: "structure_info",
-            old_value: null,
-            new_value: pdbIds.join(", "),
+            old_value: (currentStructure.pdb_ids || []).join(", "),
+            new_value: [...(currentStructure.pdb_ids || []), ...newIds].join(", "),
             severity: "low",
-            metadata: { pdb_ids: pdbIds },
+            metadata: { new_pdb_ids: newIds },
           });
           added++;
-        } else {
-          const existingIds = new Set(currentStructure.pdb_ids || []);
-          const newIds = pdbIds.filter((id: string) => !existingIds.has(id));
-          if (newIds.length > 0) {
-            await recordChange(sb, {
-              sync_run_id: runId,
-              source_id: source.id,
-              peptide_id: pep.id,
-              change_type: "structure_update",
-              field_name: "structure_info",
-              old_value: (currentStructure.pdb_ids || []).join(", "),
-              new_value: [...(currentStructure.pdb_ids || []), ...newIds].join(", "),
-              severity: "low",
-              metadata: { new_pdb_ids: newIds },
-            });
-            added++;
-          }
         }
       }
 
@@ -369,8 +434,16 @@ async function syncOpenFDA(sb: SupabaseClient, source: any, peptides: any[], run
 
       processed++;
 
-      if (res.status === 404) { await res.text(); continue; }
-      if (!res.ok) { await res.text(); continue; }
+      if (res.status === 404) {
+        await res.text();
+        await upsertSourceCheck(sb, pep.id, "openfda", "no_match", 0);
+        continue;
+      }
+      if (!res.ok) {
+        await res.text();
+        await upsertSourceCheck(sb, pep.id, "openfda", "no_match", 0);
+        continue;
+      }
 
       const data = await res.json();
       const results = data?.results || [];
@@ -378,6 +451,8 @@ async function syncOpenFDA(sb: SupabaseClient, source: any, peptides: any[], run
       if (results.length > 0) {
         const event = results[0];
         const reactions = event?.patient?.reaction?.map((r: any) => r.reactionmeddrapt).filter(Boolean) || [];
+
+        await upsertSourceCheck(sb, pep.id, "openfda", reactions.length > 0 ? "strong_match" : "weak_match", reactions.length > 0 ? 60 : 20);
 
         if (reactions.length > 0) {
           await recordChange(sb, {
@@ -387,12 +462,14 @@ async function syncOpenFDA(sb: SupabaseClient, source: any, peptides: any[], run
             change_type: "regulatory_update",
             field_name: "adverse_events",
             old_value: null,
-            new_value: reactions.slice(0, 5).join(", "),
+            new_value: reactions.slice(0, 10).join(", "), // no truncation on individual items
             severity: "medium",
             metadata: { source: "openFDA", reaction_count: reactions.length },
           });
           added++;
         }
+      } else {
+        await upsertSourceCheck(sb, pep.id, "openfda", "no_match", 0);
       }
 
       await sleep(500);
@@ -407,6 +484,7 @@ async function syncOpenFDA(sb: SupabaseClient, source: any, peptides: any[], run
 // ── Helpers ──
 
 async function recordChange(sb: SupabaseClient, change: Record<string, any>) {
+  // No truncation — store full values
   const { error } = await sb.from("detected_changes").insert(change);
   if (error) console.error("Failed to record change:", error.message);
 }

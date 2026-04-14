@@ -528,33 +528,55 @@ function suggestSlugFix(
   };
 }
 
-// ── Check if a finding has available suggestion data (data-driven) ──
+// ── Check if a finding has REAL suggestion data available (data-driven, no heuristics) ──
 
 export async function checkSuggestionAvailable(
   findingCategory: string,
   peptideId: string
 ): Promise<boolean> {
-  // Categories that always have deterministic fixes
+  // Slug fix is always deterministic
   if (findingCategory === "data_inconsistency") return true;
 
-  // Check if there are pending detected_changes for this peptide
-  const { count } = await supabase
-    .from("detected_changes")
-    .select("id", { count: "exact", head: true })
-    .eq("peptide_id", peptideId)
-    .eq("status", "pending");
-  if (count && count > 0) return true;
+  // Check for pending detected_changes matching this peptide + relevant field
+  if (findingCategory === "missing_sequence") {
+    const { count } = await supabase
+      .from("detected_changes")
+      .select("id", { count: "exact", head: true })
+      .eq("peptide_id", peptideId)
+      .eq("field_name", "sequence")
+      .eq("status", "pending");
+    return (count ?? 0) > 0;
+  }
 
-  // Check if there are references in the DB
+  if (findingCategory === "cross_source_conflict") {
+    const { count } = await supabase
+      .from("detected_changes")
+      .select("id", { count: "exact", head: true })
+      .eq("peptide_id", peptideId)
+      .eq("status", "pending");
+    return (count ?? 0) > 0;
+  }
+
+  if (findingCategory === "incomplete_data") {
+    const { count } = await supabase
+      .from("detected_changes")
+      .select("id", { count: "exact", head: true })
+      .eq("peptide_id", peptideId)
+      .eq("status", "pending")
+      .neq("field_name", "sequence");
+    return (count ?? 0) > 0;
+  }
+
+  // References: only true if real references exist in DB
   if (findingCategory === "no_references") {
     const { count: refCount } = await supabase
       .from("peptide_references")
       .select("id", { count: "exact", head: true })
       .eq("peptide_id", peptideId);
-    if (refCount && refCount > 0) return true;
+    return (refCount ?? 0) > 0;
   }
 
-  // For source origins, check if peptide has external IDs
+  // Source origins: only true if peptide has real external IDs
   if (findingCategory === "no_source") {
     const { data: pep } = await supabase
       .from("peptides")
@@ -562,8 +584,16 @@ export async function checkSuggestionAvailable(
       .eq("id", peptideId)
       .single();
     if (pep && (pep.ncbi_protein_id || pep.dramp_id || pep.apd_id || pep.peptipedia_id)) return true;
+    // Also check peptide_source_checks for any strong match
+    const { count: matchCount } = await supabase
+      .from("peptide_source_checks" as any)
+      .select("id", { count: "exact", head: true })
+      .eq("peptide_id", peptideId)
+      .eq("lookup_status", "strong_match");
+    return (matchCount ?? 0) > 0;
   }
 
+  // Default: no suggestion available
   return false;
 }
 
