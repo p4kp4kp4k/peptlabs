@@ -504,7 +504,7 @@ function AutoUpdateButton() {
   );
 }
 
-
+function SourceCard({ source }: { source: IntegrationSource }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
