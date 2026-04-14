@@ -4,6 +4,7 @@
  * 1. Checks local DB tables (detected_changes, peptide_references) for existing data.
  * 2. If nothing found locally, calls the suggest-correction edge function
  *    which queries real external APIs (UniProt, PubMed).
+ * 3. Records lookup results in peptide_source_checks for status tracking.
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +24,16 @@ export interface Suggestion {
   impact: string;
   previewData: any;
   requiresManualReview: boolean;
+  /** Info about global source sync status */
+  sourceContext?: SourceContext;
+}
+
+export interface SourceContext {
+  sourceProvider: string;
+  globalSyncStatus: string | null;
+  lastSyncAt: string | null;
+  lookupStatus: string;
+  lookupMessage: string;
 }
 
 interface FindingInput {
@@ -36,6 +47,16 @@ interface FindingInput {
   source_b: string | null;
   description: string | null;
 }
+
+// ── Source provider mapping by category ──
+
+const CATEGORY_SOURCES: Record<string, string[]> = {
+  missing_sequence: ["UniProt", "Peptipedia", "DRAMP", "APD"],
+  no_references: ["PubMed"],
+  no_source: ["UniProt", "PubMed", "Peptipedia"],
+  incomplete_data: ["UniProt", "PubMed"],
+  data_inconsistency: ["Internal"],
+};
 
 // ── Main entry point ──
 
@@ -64,19 +85,102 @@ export async function generateSuggestion(
       localResult = await suggestIncompleteDataLocal(finding, peptide);
       break;
     case "data_inconsistency":
-      return suggestSlugFix(finding, peptide);
+      return enrichWithSourceContext(suggestSlugFix(finding, peptide), finding);
     default:
       break;
   }
 
   if (localResult) {
     console.log("[SuggestionEngine] Found local data for", finding.category);
-    return localResult;
+    await recordLookupResult(finding.peptide_id!, localResult.sourceProvider, "strong_match", localResult.confidenceScore, true);
+    return enrichWithSourceContext(localResult, finding);
   }
 
   // Step 2: Call edge function for real API data
   console.log("[SuggestionEngine] No local data, calling external APIs...");
-  return callExternalSuggestion(finding, peptide);
+  const externalResult = await callExternalSuggestion(finding, peptide);
+
+  if (externalResult) {
+    await recordLookupResult(finding.peptide_id!, externalResult.sourceProvider, "strong_match", externalResult.confidenceScore, true);
+    return enrichWithSourceContext(externalResult, finding);
+  }
+
+  // No result found - record no_match for relevant sources
+  const sources = CATEGORY_SOURCES[finding.category] || [];
+  for (const src of sources) {
+    await recordLookupResult(finding.peptide_id!, src, "no_match", 0, false);
+  }
+
+  return null;
+}
+
+// ── Enrich with source context ──
+
+async function enrichWithSourceContext(suggestion: Suggestion | null, finding: FindingInput): Promise<Suggestion | null> {
+  if (!suggestion) return null;
+
+  const providerSlug = suggestion.sourceProvider.toLowerCase().replace(/\s+/g, "");
+  
+  const { data: source } = await supabase
+    .from("integration_sources")
+    .select("last_sync_status, last_sync_at, name")
+    .or(`slug.eq.${providerSlug},name.ilike.%${suggestion.sourceProvider}%`)
+    .limit(1)
+    .maybeSingle();
+
+  const lookupStatus = suggestion.proposedValue ? "strong_match" : "no_match";
+
+  suggestion.sourceContext = {
+    sourceProvider: suggestion.sourceProvider,
+    globalSyncStatus: source?.last_sync_status || null,
+    lastSyncAt: source?.last_sync_at || null,
+    lookupStatus,
+    lookupMessage: getContextMessage(source?.last_sync_status, lookupStatus, suggestion.sourceProvider),
+  };
+
+  return suggestion;
+}
+
+function getContextMessage(globalStatus: string | null, lookupStatus: string, provider: string): string {
+  if (!globalStatus || globalStatus === "never") {
+    return `${provider} ainda não foi sincronizado globalmente`;
+  }
+  if (globalStatus === "success" && lookupStatus === "strong_match") {
+    return `${provider} sincronizado com sucesso — correspondência encontrada para este peptídeo`;
+  }
+  if (globalStatus === "success" && lookupStatus === "no_match") {
+    return `${provider} sincronizado globalmente, mas sem correspondência confiável para este peptídeo`;
+  }
+  if (globalStatus === "error") {
+    return `${provider} apresentou erro na última sincronização global`;
+  }
+  return `${provider}: status ${globalStatus}`;
+}
+
+// ── Record lookup result ──
+
+async function recordLookupResult(
+  peptideId: string,
+  sourceProvider: string,
+  status: string,
+  confidence: number,
+  suggestionGenerated: boolean
+) {
+  try {
+    await supabase.from("peptide_source_checks" as any).upsert(
+      {
+        peptide_id: peptideId,
+        source_provider: sourceProvider,
+        lookup_status: status,
+        confidence_score: confidence,
+        suggestion_generated: suggestionGenerated,
+        last_checked_at: new Date().toISOString(),
+      } as any,
+      { onConflict: "peptide_id,source_provider" }
+    );
+  } catch (err) {
+    console.error("[SuggestionEngine] Failed to record lookup:", err);
+  }
 }
 
 // ── Call edge function ──
@@ -245,8 +349,6 @@ async function suggestSourceOriginsLocal(
   if (origins.length === 0) return null;
 
   const currentOrigins = peptide.source_origins || [];
-
-  // Check if we'd actually add anything new
   const newOrigins = origins.filter((o) => !currentOrigins.includes(o));
   if (newOrigins.length === 0) return null;
 
@@ -340,13 +442,11 @@ function suggestSlugFix(
 }
 
 // ── Check if a finding has available suggestion data (lightweight) ──
-// Now always returns true for categories that can call external APIs
 
 export async function checkSuggestionAvailable(
   findingCategory: string,
   _peptideId: string
 ): Promise<boolean> {
-  // These categories can always generate suggestions via external APIs
   const apiCategories = [
     "missing_sequence",
     "no_references",
@@ -355,4 +455,25 @@ export async function checkSuggestionAvailable(
     "data_inconsistency",
   ];
   return apiCategories.includes(findingCategory);
+}
+
+// ── Get source context for a peptide (used by UI) ──
+
+export async function getSourceChecksForPeptide(
+  peptideId: string
+): Promise<Record<string, { status: string; confidence: number; lastChecked: string | null }>> {
+  const { data } = await supabase
+    .from("peptide_source_checks" as any)
+    .select("source_provider, lookup_status, confidence_score, last_checked_at")
+    .eq("peptide_id", peptideId);
+
+  const result: Record<string, { status: string; confidence: number; lastChecked: string | null }> = {};
+  (data || []).forEach((row: any) => {
+    result[row.source_provider] = {
+      status: row.lookup_status,
+      confidence: row.confidence_score,
+      lastChecked: row.last_checked_at,
+    };
+  });
+  return result;
 }
