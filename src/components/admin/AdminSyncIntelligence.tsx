@@ -1069,14 +1069,15 @@ function AuditTab() {
     return f.recommendation;
   };
 
-  // Counts per severity
+  // Counts per severity — only open findings for severity tabs to match the filtered list
+  const openFindings = findings.filter(f => f.status === "open");
   const counts = {
     all: findings.length,
-    critical: findings.filter(f => f.severity === "critical").length,
-    medium: findings.filter(f => f.severity === "medium").length,
-    low: findings.filter(f => f.severity === "low").length,
+    critical: openFindings.filter(f => f.severity === "critical").length,
+    medium: openFindings.filter(f => f.severity === "medium").length,
+    low: openFindings.filter(f => f.severity === "low").length,
     resolved: findings.filter(f => f.status === "resolved" || f.status === "ignored").length,
-    open: findings.filter(f => f.status === "open").length,
+    open: openFindings.length,
   };
 
   const filtered = severityFilter === "all"
