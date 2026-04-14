@@ -66,7 +66,7 @@ async function searchSequence(name: string, aliases: string[]): Promise<any> {
   for (const term of searchTerms) {
     try {
       const cleanTerm = term.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
-      const query = encodeURIComponent(`${cleanTerm} AND (length:[2 TO 100])`);
+      const query = encodeURIComponent(cleanTerm);
       const url = `${UNIPROT_BASE}/search?query=${query}&size=3&format=json&fields=accession,protein_name,sequence,organism`;
 
       console.log(`[suggest-correction] UniProt search: "${cleanTerm}"`);
