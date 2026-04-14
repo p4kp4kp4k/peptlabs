@@ -846,19 +846,52 @@ function AuditTab() {
   // Batch check which peptides have suggestion data available
   const openPeptideIds = [...new Set(findings.filter(f => f.status === "open" && f.peptide_id).map(f => f.peptide_id!))];
 
+  // Check source sync status for context
+  const { data: sourceSyncMap = {} } = useQuery({
+    queryKey: ["source-sync-map"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("integration_sources")
+        .select("slug, name, last_sync_status, last_sync_at");
+      const map: Record<string, { name: string; status: string | null; syncAt: string | null }> = {};
+      (data || []).forEach((s: any) => {
+        map[s.slug] = { name: s.name, status: s.last_sync_status, syncAt: s.last_sync_at };
+        map[s.name.toLowerCase()] = { name: s.name, status: s.last_sync_status, syncAt: s.last_sync_at };
+      });
+      return map;
+    },
+  });
+
+  // Check peptide_source_checks for per-item lookup status
+  const { data: lookupStatusMap = {} } = useQuery({
+    queryKey: ["peptide-lookup-status", openPeptideIds.join(",")],
+    queryFn: async () => {
+      if (openPeptideIds.length === 0) return {} as Record<string, Record<string, string>>;
+      const { data } = await supabase
+        .from("peptide_source_checks" as any)
+        .select("peptide_id, source_provider, lookup_status")
+        .in("peptide_id", openPeptideIds);
+      const map: Record<string, Record<string, string>> = {};
+      (data || []).forEach((row: any) => {
+        if (!map[row.peptide_id]) map[row.peptide_id] = {};
+        map[row.peptide_id][row.source_provider] = row.lookup_status;
+      });
+      return map;
+    },
+    enabled: openPeptideIds.length > 0,
+  });
+
   const { data: suggestionAvailability = {} } = useQuery({
     queryKey: ["suggestion-availability", openPeptideIds.join(",")],
     queryFn: async () => {
       if (openPeptideIds.length === 0) return {} as Record<string, Set<string>>;
       
-      // Check detected_changes for pending data
       const { data: changes } = await supabase
         .from("detected_changes")
         .select("peptide_id, field_name, change_type")
         .in("peptide_id", openPeptideIds)
         .eq("status", "pending");
 
-      // Check peptide_references  
       const { data: refs } = await supabase
         .from("peptide_references")
         .select("peptide_id")
@@ -880,11 +913,10 @@ function AuditTab() {
         availability[r.peptide_id].add("no_source");
       });
 
-      // data_inconsistency is always correctable
       openPeptideIds.forEach(id => {
         if (!availability[id]) availability[id] = new Set();
         availability[id].add("data_inconsistency");
-        availability[id].add("no_source"); // can always derive from external IDs
+        availability[id].add("no_source");
       });
 
       return availability;
@@ -897,6 +929,60 @@ function AuditTab() {
     const avail = suggestionAvailability[finding.peptide_id];
     if (!avail) return false;
     return avail.has(finding.category);
+  };
+
+  // Get semantic badges for a finding
+  const getSourceBadges = (f: AuditFinding) => {
+    const badges: { label: string; color: string }[] = [];
+    if (!f.peptide_id) return badges;
+
+    const categorySourceMap: Record<string, string[]> = {
+      missing_sequence: ["uniprot", "peptipedia", "dramp", "apd"],
+      no_references: ["pubmed"],
+      no_source: ["uniprot", "pubmed"],
+      incomplete_data: ["uniprot"],
+    };
+
+    const relevantSources = categorySourceMap[f.category] || [];
+    const peptideLookups = lookupStatusMap[f.peptide_id] || {};
+
+    for (const srcSlug of relevantSources) {
+      const srcInfo = sourceSyncMap[srcSlug];
+      if (!srcInfo) continue;
+
+      const globalOk = srcInfo.status === "success";
+      const lookupStatus = peptideLookups[srcInfo.name] || peptideLookups[srcSlug];
+
+      if (globalOk && lookupStatus === "no_match") {
+        badges.push({ label: `Sem match no ${srcInfo.name}`, color: "text-amber-400 bg-amber-400/10 border-amber-400/30" });
+      } else if (globalOk && lookupStatus === "strong_match") {
+        badges.push({ label: `Match no ${srcInfo.name}`, color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30" });
+      } else if (globalOk && !lookupStatus) {
+        badges.push({ label: `${srcInfo.name} ativo`, color: "text-blue-400 bg-blue-400/10 border-blue-400/30" });
+      } else if (!globalOk && srcInfo.status === "error") {
+        badges.push({ label: `${srcInfo.name} com erro`, color: "text-red-400 bg-red-400/10 border-red-400/30" });
+      }
+    }
+
+    return badges;
+  };
+
+  // Get semantic recommendation text
+  const getSemanticRecommendation = (f: AuditFinding): string | null => {
+    if (!f.recommendation) return null;
+    if (!f.peptide_id) return f.recommendation;
+
+    const peptideLookups = lookupStatusMap[f.peptide_id] || {};
+    const hasNoMatch = Object.values(peptideLookups).some(s => s === "no_match");
+    const hasStrongMatch = Object.values(peptideLookups).some(s => s === "strong_match");
+
+    if (hasStrongMatch && hasSuggestionFor(f)) {
+      return "Sugestão automática disponível — clique em Corrigir para revisar";
+    }
+    if (hasNoMatch) {
+      return "Fontes verificadas sem correspondência confiável — revisão manual recomendada";
+    }
+    return f.recommendation;
   };
 
   // Counts per severity
@@ -1032,7 +1118,7 @@ function AuditTab() {
                         {/* Correction badges based on real data availability */}
                         {f.status === "open" && f.peptide_id && hasSuggestionFor(f) && (
                           <Badge className="text-[7px] px-1 py-0 text-emerald-400 bg-emerald-400/10 border-emerald-400/30">
-                            <Wrench className="h-2 w-2 mr-0.5" /> Correção disponível
+                            <Wrench className="h-2 w-2 mr-0.5" /> Sugestão disponível
                           </Badge>
                         )}
                         {f.status === "open" && f.peptide_id && !hasSuggestionFor(f) && (
@@ -1040,6 +1126,12 @@ function AuditTab() {
                             <Edit3 className="h-2 w-2 mr-0.5" /> Revisão manual
                           </Badge>
                         )}
+                        {/* Source-level status badges */}
+                        {f.status === "open" && getSourceBadges(f).map((b, i) => (
+                          <Badge key={i} className={`text-[7px] px-1 py-0 ${b.color}`}>
+                            {b.label}
+                          </Badge>
+                        ))}
                       </div>
                       <p className="text-xs font-medium text-foreground">{f.title}</p>
                       {f.description && <p className="text-[10px] text-muted-foreground mt-0.5">{f.description}</p>}
@@ -1061,9 +1153,9 @@ function AuditTab() {
                         </div>
                       )}
 
-                      {f.recommendation && (
+                      {getSemanticRecommendation(f) && (
                         <p className="text-[9px] text-primary mt-1.5 flex items-center gap-1">
-                          <Sparkles className="h-2.5 w-2.5" /> {f.recommendation}
+                          <Sparkles className="h-2.5 w-2.5" /> {getSemanticRecommendation(f)}
                         </p>
                       )}
 
@@ -1076,14 +1168,24 @@ function AuditTab() {
                     <div className="flex flex-col gap-1 shrink-0">
                       {f.status === "open" ? (
                         <>
-                          {f.peptide_id && (
+                          {f.peptide_id && hasSuggestionFor(f) && (
                             <Button
                               variant="outline"
                               size="sm"
                               className="h-6 text-[9px] px-2 border-primary/30 text-primary hover:bg-primary/10"
                               onClick={() => { setSelectedFinding(f); setCorrectionOpen(true); }}
                             >
-                              <Wrench className="h-2.5 w-2.5 mr-1" /> Corrigir
+                              <Wrench className="h-2.5 w-2.5 mr-1" /> Ver sugestão
+                            </Button>
+                          )}
+                          {f.peptide_id && !hasSuggestionFor(f) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-[9px] px-2 border-purple-400/30 text-purple-400 hover:bg-purple-400/10"
+                              onClick={() => { setSelectedFinding(f); setCorrectionOpen(true); }}
+                            >
+                              <Edit3 className="h-2.5 w-2.5 mr-1" /> Editar manualmente
                             </Button>
                           )}
                           <Button

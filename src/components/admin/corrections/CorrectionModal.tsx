@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CheckCircle2, XCircle, AlertTriangle, Loader2, ExternalLink,
   BookOpen, Beaker, ArrowRight, Shield, Sparkles, Clock, Edit3, History,
-  SearchX, RefreshCw,
+  SearchX, RefreshCw, Globe,
 } from "lucide-react";
 import { fieldLabel } from "./correctionEngine";
 import { generateSuggestion, type Suggestion } from "./suggestionEngine";
@@ -296,14 +296,48 @@ export default function CorrectionModal({ finding, open, onOpenChange }: Correct
           </div>
         )}
 
+        {/* ── Source Context ── */}
+        {!suggestionLoading && suggestion?.sourceContext && (
+          <div className="p-3 rounded-lg bg-secondary/30 border border-border/20">
+            <h4 className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <Globe className="h-3 w-3" /> Contexto da Fonte
+            </h4>
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              <div>
+                <span className="text-muted-foreground">Fonte global:</span>
+                <p className="text-foreground font-medium flex items-center gap-1 mt-0.5">
+                  {suggestion.sourceContext.globalSyncStatus === "success" ? (
+                    <><CheckCircle2 className="h-3 w-3 text-emerald-400" /> Sincronizada</>
+                  ) : suggestion.sourceContext.globalSyncStatus === "error" ? (
+                    <><XCircle className="h-3 w-3 text-destructive" /> Com erro</>
+                  ) : (
+                    <><Clock className="h-3 w-3 text-muted-foreground" /> Não sincronizada</>
+                  )}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Resultado para este peptídeo:</span>
+                <p className="text-foreground font-medium flex items-center gap-1 mt-0.5">
+                  {suggestion.sourceContext.lookupStatus === "strong_match" ? (
+                    <><CheckCircle2 className="h-3 w-3 text-emerald-400" /> Correspondência encontrada</>
+                  ) : (
+                    <><AlertTriangle className="h-3 w-3 text-amber-400" /> Sem correspondência confiável</>
+                  )}
+                </p>
+              </div>
+            </div>
+            <p className="text-[9px] text-muted-foreground mt-2 italic">{suggestion.sourceContext.lookupMessage}</p>
+          </div>
+        )}
+
         {/* ── No suggestion found ── */}
         {!suggestionLoading && !hasSuggestion && !manualMode && (
           <div className="text-center py-8 space-y-3">
             <SearchX className="h-10 w-10 text-muted-foreground mx-auto" />
             <div>
-              <p className="text-sm font-medium text-foreground">Não foi possível gerar sugestão automática</p>
+              <p className="text-sm font-medium text-foreground">Nenhuma sugestão automática disponível</p>
               <p className="text-[11px] text-muted-foreground mt-1">
-                Nenhum dado encontrado nas fontes de integração para este finding.
+                As fontes conectadas foram verificadas, mas não encontraram correspondência confiável para este peptídeo.
               </p>
             </div>
             <div className="flex justify-center gap-2 pt-2">
@@ -321,7 +355,7 @@ export default function CorrectionModal({ finding, open, onOpenChange }: Correct
                 className="h-8 text-[11px] gap-1"
                 onClick={() => refetchSuggestion()}
               >
-                <RefreshCw className="h-3 w-3" /> Buscar novamente
+                <RefreshCw className="h-3 w-3" /> Tentar nova busca
               </Button>
               <Button
                 variant="ghost"

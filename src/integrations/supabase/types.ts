@@ -808,6 +808,69 @@ export type Database = {
           },
         ]
       }
+      peptide_source_checks: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          id: string
+          last_checked_at: string | null
+          lookup_status: string
+          matched_record_id: string | null
+          matched_record_name: string | null
+          notes: string | null
+          peptide_id: string
+          source_provider: string
+          suggestion_generated: boolean
+          suggestion_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          last_checked_at?: string | null
+          lookup_status?: string
+          matched_record_id?: string | null
+          matched_record_name?: string | null
+          notes?: string | null
+          peptide_id: string
+          source_provider: string
+          suggestion_generated?: boolean
+          suggestion_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          last_checked_at?: string | null
+          lookup_status?: string
+          matched_record_id?: string | null
+          matched_record_name?: string | null
+          notes?: string | null
+          peptide_id?: string
+          source_provider?: string
+          suggestion_generated?: boolean
+          suggestion_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peptide_source_checks_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "peptides"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "peptide_source_checks_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "v_peptides_visible"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       peptides: {
         Row: {
           access_level: string
