@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
 
       const evaluation = evaluateChange(change, peptide, source, minConfidence);
 
-      if (mode === "auto" && evaluation.confidence >= minConfidence && evaluation.safe) {
+      if (mode === "auto" && evaluation.decision === "auto_apply" && evaluation.safe) {
         // Apply the change
         const applyResult = await applyChange(sb, change, peptide, source, userId);
         results.push({
@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
           oldValue: change.old_value,
           newValue: change.new_value,
           source: source?.name || "Unknown",
-          confidence: evaluation.confidence,
+          confidence: Math.round(evaluation.confidence * 100),
           applied: applyResult.success,
           reason: applyResult.success ? "Auto-applied" : applyResult.error || "Failed",
         });
@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
           oldValue: change.old_value,
           newValue: change.new_value,
           source: source?.name || "Unknown",
-          confidence: evaluation.confidence,
+          confidence: Math.round(evaluation.confidence * 100),
           applied: false,
           reason: mode === "dry_run" ? "Dry run" : evaluation.reason,
         });
