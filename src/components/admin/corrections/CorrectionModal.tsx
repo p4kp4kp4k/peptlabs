@@ -332,44 +332,47 @@ export default function CorrectionModal({ finding, open, onOpenChange }: Correct
         )}
 
         {/* ── No suggestion found ── */}
-        {!suggestionLoading && !hasSuggestion && !manualMode && (
-          <div className="text-center py-8 space-y-3">
-            <SearchX className="h-10 w-10 text-muted-foreground mx-auto" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Nenhuma sugestão automática disponível</p>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                As fontes conectadas foram verificadas, mas não encontraram correspondência confiável para este peptídeo.
-              </p>
+        {!suggestionLoading && !hasSuggestion && !manualMode && (() => {
+          const conflictInfo = finding.category === "cross_source_conflict" && peptide
+            ? analyzeConflict(
+                { id: finding.id, category: finding.category, severity: finding.severity, peptide_id: finding.peptide_id || null, value_a: finding.value_a, value_b: finding.value_b, source_a: finding.source_a, source_b: finding.source_b, description: finding.description },
+                peptide as Record<string, any>
+              )
+            : null;
+          const noSuggestionMessage = conflictInfo
+            ? conflictInfo.reason
+            : "As fontes conectadas foram verificadas, mas não encontraram correspondência confiável para este peptídeo.";
+
+          return (
+            <div className="text-center py-8 space-y-3">
+              <SearchX className="h-10 w-10 text-muted-foreground mx-auto" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Nenhuma sugestão automática disponível</p>
+                <p className="text-[11px] text-muted-foreground mt-1">{noSuggestionMessage}</p>
+                {conflictInfo && conflictInfo.subtype !== "sequence_conflict_comparable" && (
+                  <Badge className="mt-2 text-[8px] text-amber-400 bg-amber-400/10 border-amber-400/30">
+                    {conflictInfo.subtype === "sequence_missing_internal" && "Sequência ausente no PeptLabs"}
+                    {conflictInfo.subtype === "sequence_missing_external" && "Sequência ausente na fonte externa"}
+                    {conflictInfo.subtype === "non_sequence_conflict" && "Conflito não-sequencial"}
+                    {conflictInfo.subtype === "no_data_available" && "Sem dados comparáveis"}
+                    {conflictInfo.subtype === "low_confidence_match" && "Match insuficiente"}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex justify-center gap-2 pt-2">
+                <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1" onClick={() => setManualMode(true)}>
+                  <Edit3 className="h-3 w-3" /> Editar manualmente
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1" onClick={() => refetchSuggestion()}>
+                  <RefreshCw className="h-3 w-3" /> Tentar nova busca
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 text-[11px] text-amber-400 gap-1" onClick={() => ignoreMutation.mutate()} disabled={ignoreMutation.isPending}>
+                  <XCircle className="h-3 w-3" /> Ignorar
+                </Button>
+              </div>
             </div>
-            <div className="flex justify-center gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-[11px] gap-1"
-                onClick={() => setManualMode(true)}
-              >
-                <Edit3 className="h-3 w-3" /> Editar manualmente
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-[11px] gap-1"
-                onClick={() => refetchSuggestion()}
-              >
-                <RefreshCw className="h-3 w-3" /> Tentar nova busca
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 text-[11px] text-amber-400 gap-1"
-                onClick={() => ignoreMutation.mutate()}
-                disabled={ignoreMutation.isPending}
-              >
-                <XCircle className="h-3 w-3" /> Ignorar
-              </Button>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ── Suggestion found: show details ── */}
         {!suggestionLoading && hasSuggestion && (
