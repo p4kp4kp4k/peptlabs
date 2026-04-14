@@ -252,7 +252,7 @@ export default function CorrectionReviewPage() {
         change_summary: suggestion.description,
         before_snapshot: beforeSnapshot,
         after_snapshot: { [fieldName]: updatePayload[fieldName] },
-        correction_id: correctionData?.data?.id,
+        correction_id: correctionData?.id,
         applied_at: new Date().toISOString(),
       } as any);
 
