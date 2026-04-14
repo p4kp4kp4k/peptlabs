@@ -1168,14 +1168,24 @@ function AuditTab() {
                     <div className="flex flex-col gap-1 shrink-0">
                       {f.status === "open" ? (
                         <>
-                          {f.peptide_id && (
+                          {f.peptide_id && hasSuggestionFor(f) && (
                             <Button
                               variant="outline"
                               size="sm"
                               className="h-6 text-[9px] px-2 border-primary/30 text-primary hover:bg-primary/10"
                               onClick={() => { setSelectedFinding(f); setCorrectionOpen(true); }}
                             >
-                              <Wrench className="h-2.5 w-2.5 mr-1" /> Corrigir
+                              <Wrench className="h-2.5 w-2.5 mr-1" /> Ver sugestão
+                            </Button>
+                          )}
+                          {f.peptide_id && !hasSuggestionFor(f) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-[9px] px-2 border-purple-400/30 text-purple-400 hover:bg-purple-400/10"
+                              onClick={() => { setSelectedFinding(f); setCorrectionOpen(true); }}
+                            >
+                              <Edit3 className="h-2.5 w-2.5 mr-1" /> Editar manualmente
                             </Button>
                           )}
                           <Button
