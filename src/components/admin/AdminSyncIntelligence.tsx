@@ -1403,6 +1403,12 @@ function AuditTab() {
           if (!open) setSelectedFinding(null);
         }}
       />
+
+      {/* Bulk Apply Modal */}
+      <BulkApplyModal open={bulkOpen} onOpenChange={setBulkOpen} />
+
+      {/* Bulk Update History */}
+      <BulkRunsHistory />
     </div>
   );
 }
