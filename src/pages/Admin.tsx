@@ -145,6 +145,9 @@ export default function Admin() {
           <TabsTrigger value="sync" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Database className="h-3.5 w-3.5" /> Sync
           </TabsTrigger>
+          <TabsTrigger value="integrations" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Zap className="h-3.5 w-3.5" /> Central de Integrações
+          </TabsTrigger>
           <TabsTrigger value="products" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <ShoppingBag className="h-3.5 w-3.5" /> Produtos
           </TabsTrigger>
