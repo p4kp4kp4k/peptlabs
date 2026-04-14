@@ -830,26 +830,6 @@ function AuditTab() {
     },
   });
 
-  const resolveMutation = useMutation({
-    mutationFn: async ({ findingId, note }: { findingId: string; note: string }) => {
-      const { error } = await supabase
-        .from("audit_findings")
-        .update({
-          status: "resolved",
-          resolved_at: new Date().toISOString(),
-          resolution_note: note || "Resolvido pelo admin",
-        })
-        .eq("id", findingId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({ title: "Finding resolvido" });
-      queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
-      queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
-    },
-  });
-
-  const ignoreMutation = useMutation({
     mutationFn: async (findingId: string) => {
       const { error } = await supabase
         .from("audit_findings")
