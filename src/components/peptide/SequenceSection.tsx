@@ -370,6 +370,14 @@ export default function SequenceSection({
     );
   }
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(analysis.cleanSeq);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const formatMW = (mw: number) => mw >= 1000 ? `${(mw / 1000).toFixed(2)} kDa` : `${mw.toFixed(1)} Da`;
+
   /* ═══════════════════════════════════════════════════════════════
      RENDER
      ═══════════════════════════════════════════════════════════════ */
