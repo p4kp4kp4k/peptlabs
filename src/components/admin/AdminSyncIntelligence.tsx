@@ -1413,6 +1413,148 @@ function AuditTab() {
   );
 }
 
+// ── Bulk Runs History ──
+
+function BulkRunsHistory() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: runs = [] } = useQuery({
+    queryKey: ["bulk-update-runs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bulk_update_runs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const revertMutation = useMutation({
+    mutationFn: async (runId: string) => {
+      const { data: items, error } = await supabase
+        .from("bulk_update_items")
+        .select("*")
+        .eq("run_id", runId)
+        .eq("action_taken", "applied")
+        .eq("was_reverted", false);
+      if (error) throw error;
+      if (!items?.length) throw new Error("Nenhum item para reverter");
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      for (const item of items) {
+        if (!item.peptide_id || !item.field_name) continue;
+        if (item.field_name !== "scientific_references") {
+          const update: Record<string, any> = {
+            [item.field_name]: item.old_value,
+            updated_at: new Date().toISOString(),
+          };
+          await supabase.from("peptides").update(update as any).eq("id", item.peptide_id);
+        }
+        await supabase.from("bulk_update_items")
+          .update({ was_reverted: true, action_taken: "reverted" })
+          .eq("id", item.id);
+        await supabase.from("peptide_change_history").insert({
+          peptide_id: item.peptide_id,
+          change_origin: "bulk_revert",
+          change_summary: `Revertido: ${item.field_name} (run: ${runId.slice(0, 8)})`,
+          before_snapshot: { [item.field_name]: item.new_value },
+          after_snapshot: { [item.field_name]: item.old_value },
+          applied_by: user?.id || null,
+        });
+        if (item.finding_id) {
+          await supabase.from("audit_findings")
+            .update({ status: "open", resolved_at: null, resolved_by: null, resolution_note: null })
+            .eq("id", item.finding_id);
+        }
+      }
+      await supabase.from("bulk_update_runs")
+        .update({ reverted_at: new Date().toISOString(), status: "reverted" })
+        .eq("id", runId);
+      return items.length;
+    },
+    onSuccess: (count) => {
+      toast({ title: "Reversão concluída", description: `${count} alterações revertidas` });
+      queryClient.invalidateQueries({ queryKey: ["bulk-update-runs"] });
+      queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
+      queryClient.invalidateQueries({ queryKey: ["peptides"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro na reversão", description: err.message, variant: "destructive" });
+    },
+  });
+
+  if (runs.length === 0) return null;
+
+  return (
+    <Card className="border-border/40 bg-card/80">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <History className="inline h-4 w-4 mr-2 text-primary" />
+          Histórico de Aplicações em Massa
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-xs">Status</TableHead>
+              <TableHead className="text-xs">Confiança</TableHead>
+              <TableHead className="text-xs">Aplicadas</TableHead>
+              <TableHead className="text-xs">Pendentes</TableHead>
+              <TableHead className="text-xs">Data</TableHead>
+              <TableHead className="text-xs w-24">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {runs.map((r: any) => (
+              <TableRow key={r.id}>
+                <TableCell>
+                  <Badge variant="outline" className={`text-[8px] ${
+                    r.status === "completed" ? "text-emerald-400 border-emerald-400/30" :
+                    r.status === "reverted" ? "text-amber-400 border-amber-400/30" :
+                    "text-muted-foreground"
+                  }`}>
+                    {r.status === "completed" ? "Aplicado" : r.status === "reverted" ? "Revertido" : r.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-[10px]">≥{r.confidence_threshold}%</TableCell>
+                <TableCell className="text-[10px] text-emerald-400">{r.applied_count}</TableCell>
+                <TableCell className="text-[10px] text-amber-400">{r.skipped_count}</TableCell>
+                <TableCell className="text-[10px] text-muted-foreground">
+                  {new Date(r.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                </TableCell>
+                <TableCell>
+                  {r.status === "completed" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-[9px] px-2 text-destructive hover:bg-destructive/10"
+                      disabled={revertMutation.isPending}
+                      onClick={() => revertMutation.mutate(r.id)}
+                    >
+                      <RotateCcw className="h-2.5 w-2.5 mr-1" />
+                      Reverter
+                    </Button>
+                  )}
+                  {r.status === "reverted" && (
+                    <span className="text-[9px] text-muted-foreground">
+                      {r.reverted_at ? new Date(r.reverted_at).toLocaleDateString("pt-BR") : "—"}
+                    </span>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── 4. Import Queue Tab ──
 
 function ImportQueueTab() {
