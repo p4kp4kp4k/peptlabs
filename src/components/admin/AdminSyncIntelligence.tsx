@@ -984,7 +984,7 @@ function AuditTab() {
           ) : (
             <div className="space-y-2">
               {paginated.map((f) => (
-                <div key={f.id} className={`p-3 rounded-lg border ${severityColor(f.severity)}`}>
+                <div className={`p-3 rounded-lg border ${severityColor(f.severity)}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -992,6 +992,17 @@ function AuditTab() {
                         <Badge variant="outline" className="text-[8px]">{f.category}</Badge>
                         {f.peptides?.name && (
                           <span className="text-[10px] text-muted-foreground">• {f.peptides.name}</span>
+                        )}
+                        {/* Confidence & correction badges */}
+                        {f.status === "open" && f.peptide_id && isAutoCorrectible(f.category) && (
+                          <Badge className="text-[7px] px-1 py-0 text-emerald-400 bg-emerald-400/10 border-emerald-400/30">
+                            <Wrench className="h-2 w-2 mr-0.5" /> Correção disponível
+                          </Badge>
+                        )}
+                        {f.status === "open" && f.peptide_id && !isAutoCorrectible(f.category) && (
+                          <Badge className="text-[7px] px-1 py-0 text-purple-400 bg-purple-400/10 border-purple-400/30">
+                            <Edit3 className="h-2 w-2 mr-0.5" /> Revisão manual
+                          </Badge>
                         )}
                       </div>
                       <p className="text-xs font-medium text-foreground">{f.title}</p>
@@ -1029,15 +1040,16 @@ function AuditTab() {
                     <div className="flex flex-col gap-1 shrink-0">
                       {f.status === "open" ? (
                         <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-6 text-[9px] px-2 border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10"
-                            disabled={resolveMutation.isPending}
-                            onClick={() => resolveMutation.mutate({ findingId: f.id, note: "Resolvido manualmente" })}
-                          >
-                            <CheckCircle2 className="h-2.5 w-2.5 mr-1" /> Resolver
-                          </Button>
+                          {f.peptide_id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-[9px] px-2 border-primary/30 text-primary hover:bg-primary/10"
+                              onClick={() => { setSelectedFinding(f); setCorrectionOpen(true); }}
+                            >
+                              <Wrench className="h-2.5 w-2.5 mr-1" /> Corrigir
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
