@@ -20,6 +20,7 @@ import {
   Check, X, RotateCcw, Trash2, Upload, Edit3, History, Wrench
 } from "lucide-react";
 import CorrectionModal from "./corrections/CorrectionModal";
+import BulkApplyModal from "./bulk/BulkApplyModal";
 
 // ── Types ──
 
