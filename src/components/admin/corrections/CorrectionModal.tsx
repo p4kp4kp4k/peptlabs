@@ -14,7 +14,7 @@ import {
   SearchX, RefreshCw, Globe,
 } from "lucide-react";
 import { fieldLabel } from "./correctionEngine";
-import { generateSuggestion, type Suggestion } from "./suggestionEngine";
+import { generateSuggestion, analyzeConflict, type Suggestion, type ConflictAnalysis } from "./suggestionEngine";
 import SequenceDiffView from "./SequenceDiffView";
 
 interface AuditFinding {
