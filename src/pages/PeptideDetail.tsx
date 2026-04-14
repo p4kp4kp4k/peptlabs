@@ -335,7 +335,7 @@ export default function PeptideDetail() {
   /* Nav sections */
   const sections = [
     { id: "score", label: "Score", icon: TrendingUp },
-    { id: "sequence", label: "Sequência", icon: Beaker },
+    { id: "sequence", label: "Sequência", icon: Dna },
     p.mechanism ? { id: "mechanism", label: "Mecanismo", icon: Zap } : null,
     p.benefits?.length ? { id: "benefits", label: "Benefícios", icon: CheckCircle2 } : null,
     timelineData?.length ? { id: "timeline", label: "Timeline", icon: Clock } : null,
@@ -459,17 +459,15 @@ export default function PeptideDetail() {
       </Section>
 
       {/* ── SEQUENCE ── */}
-      <Section collapseSignal={collapseSignal} id="sequence" icon={Beaker} title="Sequência Peptídica">
-        {p.sequence ? (
-          <div>
-            <div className="p-3 rounded-lg bg-secondary/40 border border-border font-mono text-[11px] text-foreground break-all leading-relaxed whitespace-pre-wrap">
-              {p.sequence}
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1.5">{p.sequence.length} caracteres</p>
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground/60 italic">Sequência ainda não cadastrada</p>
-        )}
+      <Section collapseSignal={collapseSignal} id="sequence" icon={Dna} title="Sequência Peptídica">
+        <SequenceSection
+          sequence={p.sequence}
+          sequenceLength={p.sequence_length}
+          sourceOrigins={p.source_origins}
+          confidenceScore={p.confidence_score}
+          lastSyncedAt={p.last_synced_at}
+          updatedAt={p.updated_at}
+        />
       </Section>
 
       {/* ── MECHANISM ── */}
