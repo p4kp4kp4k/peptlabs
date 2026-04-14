@@ -252,7 +252,7 @@ async function searchIncompleteData(name: string, aliases: string[]): Promise<an
     const cleanName = name.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
     const query = encodeURIComponent(cleanName);
     const res = await fetch(
-      `${UNIPROT_BASE}/search?query=${query}&size=1&format=json&fields=accession,protein_name,cc_function`,
+      `${UNIPROT_BASE}/search?query=${query}&size=1&format=json`,
       { signal: AbortSignal.timeout(10000), headers: { Accept: "application/json" } }
     );
 
