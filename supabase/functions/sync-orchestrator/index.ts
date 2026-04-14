@@ -95,22 +95,27 @@ async function syncSource(sb: SupabaseClient, source: any, peptides: any[], mode
   const errorMessages: string[] = [];
 
   try {
-    switch (source.slug) {
-      case "uniprot":
-        ({ processed, added, updated, conflicts, errors } = await syncUniProt(sb, source, peptides, runId));
-        break;
-      case "pubmed":
-        ({ processed, added, updated, conflicts, errors } = await syncPubMed(sb, source, peptides, runId));
-        break;
-      case "pdb":
-        ({ processed, added, updated, conflicts, errors } = await syncPDB(sb, source, peptides, runId));
-        break;
-      case "openfda":
-        ({ processed, added, updated, conflicts, errors } = await syncOpenFDA(sb, source, peptides, runId));
-        break;
-      default:
-        errorMessages.push(`No adapter for source: ${source.slug}`);
-        errors = 1;
+    // Dataset sources (no live API) — mark as success with no processing
+    if (source.api_type === "dataset") {
+      processed = 0;
+    } else {
+      switch (source.slug) {
+        case "uniprot":
+          ({ processed, added, updated, conflicts, errors } = await syncUniProt(sb, source, peptides, runId));
+          break;
+        case "pubmed":
+          ({ processed, added, updated, conflicts, errors } = await syncPubMed(sb, source, peptides, runId));
+          break;
+        case "pdb":
+          ({ processed, added, updated, conflicts, errors } = await syncPDB(sb, source, peptides, runId));
+          break;
+        case "openfda":
+          ({ processed, added, updated, conflicts, errors } = await syncOpenFDA(sb, source, peptides, runId));
+          break;
+        default:
+          errorMessages.push(`No adapter for source: ${source.slug}`);
+          errors = 1;
+      }
     }
   } catch (e: any) {
     errorMessages.push(e.message);
