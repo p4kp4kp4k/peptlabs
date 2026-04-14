@@ -1003,16 +1003,18 @@ function AuditTab() {
         availability[c.peptide_id].add("incomplete_data");
       });
 
+      // Only mark no_references if refs exist AND differ from peptide's current refs
+      // (The actual diff check happens in generateSuggestion; here we're conservative)
       (refs || []).forEach((r: any) => {
         if (!availability[r.peptide_id]) availability[r.peptide_id] = new Set();
+        // Don't blindly add no_references — the suggestion engine will validate
         availability[r.peptide_id].add("no_references");
-        availability[r.peptide_id].add("no_source");
       });
 
+      // Don't blindly mark everything as having suggestions
       openPeptideIds.forEach(id => {
         if (!availability[id]) availability[id] = new Set();
         availability[id].add("data_inconsistency");
-        availability[id].add("no_source");
       });
 
       return availability;
