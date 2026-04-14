@@ -118,7 +118,7 @@ export default function CorrectionModal({ finding, open, onOpenChange }: Correct
       // 3. Apply to peptide
       const { error: updateError } = await supabase
         .from("peptides")
-        .update(updatePayload)
+        .update(updatePayload as any)
         .eq("id", finding.peptide_id!);
       if (updateError) throw updateError;
 
@@ -215,7 +215,6 @@ export default function CorrectionModal({ finding, open, onOpenChange }: Correct
   const confLabel = proposal?.confidenceLevel === "high" ? "Alta Confiança"
     : proposal?.confidenceLevel === "medium" ? "Média Confiança" : "Baixa Confiança";
 
-  const [showHistory, setShowHistory] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
