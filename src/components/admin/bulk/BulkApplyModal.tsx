@@ -21,7 +21,7 @@ import {
   Database, BookOpen, FlaskConical, Globe, Filter, XCircle, Zap,
   FileText, ArrowRight, Clock, Download
 } from "lucide-react";
-
+import { calculateConfidence, scoreToLevel, levelLabel, levelColor, type ConfidenceResult, type Decision } from "../corrections/confidenceEngine";
 // ── Types ──
 
 interface BulkCandidate {
@@ -38,6 +38,8 @@ interface BulkCandidate {
   confidenceScore: number;
   isEligible: boolean;
   skipReason: string | null;
+  decision: Decision;
+  confidenceAnalysis: ConfidenceResult | null;
 }
 
 interface BulkSummary {
@@ -89,66 +91,77 @@ const REGULATORY_FIELDS = new Set(["regulatory", "side_effects"]);
 function evaluateEligibility(
   finding: any,
   confidenceThreshold: number
-): { eligible: boolean; skipReason: string | null; confidence: number; fieldName: string } {
+): { eligible: boolean; skipReason: string | null; confidence: number; fieldName: string; decision: Decision; analysis: ConfidenceResult } {
   const category = finding.category;
   const severity = finding.severity;
   const fieldName = extractFieldName(category, finding.description);
 
-  // Critical severity → never auto-apply
-  if (severity === "critical") {
-    return { eligible: false, skipReason: "Severidade crítica requer revisão manual", confidence: 20, fieldName };
-  }
-
-  // Cross-source conflicts → never auto
-  if (UNSAFE_CATEGORIES.has(category)) {
-    return { eligible: false, skipReason: "Conflito entre fontes requer revisão manual", confidence: 15, fieldName };
-  }
-
-  // Sequence replacement → never auto (new sequence addition is OK)
-  if (fieldName === "sequence" && finding.value_a) {
-    return { eligible: false, skipReason: "Substituição de sequência requer revisão manual", confidence: 30, fieldName };
-  }
-
-  // Regulatory → never auto
-  if (REGULATORY_FIELDS.has(fieldName)) {
-    return { eligible: false, skipReason: "Dados regulatórios requerem revisão manual", confidence: 25, fieldName };
-  }
+  // Use the Confidence Engine for real scoring
+  const analysis = calculateConfidence({
+    fieldName,
+    sourceProvider: finding.source_b || "Unknown",
+    changeType: !finding.value_a && finding.value_b ? "add" : "replace",
+    severity,
+    matchStrength: 0.75,
+    currentValueExists: !!finding.value_a,
+    hasConflict: UNSAFE_CATEGORIES.has(category),
+    conflictSeverity: UNSAFE_CATEGORIES.has(category)
+      ? severity === "critical" ? "critical" : "major"
+      : "none",
+    crossSourceAgreement: UNSAFE_CATEGORIES.has(category) ? 0.3 : 0.6,
+    dataCompleteness: finding.value_b ? Math.min(1, (finding.value_b.length || 10) / 100) : 0.3,
+  });
 
   // No proposed value → skip
   if (!finding.value_b) {
-    return { eligible: false, skipReason: "Sem valor sugerido disponível", confidence: 10, fieldName };
+    return {
+      eligible: false,
+      skipReason: "Sem valor sugerido disponível",
+      confidence: Math.round(analysis.score * 100),
+      fieldName,
+      decision: "blocked",
+      analysis,
+    };
   }
 
-  // Calculate confidence
-  let confidence = 50;
+  // Use the engine's decision, but also check against the slider threshold
+  const scorePercent = Math.round(analysis.score * 100);
   
-  // Boost for known source
-  if (finding.source_b) {
-    const priorities = FIELD_PRIORITY[fieldName] || [];
-    const sourceIdx = priorities.indexOf(finding.source_b);
-    if (sourceIdx === 0) confidence += 30;
-    else if (sourceIdx > 0) confidence += 20;
-    else confidence += 10;
+  if (analysis.decision === "blocked") {
+    return {
+      eligible: false,
+      skipReason: analysis.blockedReason || "Bloqueado pelo motor de confiança",
+      confidence: scorePercent,
+      fieldName,
+      decision: "blocked",
+      analysis,
+    };
   }
 
-  // Boost for adding new data (vs replacing)
-  if (!finding.value_a && finding.value_b) {
-    confidence += 15; // Adding to empty field is safer
+  if (analysis.decision === "manual_review") {
+    return {
+      eligible: false,
+      skipReason: analysis.blockedReason || `Revisão manual requerida (${analysis.reasoning.slice(0, 80)})`,
+      confidence: scorePercent,
+      fieldName,
+      decision: "manual_review",
+      analysis,
+    };
   }
 
-  // Boost based on category
-  if (category === "data_inconsistency") confidence += 10;
-  if (category === "no_references") confidence += 5;
-  if (category === "missing_sequence" && !finding.value_a) confidence += 10;
-
-  // Cap
-  confidence = Math.min(95, confidence);
-
-  if (confidence < confidenceThreshold) {
-    return { eligible: false, skipReason: `Confiança ${confidence}% abaixo do limiar ${confidenceThreshold}%`, confidence, fieldName };
+  // auto_apply from engine, but also check slider threshold
+  if (scorePercent < confidenceThreshold) {
+    return {
+      eligible: false,
+      skipReason: `Confiança ${scorePercent}% abaixo do limiar ${confidenceThreshold}%`,
+      confidence: scorePercent,
+      fieldName,
+      decision: "manual_review",
+      analysis,
+    };
   }
 
-  return { eligible: true, skipReason: null, confidence, fieldName };
+  return { eligible: true, skipReason: null, confidence: scorePercent, fieldName, decision: "auto_apply", analysis };
 }
 
 function extractFieldName(category: string, description: string | null): string {
@@ -245,6 +258,8 @@ export default function BulkApplyModal({ open, onOpenChange }: Props) {
           confidenceScore: evaluation.confidence,
           isEligible: evaluation.eligible,
           skipReason: evaluation.skipReason,
+          decision: evaluation.decision,
+          confidenceAnalysis: evaluation.analysis,
         };
       });
   }, [findings, confidenceThreshold]);
