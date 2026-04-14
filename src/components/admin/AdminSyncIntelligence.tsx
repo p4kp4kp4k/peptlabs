@@ -984,7 +984,7 @@ function AuditTab() {
           ) : (
             <div className="space-y-2">
               {paginated.map((f) => (
-                <div className={`p-3 rounded-lg border ${severityColor(f.severity)}`}>
+                <div key={f.id} className={`p-3 rounded-lg border ${severityColor(f.severity)}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
