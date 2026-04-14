@@ -776,6 +776,8 @@ function AuditTab() {
   const queryClient = useQueryClient();
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
+  const [selectedFinding, setSelectedFinding] = useState<AuditFinding | null>(null);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const PAGE_SIZE = 15;
 
   const { data: auditRuns = [], isLoading } = useQuery({
