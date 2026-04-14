@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Tag, Activity, Clock, RotateCcw, Zap, CheckCircle2, AlertTriangle,
   Syringe, ListChecks, Beaker, BookOpen, GitMerge, Layers, TrendingUp,
-  ExternalLink
+  ExternalLink, Dna
 } from "lucide-react";
+import SequenceSection from "@/components/peptide/SequenceSection";
 import type { Json } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
 
@@ -213,21 +214,20 @@ export default function PeptidePreviewColumn({
         </div>
       </PreviewSection>
 
-      {/* Sequence */}
-      {(p.sequence || getHighlight("sequence")) && (
-        <PreviewSection id="sequence" icon={Beaker} title="Sequência Peptídica" highlight={getHighlight("sequence")} showHighlights={showHighlights} onlyChanges={onlyChanges}>
-          {p.sequence ? (
-            <>
-              <div className="p-2 rounded-lg bg-secondary/40 border border-border/15 font-mono text-[10px] text-foreground break-all leading-relaxed">
-                {p.sequence}
-              </div>
-              <p className="text-[9px] text-muted-foreground mt-1">{p.sequence.length} caracteres</p>
-            </>
-          ) : (
-            <p className="text-[10px] text-muted-foreground italic">Sequência não disponível</p>
-          )}
-        </PreviewSection>
-      )}
+      {/* Sequence — uses the same SequenceSection as the real page */}
+      <PreviewSection id="sequence" icon={Dna} title="Sequência Peptídica" highlight={getHighlight("sequence")} showHighlights={showHighlights} onlyChanges={onlyChanges}>
+        <SequenceSection
+          sequence={p.sequence}
+          sequenceLength={p.sequence_length}
+          sourceOrigins={p.source_origins}
+          confidenceScore={p.confidence_score}
+          lastSyncedAt={p.last_synced_at}
+          updatedAt={p.updated_at}
+          structureInfo={p.structure_info}
+          peptideId={p.id}
+          peptideName={p.name}
+        />
+      </PreviewSection>
 
       {/* Mechanism */}
       {p.mechanism && (
@@ -416,7 +416,7 @@ export default function PeptidePreviewColumn({
 export const SECTION_MAP: Record<string, { label: string; icon: React.ElementType }> = {
   hero: { label: "Informações Gerais", icon: Tag },
   score: { label: "Score", icon: TrendingUp },
-  sequence: { label: "Sequência Peptídica", icon: Beaker },
+  sequence: { label: "Sequência Peptídica", icon: Dna },
   mechanism: { label: "Mecanismo de Ação", icon: Zap },
   benefits: { label: "Benefícios", icon: CheckCircle2 },
   side_effects: { label: "Efeitos Colaterais", icon: AlertTriangle },
