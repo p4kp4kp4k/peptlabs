@@ -14,10 +14,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { Crown, Lock, UserPlus } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { Json } from "@/integrations/supabase/types";
+import SequenceSection from "@/components/peptide/SequenceSection";
 import {
   ArrowLeft, Tag, Activity, Clock, RotateCcw, Zap, CheckCircle2,
   AlertTriangle, Syringe, ListChecks, Beaker, BookOpen, GitMerge,
-  Layers, ExternalLink, Calculator, Shield, TrendingUp, Star, ChevronDown
+  Layers, ExternalLink, Calculator, Shield, TrendingUp, Star, ChevronDown, Dna
 } from "lucide-react";
 
 /* ─── Type helpers ─── */
