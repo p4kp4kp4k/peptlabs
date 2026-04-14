@@ -482,7 +482,7 @@ export default function BulkApplyModal({ open, onOpenChange }: Props) {
             [item.field_name]: item.old_value,
             updated_at: new Date().toISOString(),
           };
-          await supabase.from("peptides").update(update).eq("id", item.peptide_id);
+          await supabase.from("peptides").update(update as any).eq("id", item.peptide_id);
         }
 
         // Mark as reverted
