@@ -1300,7 +1300,7 @@ function AuditTab() {
                               variant="outline"
                               size="sm"
                               className="h-6 text-[9px] px-2 border-purple-400/30 text-purple-400 hover:bg-purple-400/10"
-                              onClick={() => { setSelectedFinding(f); setCorrectionOpen(true); }}
+                              onClick={() => navigate(`/app/admin/review/${f.id}`)}
                             >
                               <Edit3 className="h-2.5 w-2.5 mr-1" /> Editar manualmente
                             </Button>
