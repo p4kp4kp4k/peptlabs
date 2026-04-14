@@ -1,8 +1,9 @@
 /**
  * Suggestion Engine
  * =================
- * Fetches real data from integration sources (detected_changes, peptide_references)
- * and generates concrete correction proposals with before/after values.
+ * 1. Checks local DB tables (detected_changes, peptide_references) for existing data.
+ * 2. If nothing found locally, calls the suggest-correction edge function
+ *    which queries real external APIs (UniProt, PubMed).
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -46,29 +47,95 @@ export async function generateSuggestion(
 
   console.log("[SuggestionEngine] Generating for", finding.category, peptide.name);
 
+  // Step 1: Try local DB data
+  let localResult: Suggestion | null = null;
+
   switch (finding.category) {
     case "missing_sequence":
-      return suggestSequence(finding, peptide);
+      localResult = await suggestSequenceLocal(finding, peptide);
+      break;
     case "no_references":
-      return suggestReferences(finding, peptide);
+      localResult = await suggestReferencesLocal(finding, peptide);
+      break;
     case "no_source":
-      return suggestSourceOrigins(finding, peptide);
+      localResult = await suggestSourceOriginsLocal(finding, peptide);
+      break;
     case "incomplete_data":
-      return suggestIncompleteData(finding, peptide);
+      localResult = await suggestIncompleteDataLocal(finding, peptide);
+      break;
     case "data_inconsistency":
       return suggestSlugFix(finding, peptide);
     default:
-      return null;
+      break;
   }
+
+  if (localResult) {
+    console.log("[SuggestionEngine] Found local data for", finding.category);
+    return localResult;
+  }
+
+  // Step 2: Call edge function for real API data
+  console.log("[SuggestionEngine] No local data, calling external APIs...");
+  return callExternalSuggestion(finding, peptide);
 }
 
-// ── Sequence suggestion ──
+// ── Call edge function ──
 
-async function suggestSequence(
+async function callExternalSuggestion(
   finding: FindingInput,
   peptide: Record<string, any>
 ): Promise<Suggestion | null> {
-  // 1. Check detected_changes for sequence data
+  try {
+    const { data, error } = await supabase.functions.invoke("suggest-correction", {
+      body: {
+        peptide_name: peptide.name,
+        peptide_id: finding.peptide_id,
+        category: finding.category,
+        aliases: peptide.alternative_names || [],
+      },
+    });
+
+    if (error) {
+      console.error("[SuggestionEngine] Edge function error:", error);
+      return null;
+    }
+
+    const ext = data?.suggestion;
+    if (!ext) {
+      console.log("[SuggestionEngine] No external suggestion found");
+      return null;
+    }
+
+    console.log("[SuggestionEngine] External suggestion found:", ext.field, "from", ext.source);
+
+    return {
+      findingId: finding.id,
+      peptideId: finding.peptide_id!,
+      field: ext.field,
+      oldValue: (peptide as any)[ext.field] || null,
+      proposedValue: ext.proposed_value,
+      sourceProvider: ext.source,
+      sourceReference: ext.source_id || null,
+      confidenceScore: ext.confidence,
+      confidenceLevel: ext.confidence_level,
+      changeType: ext.change_type,
+      description: ext.description,
+      impact: ext.impact,
+      previewData: ext.extra || {},
+      requiresManualReview: false,
+    };
+  } catch (err) {
+    console.error("[SuggestionEngine] Failed to call edge function:", err);
+    return null;
+  }
+}
+
+// ── Local: Sequence ──
+
+async function suggestSequenceLocal(
+  finding: FindingInput,
+  peptide: Record<string, any>
+): Promise<Suggestion | null> {
   const { data: changes } = await supabase
     .from("detected_changes")
     .select("new_value, integration_sources(name, slug)")
@@ -84,7 +151,6 @@ async function suggestSequence(
     const sequence = change.new_value;
 
     if (sequence && sequence.length > 0) {
-      console.log("[SuggestionEngine] Found sequence from", source?.name);
       return {
         findingId: finding.id,
         peptideId: finding.peptide_id!,
@@ -104,103 +170,24 @@ async function suggestSequence(
     }
   }
 
-  // 2. Check if peptide has sequence in import_queue
-  const { data: queued } = await supabase
-    .from("peptide_import_queue")
-    .select("collected_data, integration_sources(name)")
-    .eq("status", "pending")
-    .limit(100);
-
-  if (queued) {
-    for (const q of queued) {
-      const data = q.collected_data as any;
-      if (data?.sequence && data?.name?.toLowerCase() === peptide.name?.toLowerCase()) {
-        return {
-          findingId: finding.id,
-          peptideId: finding.peptide_id!,
-          field: "sequence",
-          oldValue: null,
-          proposedValue: data.sequence,
-          sourceProvider: (q as any).integration_sources?.name || "Import Queue",
-          sourceReference: null,
-          confidenceScore: 60,
-          confidenceLevel: "medium",
-          changeType: "add",
-          description: `Sequência encontrada na fila de importação para ${peptide.name}`,
-          impact: "A sequência aparecerá na seção de informações moleculares",
-          previewData: { sequence: data.sequence, length: data.sequence.length },
-          requiresManualReview: false,
-        };
-      }
-    }
-  }
-
   return null;
 }
 
-// ── References suggestion ──
+// ── Local: References ──
 
-async function suggestReferences(
+async function suggestReferencesLocal(
   finding: FindingInput,
   peptide: Record<string, any>
 ): Promise<Suggestion | null> {
-  // Check peptide_references table for existing refs
-  const { data: refs, error } = await supabase
+  const { data: refs } = await supabase
     .from("peptide_references")
     .select("title, journal, year, pmid, doi, source, authors")
     .eq("peptide_id", finding.peptide_id!)
     .order("year", { ascending: false })
     .limit(20);
 
-  if (error || !refs || refs.length === 0) {
-    // Check detected_changes for new_reference entries
-    const { data: refChanges } = await supabase
-      .from("detected_changes")
-      .select("new_value, metadata, integration_sources(name)")
-      .eq("peptide_id", finding.peptide_id!)
-      .eq("change_type", "new_reference")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(10);
+  if (!refs || refs.length === 0) return null;
 
-    if (refChanges && refChanges.length > 0) {
-      const parsedRefs = refChanges.map((rc) => {
-        try {
-          const meta = rc.metadata as any;
-          return {
-            title: meta?.title || rc.new_value || "Referência sem título",
-            journal: meta?.journal || null,
-            year: meta?.year || null,
-            pmid: meta?.pmid || null,
-            source: (rc as any).integration_sources?.name || "PubMed",
-          };
-        } catch {
-          return { title: rc.new_value || "Referência", journal: null, year: null, pmid: null, source: "PubMed" };
-        }
-      });
-
-      return {
-        findingId: finding.id,
-        peptideId: finding.peptide_id!,
-        field: "scientific_references",
-        oldValue: peptide.scientific_references || [],
-        proposedValue: parsedRefs,
-        sourceProvider: "PubMed / Detected Changes",
-        sourceReference: null,
-        confidenceScore: 65,
-        confidenceLevel: "medium",
-        changeType: "merge",
-        description: `Vincular ${parsedRefs.length} referência(s) científica(s) ao ${peptide.name}`,
-        impact: "As referências aparecerão no bloco 'Referências Científicas' da aba Pesquisa",
-        previewData: { references: parsedRefs, count: parsedRefs.length },
-        requiresManualReview: false,
-      };
-    }
-
-    return null;
-  }
-
-  // We have refs in peptide_references but the peptide's scientific_references JSON is empty
   const currentRefs = peptide.scientific_references || [];
   const currentCount = Array.isArray(currentRefs) ? currentRefs.length : 0;
 
@@ -229,21 +216,19 @@ async function suggestReferences(
   };
 }
 
-// ── Source origins suggestion ──
+// ── Local: Source origins ──
 
-async function suggestSourceOrigins(
+async function suggestSourceOriginsLocal(
   finding: FindingInput,
   peptide: Record<string, any>
 ): Promise<Suggestion | null> {
   const origins: string[] = [];
 
-  // Check which external IDs exist on the peptide
   if (peptide.ncbi_protein_id) origins.push("NCBI");
   if (peptide.dramp_id) origins.push("DRAMP");
   if (peptide.apd_id) origins.push("APD");
   if (peptide.peptipedia_id) origins.push("Peptipedia");
 
-  // Check peptide_references for sources
   const { data: refs } = await supabase
     .from("peptide_references")
     .select("source")
@@ -257,23 +242,13 @@ async function suggestSourceOrigins(
     });
   }
 
-  // Check detected_changes for any data from sources
-  const { data: changes } = await supabase
-    .from("detected_changes")
-    .select("integration_sources(name)")
-    .eq("peptide_id", finding.peptide_id!)
-    .limit(20);
-
-  if (changes) {
-    changes.forEach((c: any) => {
-      const name = c.integration_sources?.name;
-      if (name && !origins.includes(name)) origins.push(name);
-    });
-  }
-
   if (origins.length === 0) return null;
 
   const currentOrigins = peptide.source_origins || [];
+
+  // Check if we'd actually add anything new
+  const newOrigins = origins.filter((o) => !currentOrigins.includes(o));
+  if (newOrigins.length === 0) return null;
 
   return {
     findingId: finding.id,
@@ -286,20 +261,19 @@ async function suggestSourceOrigins(
     confidenceScore: 80,
     confidenceLevel: "high",
     changeType: "merge",
-    description: `Adicionar ${origins.length} origem(ns) verificável(is) ao ${peptide.name}`,
+    description: `Adicionar ${newOrigins.length} origem(ns) verificável(is) ao ${peptide.name}`,
     impact: "As origens serão registradas nos metadados de rastreabilidade",
-    previewData: { origins },
+    previewData: { origins: newOrigins },
     requiresManualReview: false,
   };
 }
 
-// ── Incomplete data suggestion ──
+// ── Local: Incomplete data ──
 
-async function suggestIncompleteData(
+async function suggestIncompleteDataLocal(
   finding: FindingInput,
   peptide: Record<string, any>
 ): Promise<Suggestion | null> {
-  // Check detected_changes for any field data
   const { data: changes } = await supabase
     .from("detected_changes")
     .select("field_name, new_value, integration_sources(name)")
@@ -334,12 +308,12 @@ async function suggestIncompleteData(
   return null;
 }
 
-// ── Slug fix suggestion ──
+// ── Slug fix (deterministic, no API needed) ──
 
-async function suggestSlugFix(
+function suggestSlugFix(
   finding: FindingInput,
   peptide: Record<string, any>
-): Promise<Suggestion | null> {
+): Suggestion | null {
   const expectedSlug = peptide.name
     .toLowerCase()
     .replace(/\s+/g, "-")
@@ -365,53 +339,20 @@ async function suggestSlugFix(
   };
 }
 
-// ── Check if a finding has available suggestion data (lightweight check) ──
+// ── Check if a finding has available suggestion data (lightweight) ──
+// Now always returns true for categories that can call external APIs
 
 export async function checkSuggestionAvailable(
   findingCategory: string,
-  peptideId: string
+  _peptideId: string
 ): Promise<boolean> {
-  switch (findingCategory) {
-    case "missing_sequence": {
-      const { count } = await supabase
-        .from("detected_changes")
-        .select("*", { count: "exact", head: true })
-        .eq("peptide_id", peptideId)
-        .eq("field_name", "sequence")
-        .eq("status", "pending");
-      return (count || 0) > 0;
-    }
-    case "no_references": {
-      const { count } = await supabase
-        .from("peptide_references")
-        .select("*", { count: "exact", head: true })
-        .eq("peptide_id", peptideId);
-      if ((count || 0) > 0) return true;
-      const { count: changeCount } = await supabase
-        .from("detected_changes")
-        .select("*", { count: "exact", head: true })
-        .eq("peptide_id", peptideId)
-        .eq("change_type", "new_reference")
-        .eq("status", "pending");
-      return (changeCount || 0) > 0;
-    }
-    case "no_source": {
-      // Always can derive from existing external IDs
-      return true;
-    }
-    case "data_inconsistency": {
-      return true;
-    }
-    case "incomplete_data": {
-      const { count } = await supabase
-        .from("detected_changes")
-        .select("*", { count: "exact", head: true })
-        .eq("peptide_id", peptideId)
-        .eq("status", "pending")
-        .neq("field_name", "sequence");
-      return (count || 0) > 0;
-    }
-    default:
-      return false;
-  }
+  // These categories can always generate suggestions via external APIs
+  const apiCategories = [
+    "missing_sequence",
+    "no_references",
+    "no_source",
+    "incomplete_data",
+    "data_inconsistency",
+  ];
+  return apiCategories.includes(findingCategory);
 }
