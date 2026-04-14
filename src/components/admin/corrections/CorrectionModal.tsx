@@ -42,6 +42,7 @@ interface CorrectionModalProps {
 }
 
 export default function CorrectionModal({ finding, open, onOpenChange }: CorrectionModalProps) {
+  // All hooks MUST be before any conditional returns
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [manualMode, setManualMode] = useState(false);
