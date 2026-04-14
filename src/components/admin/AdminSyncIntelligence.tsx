@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -857,6 +858,7 @@ function ChangesTab() {
 function AuditTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
   const [selectedFinding, setSelectedFinding] = useState<AuditFinding | null>(null);
@@ -1288,7 +1290,7 @@ function AuditTab() {
                               variant="outline"
                               size="sm"
                               className="h-6 text-[9px] px-2 border-primary/30 text-primary hover:bg-primary/10"
-                              onClick={() => { setSelectedFinding(f); setCorrectionOpen(true); }}
+                              onClick={() => navigate(`/app/admin/review/${f.id}`)}
                             >
                               <Wrench className="h-2.5 w-2.5 mr-1" /> Ver sugestão
                             </Button>
@@ -1298,7 +1300,7 @@ function AuditTab() {
                               variant="outline"
                               size="sm"
                               className="h-6 text-[9px] px-2 border-purple-400/30 text-purple-400 hover:bg-purple-400/10"
-                              onClick={() => { setSelectedFinding(f); setCorrectionOpen(true); }}
+                              onClick={() => navigate(`/app/admin/review/${f.id}`)}
                             >
                               <Edit3 className="h-2.5 w-2.5 mr-1" /> Editar manualmente
                             </Button>
