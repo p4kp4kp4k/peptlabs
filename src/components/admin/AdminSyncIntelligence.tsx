@@ -830,6 +830,7 @@ function AuditTab() {
     },
   });
 
+  const ignoreMutation = useMutation({
     mutationFn: async (findingId: string) => {
       const { error } = await supabase
         .from("audit_findings")
