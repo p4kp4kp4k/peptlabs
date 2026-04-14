@@ -1290,7 +1290,7 @@ function AuditTab() {
                               variant="outline"
                               size="sm"
                               className="h-6 text-[9px] px-2 border-primary/30 text-primary hover:bg-primary/10"
-                              onClick={() => { setSelectedFinding(f); setCorrectionOpen(true); }}
+                              onClick={() => navigate(`/app/admin/review/${f.id}`)}
                             >
                               <Wrench className="h-2.5 w-2.5 mr-1" /> Ver sugestão
                             </Button>
