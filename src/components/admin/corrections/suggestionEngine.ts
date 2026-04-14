@@ -757,3 +757,40 @@ export async function getSourceChecksForPeptide(
   });
   return result;
 }
+
+// ── Generic placeholder detection ──
+
+const KNOWN_SOURCE_NAMES = ["PubMed", "UniProt", "PDB", "openFDA", "NCBI", "DRAMP", "APD", "Peptipedia", "Crossref"];
+
+/**
+ * Detects if a source_origins suggestion is just a generic placeholder
+ * without real evidence (e.g. ["PubMed"] with no PMID or accession).
+ */
+function isGenericSourceOrigins(
+  proposedValue: any,
+  sourceId: string | null,
+  extra: any
+): boolean {
+  // If there's a real source_id with actual IDs, it's valid
+  if (sourceId && sourceId.length > 0) {
+    // Check it's not just the source name repeated
+    const isJustNames = KNOWN_SOURCE_NAMES.some(n => sourceId === n);
+    if (!isJustNames) return false;
+  }
+
+  // If extra has structured origins with IDs, it's valid
+  if (extra?.origins && Array.isArray(extra.origins)) {
+    const hasRealEvidence = extra.origins.some((o: any) => o.id && o.id.length > 0);
+    if (hasRealEvidence) return false;
+  }
+
+  // If proposed value is just an array of source names, it's a placeholder
+  if (Array.isArray(proposedValue)) {
+    const allGeneric = proposedValue.every((v: any) =>
+      typeof v === "string" && KNOWN_SOURCE_NAMES.includes(v)
+    );
+    if (allGeneric) return true;
+  }
+
+  return false;
+}
