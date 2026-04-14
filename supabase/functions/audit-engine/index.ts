@@ -165,7 +165,7 @@ async function auditInternal(sb: SupabaseClient, runId: string, peptides: any[])
         severity: "medium",
         title: "Sequência não informada",
         description: `${pep.name} não possui sequência peptídica registrada`,
-        recommendation: "Sincronizar com UniProt ou adicionar manualmente",
+        recommendation: "Nenhuma sequência encontrada nas fontes conectadas — verificar manualmente ou tentar nova busca",
       });
       medium++;
     }
@@ -182,8 +182,8 @@ async function auditInternal(sb: SupabaseClient, runId: string, peptides: any[])
         category: "no_references",
         severity: "medium",
         title: "Sem referências científicas",
-        description: `${pep.name} não possui nenhuma referência PubMed vinculada`,
-        recommendation: "Executar sincronização PubMed para este peptídeo",
+        description: `${pep.name} não possui nenhuma referência vinculada no banco local`,
+        recommendation: "Buscar referências via motor de sugestão ou adicionar manualmente",
       });
       medium++;
     }
@@ -196,8 +196,8 @@ async function auditInternal(sb: SupabaseClient, runId: string, peptides: any[])
         category: "no_source",
         severity: "low",
         title: "Sem fonte verificável",
-        description: `${pep.name} não possui nenhuma fonte de dados registrada`,
-        recommendation: "Vincular a pelo menos uma fonte científica confiável",
+        description: `${pep.name} não possui nenhuma origem de dados rastreável`,
+        recommendation: "Verificar correspondência nas fontes ativas ou registrar origem manualmente",
       });
       low++;
     }
