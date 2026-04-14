@@ -615,6 +615,17 @@ function FieldPreview({ field, value, peptide }: { field: string; value: any; pe
     case "scientific_references":
       return <ReferencesPreview refs={value} />;
     case "sequence":
+      // If peptide already has a sequence, show diff; otherwise simple preview
+      if (peptide?.sequence && value && peptide.sequence !== value) {
+        return (
+          <SequenceDiffView
+            seqA={peptide.sequence}
+            seqB={typeof value === "string" ? value : null}
+            labelA="Atual"
+            labelB="Proposta"
+          />
+        );
+      }
       return <SequencePreview sequence={value} />;
     case "description":
     case "mechanism":
