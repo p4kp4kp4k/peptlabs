@@ -21,7 +21,7 @@ import {
   Database, BookOpen, FlaskConical, Globe, Filter, XCircle, Zap,
   FileText, ArrowRight, Clock, Download
 } from "lucide-react";
-
+import { calculateConfidence, scoreToLevel, levelLabel, levelColor, type ConfidenceResult, type Decision } from "../corrections/confidenceEngine";
 // ── Types ──
 
 interface BulkCandidate {
@@ -38,6 +38,8 @@ interface BulkCandidate {
   confidenceScore: number;
   isEligible: boolean;
   skipReason: string | null;
+  decision: Decision;
+  confidenceAnalysis: ConfidenceResult | null;
 }
 
 interface BulkSummary {
@@ -89,66 +91,77 @@ const REGULATORY_FIELDS = new Set(["regulatory", "side_effects"]);
 function evaluateEligibility(
   finding: any,
   confidenceThreshold: number
-): { eligible: boolean; skipReason: string | null; confidence: number; fieldName: string } {
+): { eligible: boolean; skipReason: string | null; confidence: number; fieldName: string; decision: Decision; analysis: ConfidenceResult } {
   const category = finding.category;
   const severity = finding.severity;
   const fieldName = extractFieldName(category, finding.description);
 
-  // Critical severity → never auto-apply
-  if (severity === "critical") {
-    return { eligible: false, skipReason: "Severidade crítica requer revisão manual", confidence: 20, fieldName };
-  }
-
-  // Cross-source conflicts → never auto
-  if (UNSAFE_CATEGORIES.has(category)) {
-    return { eligible: false, skipReason: "Conflito entre fontes requer revisão manual", confidence: 15, fieldName };
-  }
-
-  // Sequence replacement → never auto (new sequence addition is OK)
-  if (fieldName === "sequence" && finding.value_a) {
-    return { eligible: false, skipReason: "Substituição de sequência requer revisão manual", confidence: 30, fieldName };
-  }
-
-  // Regulatory → never auto
-  if (REGULATORY_FIELDS.has(fieldName)) {
-    return { eligible: false, skipReason: "Dados regulatórios requerem revisão manual", confidence: 25, fieldName };
-  }
+  // Use the Confidence Engine for real scoring
+  const analysis = calculateConfidence({
+    fieldName,
+    sourceProvider: finding.source_b || "Unknown",
+    changeType: !finding.value_a && finding.value_b ? "add" : "replace",
+    severity,
+    matchStrength: 0.75,
+    currentValueExists: !!finding.value_a,
+    hasConflict: UNSAFE_CATEGORIES.has(category),
+    conflictSeverity: UNSAFE_CATEGORIES.has(category)
+      ? severity === "critical" ? "critical" : "major"
+      : "none",
+    crossSourceAgreement: UNSAFE_CATEGORIES.has(category) ? 0.3 : 0.6,
+    dataCompleteness: finding.value_b ? Math.min(1, (finding.value_b.length || 10) / 100) : 0.3,
+  });
 
   // No proposed value → skip
   if (!finding.value_b) {
-    return { eligible: false, skipReason: "Sem valor sugerido disponível", confidence: 10, fieldName };
+    return {
+      eligible: false,
+      skipReason: "Sem valor sugerido disponível",
+      confidence: Math.round(analysis.score * 100),
+      fieldName,
+      decision: "blocked",
+      analysis,
+    };
   }
 
-  // Calculate confidence
-  let confidence = 50;
+  // Use the engine's decision, but also check against the slider threshold
+  const scorePercent = Math.round(analysis.score * 100);
   
-  // Boost for known source
-  if (finding.source_b) {
-    const priorities = FIELD_PRIORITY[fieldName] || [];
-    const sourceIdx = priorities.indexOf(finding.source_b);
-    if (sourceIdx === 0) confidence += 30;
-    else if (sourceIdx > 0) confidence += 20;
-    else confidence += 10;
+  if (analysis.decision === "blocked") {
+    return {
+      eligible: false,
+      skipReason: analysis.blockedReason || "Bloqueado pelo motor de confiança",
+      confidence: scorePercent,
+      fieldName,
+      decision: "blocked",
+      analysis,
+    };
   }
 
-  // Boost for adding new data (vs replacing)
-  if (!finding.value_a && finding.value_b) {
-    confidence += 15; // Adding to empty field is safer
+  if (analysis.decision === "manual_review") {
+    return {
+      eligible: false,
+      skipReason: analysis.blockedReason || `Revisão manual requerida (${analysis.reasoning.slice(0, 80)})`,
+      confidence: scorePercent,
+      fieldName,
+      decision: "manual_review",
+      analysis,
+    };
   }
 
-  // Boost based on category
-  if (category === "data_inconsistency") confidence += 10;
-  if (category === "no_references") confidence += 5;
-  if (category === "missing_sequence" && !finding.value_a) confidence += 10;
-
-  // Cap
-  confidence = Math.min(95, confidence);
-
-  if (confidence < confidenceThreshold) {
-    return { eligible: false, skipReason: `Confiança ${confidence}% abaixo do limiar ${confidenceThreshold}%`, confidence, fieldName };
+  // auto_apply from engine, but also check slider threshold
+  if (scorePercent < confidenceThreshold) {
+    return {
+      eligible: false,
+      skipReason: `Confiança ${scorePercent}% abaixo do limiar ${confidenceThreshold}%`,
+      confidence: scorePercent,
+      fieldName,
+      decision: "manual_review",
+      analysis,
+    };
   }
 
-  return { eligible: true, skipReason: null, confidence, fieldName };
+  return { eligible: true, skipReason: null, confidence: scorePercent, fieldName, decision: "auto_apply", analysis };
 }
 
 function extractFieldName(category: string, description: string | null): string {
@@ -245,6 +258,8 @@ export default function BulkApplyModal({ open, onOpenChange }: Props) {
           confidenceScore: evaluation.confidence,
           isEligible: evaluation.eligible,
           skipReason: evaluation.skipReason,
+          decision: evaluation.decision,
+          confidenceAnalysis: evaluation.analysis,
         };
       });
   }, [findings, confidenceThreshold]);
@@ -677,19 +692,28 @@ function PreviewStep({
           {/* Items list */}
           <ScrollArea className="flex-1 min-h-0 max-h-[300px]">
             <div className="space-y-1.5 pr-3">
-              {candidates.map((c) => (
+              {candidates.map((c) => {
+                const lvl = c.confidenceAnalysis ? c.confidenceAnalysis.level : "low";
+                const decisionLabel = c.decision === "auto_apply" ? "Auto" : c.decision === "manual_review" ? "Revisão" : "Bloqueado";
+                const decisionColor = c.decision === "auto_apply" ? "text-emerald-400 border-emerald-400/30" : c.decision === "manual_review" ? "text-amber-400 border-amber-400/30" : "text-red-400 border-red-400/30";
+                
+                return (
                 <div
                   key={c.findingId}
                   className={`p-2.5 rounded-lg border text-[11px] ${
                     c.isEligible
                       ? "border-emerald-400/20 bg-emerald-400/5"
-                      : "border-amber-400/20 bg-amber-400/5"
+                      : c.decision === "blocked"
+                        ? "border-red-400/20 bg-red-400/5"
+                        : "border-amber-400/20 bg-amber-400/5"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       {c.isEligible ? (
                         <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+                      ) : c.decision === "blocked" ? (
+                        <XCircle className="h-3 w-3 text-red-400 shrink-0" />
                       ) : (
                         <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" />
                       )}
@@ -699,8 +723,11 @@ function PreviewStep({
                         <Badge variant="outline" className="text-[8px] shrink-0">{c.sourceProvider}</Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant="outline" className={`text-[8px] ${c.confidenceScore >= 75 ? "text-emerald-400 border-emerald-400/30" : c.confidenceScore >= 50 ? "text-amber-400 border-amber-400/30" : "text-red-400 border-red-400/30"}`}>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Badge variant="outline" className={`text-[8px] ${decisionColor}`}>
+                        {decisionLabel}
+                      </Badge>
+                      <Badge variant="outline" className={`text-[8px] ${c.confidenceAnalysis ? levelColor(lvl) : ""}`}>
                         {c.confidenceScore}%
                       </Badge>
                     </div>
@@ -708,13 +735,19 @@ function PreviewStep({
                   {c.skipReason && (
                     <p className="text-[9px] text-amber-400 mt-1 ml-5">{c.skipReason}</p>
                   )}
+                  {c.confidenceAnalysis?.reasoning && (
+                    <p className="text-[9px] text-muted-foreground mt-0.5 ml-5 truncate italic">
+                      {c.confidenceAnalysis.reasoning.slice(0, 150)}
+                    </p>
+                  )}
                   {c.newValue && (
                     <p className="text-[9px] text-muted-foreground mt-1 ml-5 truncate">
                       → {c.newValue.slice(0, 120)}{c.newValue.length > 120 ? "…" : ""}
                     </p>
                   )}
                 </div>
-              ))}
+                );
+              })}
               {candidates.length === 0 && (
                 <p className="text-center text-xs text-muted-foreground py-8">Nenhum item encontrado</p>
               )}

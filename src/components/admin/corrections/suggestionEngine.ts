@@ -10,6 +10,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fieldLabel } from "./correctionEngine";
 import { isNoChange, normalizeReferences, normalizeSequence } from "./noChangeFilter";
+import { scoreSuggestion, type ConfidenceResult, type ConfidenceLevel, levelLabel } from "./confidenceEngine";
 
 export interface Suggestion {
   findingId: string;
@@ -28,6 +29,8 @@ export interface Suggestion {
   requiresManualReview: boolean;
   /** Info about global source sync status */
   sourceContext?: SourceContext;
+  /** Rich confidence analysis from the Confidence Engine */
+  confidenceAnalysis?: ConfidenceResult;
 }
 
 export interface SourceContext {
@@ -187,8 +190,10 @@ export async function generateSuggestion(
       return null;
     }
     console.log("[SuggestionEngine] Found local data for", finding.category);
-    await recordLookupResult(finding.peptide_id!, localResult.sourceProvider, "strong_match", localResult.confidenceScore, true);
-    return enrichWithSourceContext(localResult, finding);
+    // ── Apply Confidence Engine scoring ──
+    const enriched = applyConfidenceEngine(localResult);
+    await recordLookupResult(finding.peptide_id!, enriched.sourceProvider, "strong_match", enriched.confidenceScore, true);
+    return enrichWithSourceContext(enriched, finding);
   }
 
   // Step 2: Call edge function for real API data
@@ -203,8 +208,10 @@ export async function generateSuggestion(
       await recordLookupResult(finding.peptide_id!, externalResult.sourceProvider, "no_change", 0, false);
       return null;
     }
-    await recordLookupResult(finding.peptide_id!, externalResult.sourceProvider, "strong_match", externalResult.confidenceScore, true);
-    return enrichWithSourceContext(externalResult, finding);
+    // ── Apply Confidence Engine scoring ──
+    const enriched = applyConfidenceEngine(externalResult);
+    await recordLookupResult(finding.peptide_id!, enriched.sourceProvider, "strong_match", enriched.confidenceScore, true);
+    return enrichWithSourceContext(enriched, finding);
   }
 
   // No result found - record no_match for relevant sources
@@ -214,6 +221,33 @@ export async function generateSuggestion(
   }
 
   return null;
+}
+
+// ── Apply Confidence Engine to a suggestion ──
+
+function applyConfidenceEngine(suggestion: Suggestion): Suggestion {
+  const analysis = scoreSuggestion({
+    fieldName: suggestion.field,
+    sourceProvider: suggestion.sourceProvider,
+    changeType: suggestion.changeType === "manual_assist" || suggestion.changeType === "remove"
+      ? "replace"
+      : suggestion.changeType as "add" | "replace" | "merge",
+    currentValueExists: suggestion.oldValue !== null && suggestion.oldValue !== undefined && suggestion.oldValue !== "",
+    matchStrength: 0.75,
+    hasConflict: false,
+  });
+
+  // Override the simple score/level with the engine's result
+  suggestion.confidenceScore = Math.round(analysis.score * 100);
+  suggestion.confidenceLevel = analysis.level === "very_high" || analysis.level === "high"
+    ? "high"
+    : analysis.level === "medium"
+      ? "medium"
+      : "low";
+  suggestion.requiresManualReview = analysis.requiresManualReview || analysis.decision === "blocked";
+  suggestion.confidenceAnalysis = analysis;
+
+  return suggestion;
 }
 
 // ── Enrich with source context ──
