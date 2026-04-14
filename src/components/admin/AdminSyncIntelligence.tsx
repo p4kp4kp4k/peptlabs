@@ -10,11 +10,13 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Activity, AlertTriangle, ArrowRightLeft, Bell, BookOpen,
   CheckCircle2, Clock, Database, Eye, Filter, Globe,
   Loader2, Play, RefreshCw, Search, Settings, Shield,
-  Sparkles, TrendingUp, XCircle, Zap, FileText, FlaskConical
+  Sparkles, TrendingUp, XCircle, Zap, FileText, FlaskConical,
+  Check, X, RotateCcw, Trash2, Upload
 } from "lucide-react";
 
 // ── Types ──
