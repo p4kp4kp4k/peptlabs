@@ -208,12 +208,15 @@ async function auditInternal(sb: SupabaseClient, runId: string, peptides: any[],
       .select("*", { count: "exact", head: true })
       .eq("peptide_id", pep.id);
 
-    if (!refCount || refCount === 0) {
+    // Only flag "no_references" if BOTH peptide_references table AND the peptide's
+    // scientific_references JSON are empty. If refs exist in either, it's not missing.
+    const hasInlineRefs = Array.isArray(pep.scientific_references) && pep.scientific_references.length > 0;
+    if ((!refCount || refCount === 0) && !hasInlineRefs) {
       await addFinding({
         audit_run_id: runId, peptide_id: pep.id,
         category: "no_references", severity: "medium",
         title: "Sem referências científicas",
-        description: `${pep.name} não possui referências vinculadas no banco`,
+        description: `${pep.name} não possui referências vinculadas no banco nem no campo inline`,
         recommendation: "Buscar referências via motor de sugestão ou adicionar manualmente",
       });
       medium++;

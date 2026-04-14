@@ -1003,16 +1003,18 @@ function AuditTab() {
         availability[c.peptide_id].add("incomplete_data");
       });
 
+      // Only mark no_references if refs exist AND differ from peptide's current refs
+      // (The actual diff check happens in generateSuggestion; here we're conservative)
       (refs || []).forEach((r: any) => {
         if (!availability[r.peptide_id]) availability[r.peptide_id] = new Set();
+        // Don't blindly add no_references — the suggestion engine will validate
         availability[r.peptide_id].add("no_references");
-        availability[r.peptide_id].add("no_source");
       });
 
+      // Don't blindly mark everything as having suggestions
       openPeptideIds.forEach(id => {
         if (!availability[id]) availability[id] = new Set();
         availability[id].add("data_inconsistency");
-        availability[id].add("no_source");
       });
 
       return availability;
@@ -1133,6 +1135,7 @@ function AuditTab() {
           Apenas Cross-Source
         </Button>
         <div className="flex-1" />
+        <CleanNoiseButton />
         <Button
           size="sm"
           className="h-8 text-[11px] gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -1410,6 +1413,105 @@ function AuditTab() {
       {/* Bulk Update History */}
       <BulkRunsHistory />
     </div>
+  );
+}
+
+// ── Clean Noise Button ──
+
+function CleanNoiseButton() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const cleanMutation = useMutation({
+    mutationFn: async () => {
+      // Fetch all open findings with their peptide data
+      const { data: openFindings, error } = await supabase
+        .from("audit_findings")
+        .select("id, category, peptide_id, value_a, value_b, source_a, source_b, peptides(scientific_references, sequence, source_origins, slug, name)")
+        .eq("status", "open");
+      if (error) throw error;
+
+      let resolved = 0;
+      const { isNoChange: isNoChangeFn } = await import("./corrections/noChangeFilter");
+
+      for (const f of (openFindings || [])) {
+        const pep = (f as any).peptides;
+        if (!pep) continue;
+
+        let shouldResolve = false;
+
+        // Check no_references: if peptide already has scientific_references
+        if (f.category === "no_references") {
+          const refs = pep.scientific_references;
+          if (Array.isArray(refs) && refs.length > 0) {
+            shouldResolve = true;
+          }
+        }
+
+        // Check missing_sequence: if peptide already has sequence
+        if (f.category === "missing_sequence" && pep.sequence) {
+          shouldResolve = true;
+        }
+
+        // Check no_source: if peptide already has source_origins
+        if (f.category === "no_source" && Array.isArray(pep.source_origins) && pep.source_origins.length > 0) {
+          shouldResolve = true;
+        }
+
+        // Check cross_source_conflict with value_a === value_b
+        if (f.category === "cross_source_conflict" && f.value_a && f.value_b) {
+          const result = isNoChangeFn(
+            "sequence", // approximate field
+            f.value_a,
+            f.value_b
+          );
+          if (result.isNoChange) shouldResolve = true;
+        }
+
+        // Check data_inconsistency (slug) — if slug actually matches
+        if (f.category === "data_inconsistency" && pep.slug && pep.name) {
+          const expected = pep.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+          if (pep.slug === expected || pep.slug.includes(pep.name.toLowerCase().split(" ")[0])) {
+            shouldResolve = true;
+          }
+        }
+
+        if (shouldResolve) {
+          await supabase.from("audit_findings").update({
+            status: "resolved",
+            resolved_at: new Date().toISOString(),
+            resolution_note: "Auto-resolvido: sem alteração real detectada (limpeza de ruído)"
+          }).eq("id", f.id);
+          resolved++;
+        }
+      }
+
+      return { resolved, total: openFindings?.length || 0 };
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Limpeza concluída",
+        description: `${data.resolved} finding(s) resolvido(s) automaticamente de ${data.total} aberto(s)`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
+      queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-8 text-[11px] gap-1.5 border-amber-400/30 text-amber-400 hover:bg-amber-400/10"
+      disabled={cleanMutation.isPending}
+      onClick={() => cleanMutation.mutate()}
+    >
+      {cleanMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Trash2 className="h-3 w-3 mr-1" />}
+      Limpar Ruído
+    </Button>
   );
 }
 

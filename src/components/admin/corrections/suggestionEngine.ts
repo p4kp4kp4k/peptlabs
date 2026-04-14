@@ -9,6 +9,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { fieldLabel } from "./correctionEngine";
+import { isNoChange, normalizeReferences, normalizeSequence } from "./noChangeFilter";
 
 export interface Suggestion {
   findingId: string;
@@ -178,6 +179,13 @@ export async function generateSuggestion(
   }
 
   if (localResult) {
+    // ── NO_CHANGE filter: skip if proposed === current ──
+    const noChange = isNoChange(localResult.field, localResult.oldValue, localResult.proposedValue);
+    if (noChange.isNoChange) {
+      console.log("[SuggestionEngine] NO_CHANGE detected for", finding.category, ":", noChange.reason);
+      await recordLookupResult(finding.peptide_id!, localResult.sourceProvider, "no_change", 0, false);
+      return null;
+    }
     console.log("[SuggestionEngine] Found local data for", finding.category);
     await recordLookupResult(finding.peptide_id!, localResult.sourceProvider, "strong_match", localResult.confidenceScore, true);
     return enrichWithSourceContext(localResult, finding);
@@ -188,6 +196,13 @@ export async function generateSuggestion(
   const externalResult = await callExternalSuggestion(finding, peptide);
 
   if (externalResult) {
+    // ── NO_CHANGE filter for external results too ──
+    const noChange = isNoChange(externalResult.field, externalResult.oldValue, externalResult.proposedValue);
+    if (noChange.isNoChange) {
+      console.log("[SuggestionEngine] NO_CHANGE (external) for", finding.category, ":", noChange.reason);
+      await recordLookupResult(finding.peptide_id!, externalResult.sourceProvider, "no_change", 0, false);
+      return null;
+    }
     await recordLookupResult(finding.peptide_id!, externalResult.sourceProvider, "strong_match", externalResult.confidenceScore, true);
     return enrichWithSourceContext(externalResult, finding);
   }
@@ -389,6 +404,13 @@ async function suggestReferencesLocal(
     pmid: r.pmid,
   }));
 
+  // ── NO_CHANGE check: if all proposed refs already exist by PMID ──
+  const noChange = isNoChange("scientific_references", currentRefs, formattedRefs);
+  if (noChange.isNoChange) {
+    console.log("[SuggestionEngine] References NO_CHANGE:", noChange.reason);
+    return null;
+  }
+
   return {
     findingId: finding.id,
     peptideId: finding.peptide_id!,
@@ -567,13 +589,23 @@ export async function checkSuggestionAvailable(
     return (count ?? 0) > 0;
   }
 
-  // References: only true if real references exist in DB
+  // References: only true if real NEW references exist that aren't already in the peptide
   if (findingCategory === "no_references") {
-    const { count: refCount } = await supabase
+    const { data: dbRefs } = await supabase
       .from("peptide_references")
-      .select("id", { count: "exact", head: true })
-      .eq("peptide_id", peptideId);
-    return (refCount ?? 0) > 0;
+      .select("pmid, title, year")
+      .eq("peptide_id", peptideId)
+      .limit(20);
+    if (!dbRefs || dbRefs.length === 0) return false;
+    // Fetch current peptide refs
+    const { data: pep } = await supabase
+      .from("peptides")
+      .select("scientific_references")
+      .eq("id", peptideId)
+      .single();
+    const currentRefs = pep?.scientific_references || [];
+    const noChange = isNoChange("scientific_references", currentRefs, dbRefs.map(r => ({ title: r.title, year: r.year, pmid: r.pmid })));
+    return !noChange.isNoChange;
   }
 
   // Source origins: only true if peptide has real external IDs
