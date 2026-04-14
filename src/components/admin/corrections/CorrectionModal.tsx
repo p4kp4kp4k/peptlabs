@@ -440,8 +440,9 @@ export default function CorrectionModal({ finding, open, onOpenChange }: Correct
                 </div>
               )}
 
-              {/* Standard before/after for non-sequence or when one side is empty */}
-              {(suggestion!.field !== "sequence" || manualMode || !suggestion!.oldValue || !suggestion!.proposedValue) && (
+              {/* Standard before/after for non-sequence fields, manual mode, or when diff is not possible */}
+              {(suggestion!.field !== "sequence" || manualMode || !suggestion!.oldValue || !suggestion!.proposedValue
+                || (suggestion!.previewData?.conflictAnalysis && !suggestion!.previewData.conflictAnalysis.canDiff)) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/20">
                     <p className="text-[9px] font-bold text-destructive uppercase tracking-wider mb-1.5">Antes</p>
