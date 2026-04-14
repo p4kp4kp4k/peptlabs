@@ -396,11 +396,6 @@ export default function SequenceSection({
           <Badge variant="outline" className="text-[10px] border-border text-muted-foreground gap-1">
             Fonte: {primarySource}
           </Badge>
-          {confidenceLabel && (
-            <Badge variant="outline" className={`text-[10px] gap-1 font-semibold ${confidenceColor}`}>
-              Confiança: {confidenceLabel}
-            </Badge>
-          )}
           {hasConflict && (
             <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-400 bg-amber-500/10 gap-1 font-semibold">
               <AlertTriangle className="h-3 w-3" /> Conflito
