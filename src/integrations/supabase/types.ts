@@ -47,6 +47,95 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_corrections: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          audit_run_id: string | null
+          confidence_level: string | null
+          confidence_score: number | null
+          correction_type: string
+          created_at: string
+          field_name: string
+          finding_id: string | null
+          id: string
+          new_value: string | null
+          notes: string | null
+          old_value: string | null
+          peptide_id: string | null
+          source_provider: string | null
+          source_record_id: string | null
+          status: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audit_run_id?: string | null
+          confidence_level?: string | null
+          confidence_score?: number | null
+          correction_type?: string
+          created_at?: string
+          field_name: string
+          finding_id?: string | null
+          id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+          peptide_id?: string | null
+          source_provider?: string | null
+          source_record_id?: string | null
+          status?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audit_run_id?: string | null
+          confidence_level?: string | null
+          confidence_score?: number | null
+          correction_type?: string
+          created_at?: string
+          field_name?: string
+          finding_id?: string | null
+          id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+          peptide_id?: string | null
+          source_provider?: string | null
+          source_record_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_corrections_audit_run_id_fkey"
+            columns: ["audit_run_id"]
+            isOneToOne: false
+            referencedRelation: "audit_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_corrections_finding_id_fkey"
+            columns: ["finding_id"]
+            isOneToOne: false
+            referencedRelation: "audit_findings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_corrections_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "peptides"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_corrections_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "v_peptides_visible"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_findings: {
         Row: {
           audit_run_id: string
@@ -508,6 +597,67 @@ export type Database = {
             columns: ["variant_id"]
             isOneToOne: false
             referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      peptide_change_history: {
+        Row: {
+          after_snapshot: Json
+          applied_at: string
+          applied_by: string | null
+          before_snapshot: Json
+          change_origin: string
+          change_summary: string | null
+          correction_id: string | null
+          created_at: string
+          id: string
+          peptide_id: string
+        }
+        Insert: {
+          after_snapshot?: Json
+          applied_at?: string
+          applied_by?: string | null
+          before_snapshot?: Json
+          change_origin?: string
+          change_summary?: string | null
+          correction_id?: string | null
+          created_at?: string
+          id?: string
+          peptide_id: string
+        }
+        Update: {
+          after_snapshot?: Json
+          applied_at?: string
+          applied_by?: string | null
+          before_snapshot?: Json
+          change_origin?: string
+          change_summary?: string | null
+          correction_id?: string | null
+          created_at?: string
+          id?: string
+          peptide_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peptide_change_history_correction_id_fkey"
+            columns: ["correction_id"]
+            isOneToOne: false
+            referencedRelation: "audit_corrections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "peptide_change_history_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "peptides"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "peptide_change_history_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "v_peptides_visible"
             referencedColumns: ["id"]
           },
         ]

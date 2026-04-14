@@ -16,8 +16,10 @@ import {
   CheckCircle2, Clock, Database, Eye, Filter, Globe,
   Loader2, Play, RefreshCw, Search, Settings, Shield,
   Sparkles, TrendingUp, XCircle, Zap, FileText, FlaskConical,
-  Check, X, RotateCcw, Trash2, Upload
+  Check, X, RotateCcw, Trash2, Upload, Edit3, History, Wrench
 } from "lucide-react";
+import CorrectionModal from "./corrections/CorrectionModal";
+import { isAutoCorrectible, confidenceBadgeColor } from "./corrections/correctionEngine";
 
 // ── Types ──
 
@@ -92,6 +94,7 @@ interface AuditFinding {
   recommendation: string | null;
   status: string;
   resolution_note: string | null;
+  peptide_id: string | null;
   peptides?: { name: string } | null;
 }
 
@@ -773,6 +776,8 @@ function AuditTab() {
   const queryClient = useQueryClient();
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
+  const [selectedFinding, setSelectedFinding] = useState<AuditFinding | null>(null);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const PAGE_SIZE = 15;
 
   const { data: auditRuns = [], isLoading } = useQuery({
@@ -822,25 +827,6 @@ function AuditTab() {
     },
     onError: (err: any) => {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
-    },
-  });
-
-  const resolveMutation = useMutation({
-    mutationFn: async ({ findingId, note }: { findingId: string; note: string }) => {
-      const { error } = await supabase
-        .from("audit_findings")
-        .update({
-          status: "resolved",
-          resolved_at: new Date().toISOString(),
-          resolution_note: note || "Resolvido pelo admin",
-        })
-        .eq("id", findingId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({ title: "Finding resolvido" });
-      queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
-      queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
     },
   });
 
@@ -988,6 +974,17 @@ function AuditTab() {
                         {f.peptides?.name && (
                           <span className="text-[10px] text-muted-foreground">• {f.peptides.name}</span>
                         )}
+                        {/* Confidence & correction badges */}
+                        {f.status === "open" && f.peptide_id && isAutoCorrectible(f.category) && (
+                          <Badge className="text-[7px] px-1 py-0 text-emerald-400 bg-emerald-400/10 border-emerald-400/30">
+                            <Wrench className="h-2 w-2 mr-0.5" /> Correção disponível
+                          </Badge>
+                        )}
+                        {f.status === "open" && f.peptide_id && !isAutoCorrectible(f.category) && (
+                          <Badge className="text-[7px] px-1 py-0 text-purple-400 bg-purple-400/10 border-purple-400/30">
+                            <Edit3 className="h-2 w-2 mr-0.5" /> Revisão manual
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-xs font-medium text-foreground">{f.title}</p>
                       {f.description && <p className="text-[10px] text-muted-foreground mt-0.5">{f.description}</p>}
@@ -1024,15 +1021,16 @@ function AuditTab() {
                     <div className="flex flex-col gap-1 shrink-0">
                       {f.status === "open" ? (
                         <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-6 text-[9px] px-2 border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10"
-                            disabled={resolveMutation.isPending}
-                            onClick={() => resolveMutation.mutate({ findingId: f.id, note: "Resolvido manualmente" })}
-                          >
-                            <CheckCircle2 className="h-2.5 w-2.5 mr-1" /> Resolver
-                          </Button>
+                          {f.peptide_id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-[9px] px-2 border-primary/30 text-primary hover:bg-primary/10"
+                              onClick={() => { setSelectedFinding(f); setCorrectionOpen(true); }}
+                            >
+                              <Wrench className="h-2.5 w-2.5 mr-1" /> Corrigir
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1110,6 +1108,16 @@ function AuditTab() {
           </CardContent>
         </Card>
       )}
+
+      {/* Correction Modal */}
+      <CorrectionModal
+        finding={selectedFinding}
+        open={correctionOpen}
+        onOpenChange={(open) => {
+          setCorrectionOpen(open);
+          if (!open) setSelectedFinding(null);
+        }}
+      />
     </div>
   );
 }
