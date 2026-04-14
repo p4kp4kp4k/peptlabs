@@ -467,6 +467,9 @@ export default function PeptideDetail() {
           confidenceScore={p.confidence_score}
           lastSyncedAt={p.last_synced_at}
           updatedAt={p.updated_at}
+          structureInfo={p.structure_info}
+          peptideId={p.id}
+          peptideName={p.name}
         />
       </Section>
 
