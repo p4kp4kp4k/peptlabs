@@ -348,7 +348,7 @@ export default function BulkApplyModal({ open, onOpenChange }: Props) {
             update.last_synced_at = new Date().toISOString();
             const { error: updateErr } = await supabase
               .from("peptides")
-              .update(update)
+              .update(update as any)
               .eq("id", candidate.peptideId);
             if (updateErr) throw updateErr;
           }
