@@ -146,12 +146,24 @@ async function syncUniProt(sb: SupabaseClient, source: any, peptides: any[], run
 
   for (const pep of peptides.slice(0, 50)) {
     try {
-      const query = encodeURIComponent(`(peptide_name:"${pep.name}") AND (length:[2 TO 100])`);
+      // Use general text search — peptide_name field doesn't exist in UniProt
+      const searchName = pep.name.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
+      if (!searchName || searchName.length < 2) { continue; }
+
+      const query = encodeURIComponent(`${searchName} AND (length:[2 TO 100])`);
       const res = await fetch(`${UNIPROT_BASE}/search?query=${query}&size=3&format=json&fields=accession,protein_name,organism_name,sequence,cc_function`, {
-        signal: AbortSignal.timeout(10000),
+        headers: { "Accept": "application/json" },
+        signal: AbortSignal.timeout(15000),
       });
 
-      if (!res.ok) { await res.text(); errors++; continue; }
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        console.warn(`UniProt ${pep.name}: HTTP ${res.status} - ${txt.substring(0, 100)}`);
+        errors++;
+        await sleep(500);
+        continue;
+      }
+
       const data = await res.json();
       const results = data?.results || [];
       processed++;
@@ -191,8 +203,9 @@ async function syncUniProt(sb: SupabaseClient, source: any, peptides: any[], run
         added++;
       }
 
-      await sleep(350);
+      await sleep(500);
     } catch (e: any) {
+      console.warn(`UniProt sync error for ${pep.name}:`, e.message);
       errors++;
     }
   }
