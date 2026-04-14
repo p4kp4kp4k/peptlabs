@@ -422,9 +422,8 @@ function SourceCard({ source }: { source: IntegrationSource }) {
 
   const syncMutation = useMutation({
     mutationFn: async () => {
-      const fnName = source.api_type === "rest" ? "sync-peptides" : "ingest-datasets";
-      const { data, error } = await supabase.functions.invoke(fnName, {
-        body: { source: source.slug },
+      const { data, error } = await supabase.functions.invoke("sync-orchestrator", {
+        body: { source: source.slug, mode: "manual" },
       });
       if (error) throw error;
       return data;
