@@ -290,6 +290,131 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_update_items: {
+        Row: {
+          action_taken: string
+          confidence_score: number
+          created_at: string
+          field_name: string
+          finding_id: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          peptide_id: string | null
+          run_id: string
+          skip_reason: string | null
+          source_provider: string | null
+          source_reference: string | null
+          was_reverted: boolean
+        }
+        Insert: {
+          action_taken?: string
+          confidence_score?: number
+          created_at?: string
+          field_name: string
+          finding_id?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          peptide_id?: string | null
+          run_id: string
+          skip_reason?: string | null
+          source_provider?: string | null
+          source_reference?: string | null
+          was_reverted?: boolean
+        }
+        Update: {
+          action_taken?: string
+          confidence_score?: number
+          created_at?: string
+          field_name?: string
+          finding_id?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          peptide_id?: string | null
+          run_id?: string
+          skip_reason?: string | null
+          source_provider?: string | null
+          source_reference?: string | null
+          was_reverted?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_update_items_finding_id_fkey"
+            columns: ["finding_id"]
+            isOneToOne: false
+            referencedRelation: "audit_findings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bulk_update_items_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "peptides"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bulk_update_items_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "v_peptides_visible"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bulk_update_items_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_update_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bulk_update_runs: {
+        Row: {
+          applied_count: number
+          completed_at: string | null
+          confidence_threshold: number
+          created_at: string
+          id: string
+          reverted_at: string | null
+          skipped_count: number
+          source_priority_mode: string
+          started_at: string
+          status: string
+          summary: Json
+          triggered_by: string | null
+        }
+        Insert: {
+          applied_count?: number
+          completed_at?: string | null
+          confidence_threshold?: number
+          created_at?: string
+          id?: string
+          reverted_at?: string | null
+          skipped_count?: number
+          source_priority_mode?: string
+          started_at?: string
+          status?: string
+          summary?: Json
+          triggered_by?: string | null
+        }
+        Update: {
+          applied_count?: number
+          completed_at?: string | null
+          confidence_threshold?: number
+          created_at?: string
+          id?: string
+          reverted_at?: string | null
+          skipped_count?: number
+          source_priority_mode?: string
+          started_at?: string
+          status?: string
+          summary?: Json
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       calculations: {
         Row: {
           created_at: string
