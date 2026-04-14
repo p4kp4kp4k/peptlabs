@@ -348,6 +348,18 @@ async function auditPendingChanges(sb: SupabaseClient, runId: string) {
 // ── Helpers ──
 
 async function addFinding(sb: SupabaseClient, finding: Record<string, any>) {
+  // Idempotency: skip if an open finding with same peptide+category already exists
+  if (finding.peptide_id && finding.category) {
+    const { count } = await sb.from("audit_findings")
+      .select("id", { count: "exact", head: true })
+      .eq("peptide_id", finding.peptide_id)
+      .eq("category", finding.category)
+      .eq("status", "open");
+    if (count && count > 0) {
+      console.log(`[AuditEngine] Skipping duplicate: ${finding.category} for peptide ${finding.peptide_id}`);
+      return;
+    }
+  }
   const { error } = await sb.from("audit_findings").insert(finding);
   if (error) console.error("Failed to add finding:", error.message);
 }
