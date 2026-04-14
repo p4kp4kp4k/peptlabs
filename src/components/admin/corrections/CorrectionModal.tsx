@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { fieldLabel } from "./correctionEngine";
 import { generateSuggestion, type Suggestion } from "./suggestionEngine";
+import SequenceDiffView from "./SequenceDiffView";
 
 interface AuditFinding {
   id: string;
@@ -403,25 +404,39 @@ export default function CorrectionModal({ finding, open, onOpenChange }: Correct
               <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <ArrowRight className="h-3 w-3 text-primary" /> Antes × Depois
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/20">
-                  <p className="text-[9px] font-bold text-destructive uppercase tracking-wider mb-1.5">Antes</p>
-                  <ValueDisplay value={suggestion!.oldValue} field={suggestion!.field} />
+
+              {/* Sequence Diff Engine — smart comparison */}
+              {suggestion!.field === "sequence" && !manualMode && suggestion!.oldValue && suggestion!.proposedValue && (
+                <SequenceDiffView
+                  seqA={typeof suggestion!.oldValue === "string" ? suggestion!.oldValue : null}
+                  seqB={typeof suggestion!.proposedValue === "string" ? suggestion!.proposedValue : null}
+                  labelA="PeptLabs"
+                  labelB={suggestion!.sourceProvider || "Fonte Externa"}
+                />
+              )}
+
+              {/* Standard before/after for non-sequence or when one side is empty */}
+              {(suggestion!.field !== "sequence" || manualMode || !suggestion!.oldValue || !suggestion!.proposedValue) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                    <p className="text-[9px] font-bold text-destructive uppercase tracking-wider mb-1.5">Antes</p>
+                    <ValueDisplay value={suggestion!.oldValue} field={suggestion!.field} />
+                  </div>
+                  <div className="p-3 rounded-lg bg-emerald-400/5 border border-emerald-400/20">
+                    <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider mb-1.5">Depois</p>
+                    {manualMode ? (
+                      <Textarea
+                        value={manualValue}
+                        onChange={(e) => setManualValue(e.target.value)}
+                        placeholder="Digite o valor corrigido..."
+                        className="text-xs min-h-[80px] bg-transparent border-emerald-400/20"
+                      />
+                    ) : (
+                      <ValueDisplay value={suggestion!.proposedValue} field={suggestion!.field} isNew />
+                    )}
+                  </div>
                 </div>
-                <div className="p-3 rounded-lg bg-emerald-400/5 border border-emerald-400/20">
-                  <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider mb-1.5">Depois</p>
-                  {manualMode ? (
-                    <Textarea
-                      value={manualValue}
-                      onChange={(e) => setManualValue(e.target.value)}
-                      placeholder="Digite o valor corrigido..."
-                      className="text-xs min-h-[80px] bg-transparent border-emerald-400/20"
-                    />
-                  ) : (
-                    <ValueDisplay value={suggestion!.proposedValue} field={suggestion!.field} isNew />
-                  )}
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Block 3: Preview */}
@@ -600,6 +615,17 @@ function FieldPreview({ field, value, peptide }: { field: string; value: any; pe
     case "scientific_references":
       return <ReferencesPreview refs={value} />;
     case "sequence":
+      // If peptide already has a sequence, show diff; otherwise simple preview
+      if (peptide?.sequence && value && peptide.sequence !== value) {
+        return (
+          <SequenceDiffView
+            seqA={peptide.sequence}
+            seqB={typeof value === "string" ? value : null}
+            labelA="Atual"
+            labelB="Proposta"
+          />
+        );
+      }
       return <SequencePreview sequence={value} />;
     case "description":
     case "mechanism":
