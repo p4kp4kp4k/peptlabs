@@ -9,6 +9,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { fieldLabel } from "./correctionEngine";
+import { isNoChange, normalizeReferences, normalizeSequence } from "./noChangeFilter";
 
 export interface Suggestion {
   findingId: string;
@@ -178,6 +179,13 @@ export async function generateSuggestion(
   }
 
   if (localResult) {
+    // ── NO_CHANGE filter: skip if proposed === current ──
+    const noChange = isNoChange(localResult.field, localResult.oldValue, localResult.proposedValue);
+    if (noChange.isNoChange) {
+      console.log("[SuggestionEngine] NO_CHANGE detected for", finding.category, ":", noChange.reason);
+      await recordLookupResult(finding.peptide_id!, localResult.sourceProvider, "no_change", 0, false);
+      return null;
+    }
     console.log("[SuggestionEngine] Found local data for", finding.category);
     await recordLookupResult(finding.peptide_id!, localResult.sourceProvider, "strong_match", localResult.confidenceScore, true);
     return enrichWithSourceContext(localResult, finding);
@@ -188,6 +196,13 @@ export async function generateSuggestion(
   const externalResult = await callExternalSuggestion(finding, peptide);
 
   if (externalResult) {
+    // ── NO_CHANGE filter for external results too ──
+    const noChange = isNoChange(externalResult.field, externalResult.oldValue, externalResult.proposedValue);
+    if (noChange.isNoChange) {
+      console.log("[SuggestionEngine] NO_CHANGE (external) for", finding.category, ":", noChange.reason);
+      await recordLookupResult(finding.peptide_id!, externalResult.sourceProvider, "no_change", 0, false);
+      return null;
+    }
     await recordLookupResult(finding.peptide_id!, externalResult.sourceProvider, "strong_match", externalResult.confidenceScore, true);
     return enrichWithSourceContext(externalResult, finding);
   }
