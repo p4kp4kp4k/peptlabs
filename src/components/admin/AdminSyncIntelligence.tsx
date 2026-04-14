@@ -91,6 +91,7 @@ interface AuditFinding {
   value_b: string | null;
   recommendation: string | null;
   status: string;
+  resolution_note: string | null;
   peptides?: { name: string } | null;
 }
 
