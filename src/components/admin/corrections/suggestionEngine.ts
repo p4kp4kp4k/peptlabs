@@ -404,6 +404,13 @@ async function suggestReferencesLocal(
     pmid: r.pmid,
   }));
 
+  // ── NO_CHANGE check: if all proposed refs already exist by PMID ──
+  const noChange = isNoChange("scientific_references", currentRefs, formattedRefs);
+  if (noChange.isNoChange) {
+    console.log("[SuggestionEngine] References NO_CHANGE:", noChange.reason);
+    return null;
+  }
+
   return {
     findingId: finding.id,
     peptideId: finding.peptide_id!,
