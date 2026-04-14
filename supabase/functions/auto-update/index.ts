@@ -138,57 +138,87 @@ Deno.serve(async (req) => {
   }
 });
 
-// ── Evaluate if a change is safe to auto-apply ──
+// ── Confidence Engine (server-side mirror of client confidenceEngine.ts) ──
+
+const SOURCE_AUTHORITY: Record<string, number> = {
+  UniProt: 0.95, PDB: 0.93, PubMed: 0.92, openFDA: 0.95, NCBI: 0.90,
+  DRAMP: 0.80, APD: 0.78, Peptipedia: 0.75, Internal: 0.60, Unknown: 0.30,
+};
+
+const FIELD_AUTH_SOURCES: Record<string, string[]> = {
+  sequence: ["UniProt", "PDB", "NCBI"],
+  scientific_references: ["PubMed"],
+  structure_info: ["PDB", "UniProt"],
+  side_effects: ["openFDA"],
+  mechanism: ["UniProt", "PubMed"],
+  source_origins: ["UniProt", "PDB", "PubMed"],
+};
+
+const FIELD_RISK: Record<string, string> = {
+  sequence: "critical", side_effects: "critical", dosage_info: "high",
+  half_life: "high", protocol_phases: "high", mechanism: "medium",
+  benefits: "medium", description: "medium", scientific_references: "low",
+  source_origins: "low", slug: "low",
+};
 
 interface Evaluation {
-  confidence: number;
+  confidence: number;  // 0-1
   safe: boolean;
   reason: string;
+  decision: "auto_apply" | "manual_review" | "blocked";
+  factors: string[];
 }
 
 function evaluateChange(change: any, peptide: any, source: any, threshold: number): Evaluation {
-  const field = change.field_name;
+  const field = change.field_name || "unknown";
   const severity = change.severity;
+  const sourceName = source?.name || "Unknown";
+  const factors: string[] = [];
 
-  // Critical severity = never auto-apply
+  // Factor 1: Source authority
+  const authority = SOURCE_AUTHORITY[sourceName] ?? SOURCE_AUTHORITY.Unknown;
+  const authSources = FIELD_AUTH_SOURCES[field] || [];
+  const isAuth = authSources.includes(sourceName);
+  const f1 = isAuth ? Math.min(1, authority + 0.05) : authority * 0.85;
+  factors.push(`Fonte: ${sourceName} ${isAuth ? "(autoritativa)" : ""} → ${(f1 * 100).toFixed(0)}%`);
+
+  // Factor 2: Change type safety
+  const hasCurrentValue = peptide[field] !== null && peptide[field] !== undefined && peptide[field] !== "";
+  const isAdd = !hasCurrentValue && change.new_value;
+  const f2 = isAdd ? 0.9 : 0.5;
+  factors.push(isAdd ? "Adição a campo vazio (seguro)" : "Substituição de dado existente");
+
+  // Factor 3: Data completeness
+  const newVal = change.new_value || "";
+  const f3 = typeof newVal === "string" ? Math.min(1, newVal.length / 100) : 0.7;
+
+  // Factor 4: Field risk
+  const risk = FIELD_RISK[field] || "medium";
+  const riskScore: Record<string, number> = { critical: 0.3, high: 0.5, medium: 0.7, low: 0.9 };
+  const f4 = isAdd ? Math.min(1, (riskScore[risk] || 0.7) + 0.2) : (riskScore[risk] || 0.7);
+
+  // Weighted score
+  const rawScore = (f1 * 0.35) + (f2 * 0.20) + (f3 * 0.15) + (f4 * 0.15) + (0.5 * 0.15);
+  const score = Math.max(0, Math.min(1, rawScore));
+
+  // Hard blocks
   if (severity === "critical") {
-    return { confidence: 20, safe: false, reason: "Severidade crítica requer revisão manual" };
+    return { confidence: score, safe: false, reason: "Severidade crítica requer revisão manual", decision: "blocked", factors };
+  }
+  if (risk === "critical" && !isAdd) {
+    return { confidence: score, safe: false, reason: `Substituição em campo crítico (${field}) bloqueada`, decision: "blocked", factors };
+  }
+  if (!isAuth && risk !== "low" && !isAdd) {
+    return { confidence: score, safe: false, reason: "Fonte não-autoritativa para campo sensível", decision: "manual_review", factors };
   }
 
-  // Sequence changes are sensitive
-  if (field === "sequence") {
-    if (!peptide.sequence && change.new_value) {
-      // Adding new sequence (peptide had none) — medium confidence
-      return { confidence: 70, safe: change.new_value.length < 200, reason: "Nova sequência para peptídeo sem dados" };
-    }
-    // Replacing existing sequence — never auto
-    return { confidence: 30, safe: false, reason: "Substituição de sequência requer revisão manual" };
+  if (score >= threshold / 100) {
+    return { confidence: score, safe: true, reason: `Confiança ${(score * 100).toFixed(0)}% ≥ limiar ${threshold}%`, decision: "auto_apply", factors };
   }
-
-  // New references — safe to add
-  if (change.change_type === "new_reference") {
-    return { confidence: 85, safe: true, reason: "Nova referência científica" };
+  if (score >= 0.45) {
+    return { confidence: score, safe: false, reason: `Confiança intermediária ${(score * 100).toFixed(0)}%`, decision: "manual_review", factors };
   }
-
-  // New data (no existing value) — safe
-  if (change.change_type === "new_data") {
-    return { confidence: 80, safe: true, reason: "Dados novos para campo vazio" };
-  }
-
-  // Structure updates — safe if additive
-  if (change.change_type === "structure_update") {
-    return { confidence: 75, safe: true, reason: "Atualização estrutural" };
-  }
-
-  // Regulatory updates — medium caution
-  if (change.change_type === "regulatory_update") {
-    return { confidence: 60, safe: false, reason: "Dados regulatórios requerem revisão" };
-  }
-
-  // Default: depends on source priority
-  const priority = source?.priority || 50;
-  const confidence = Math.min(90, priority + 20);
-  return { confidence, safe: confidence >= threshold, reason: `Confiança baseada na prioridade da fonte (${priority})` };
+  return { confidence: score, safe: false, reason: `Confiança baixa ${(score * 100).toFixed(0)}%`, decision: "blocked", factors };
 }
 
 // ── Apply a single change ──
