@@ -14,7 +14,7 @@ import {
   SearchX, RefreshCw, Globe,
 } from "lucide-react";
 import { fieldLabel } from "./correctionEngine";
-import { generateSuggestion, type Suggestion } from "./suggestionEngine";
+import { generateSuggestion, analyzeConflict, type Suggestion, type ConflictAnalysis } from "./suggestionEngine";
 import SequenceDiffView from "./SequenceDiffView";
 
 interface AuditFinding {
@@ -332,44 +332,47 @@ export default function CorrectionModal({ finding, open, onOpenChange }: Correct
         )}
 
         {/* ── No suggestion found ── */}
-        {!suggestionLoading && !hasSuggestion && !manualMode && (
-          <div className="text-center py-8 space-y-3">
-            <SearchX className="h-10 w-10 text-muted-foreground mx-auto" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Nenhuma sugestão automática disponível</p>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                As fontes conectadas foram verificadas, mas não encontraram correspondência confiável para este peptídeo.
-              </p>
+        {!suggestionLoading && !hasSuggestion && !manualMode && (() => {
+          const conflictInfo = finding.category === "cross_source_conflict" && peptide
+            ? analyzeConflict(
+                { id: finding.id, category: finding.category, severity: finding.severity, peptide_id: finding.peptide_id || null, value_a: finding.value_a, value_b: finding.value_b, source_a: finding.source_a, source_b: finding.source_b, description: finding.description },
+                peptide as Record<string, any>
+              )
+            : null;
+          const noSuggestionMessage = conflictInfo
+            ? conflictInfo.reason
+            : "As fontes conectadas foram verificadas, mas não encontraram correspondência confiável para este peptídeo.";
+
+          return (
+            <div className="text-center py-8 space-y-3">
+              <SearchX className="h-10 w-10 text-muted-foreground mx-auto" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Nenhuma sugestão automática disponível</p>
+                <p className="text-[11px] text-muted-foreground mt-1">{noSuggestionMessage}</p>
+                {conflictInfo && conflictInfo.subtype !== "sequence_conflict_comparable" && (
+                  <Badge className="mt-2 text-[8px] text-amber-400 bg-amber-400/10 border-amber-400/30">
+                    {conflictInfo.subtype === "sequence_missing_internal" && "Sequência ausente no PeptLabs"}
+                    {conflictInfo.subtype === "sequence_missing_external" && "Sequência ausente na fonte externa"}
+                    {conflictInfo.subtype === "non_sequence_conflict" && "Conflito não-sequencial"}
+                    {conflictInfo.subtype === "no_data_available" && "Sem dados comparáveis"}
+                    {conflictInfo.subtype === "low_confidence_match" && "Match insuficiente"}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex justify-center gap-2 pt-2">
+                <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1" onClick={() => setManualMode(true)}>
+                  <Edit3 className="h-3 w-3" /> Editar manualmente
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1" onClick={() => refetchSuggestion()}>
+                  <RefreshCw className="h-3 w-3" /> Tentar nova busca
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 text-[11px] text-amber-400 gap-1" onClick={() => ignoreMutation.mutate()} disabled={ignoreMutation.isPending}>
+                  <XCircle className="h-3 w-3" /> Ignorar
+                </Button>
+              </div>
             </div>
-            <div className="flex justify-center gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-[11px] gap-1"
-                onClick={() => setManualMode(true)}
-              >
-                <Edit3 className="h-3 w-3" /> Editar manualmente
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-[11px] gap-1"
-                onClick={() => refetchSuggestion()}
-              >
-                <RefreshCw className="h-3 w-3" /> Tentar nova busca
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 text-[11px] text-amber-400 gap-1"
-                onClick={() => ignoreMutation.mutate()}
-                disabled={ignoreMutation.isPending}
-              >
-                <XCircle className="h-3 w-3" /> Ignorar
-              </Button>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ── Suggestion found: show details ── */}
         {!suggestionLoading && hasSuggestion && (
@@ -405,18 +408,41 @@ export default function CorrectionModal({ finding, open, onOpenChange }: Correct
                 <ArrowRight className="h-3 w-3 text-primary" /> Antes × Depois
               </h4>
 
-              {/* Sequence Diff Engine — smart comparison */}
-              {suggestion!.field === "sequence" && !manualMode && suggestion!.oldValue && suggestion!.proposedValue && (
+              {/* Sequence Diff Engine — only when both sequences are valid and comparable */}
+              {suggestion!.field === "sequence" && !manualMode && suggestion!.oldValue && suggestion!.proposedValue
+                && typeof suggestion!.oldValue === "string" && typeof suggestion!.proposedValue === "string"
+                && suggestion!.oldValue.length >= 3 && suggestion!.proposedValue.length >= 3
+                && /^[A-Za-z\-]+$/.test(suggestion!.oldValue) && /^[A-Za-z\-]+$/.test(suggestion!.proposedValue)
+                && (!suggestion!.previewData?.conflictAnalysis || suggestion!.previewData.conflictAnalysis.canDiff) && (
                 <SequenceDiffView
-                  seqA={typeof suggestion!.oldValue === "string" ? suggestion!.oldValue : null}
-                  seqB={typeof suggestion!.proposedValue === "string" ? suggestion!.proposedValue : null}
+                  seqA={suggestion!.oldValue}
+                  seqB={suggestion!.proposedValue}
                   labelA="PeptLabs"
                   labelB={suggestion!.sourceProvider || "Fonte Externa"}
                 />
               )}
 
-              {/* Standard before/after for non-sequence or when one side is empty */}
-              {(suggestion!.field !== "sequence" || manualMode || !suggestion!.oldValue || !suggestion!.proposedValue) && (
+              {/* Conflict explanation when diff is not possible */}
+              {suggestion!.field === "sequence" && !manualMode
+                && suggestion!.previewData?.conflictAnalysis
+                && !suggestion!.previewData.conflictAnalysis.canDiff && (
+                <div className="p-3 rounded-lg bg-amber-400/5 border border-amber-400/20 space-y-1.5">
+                  <p className="text-[10px] font-medium text-amber-400 flex items-center gap-1.5">
+                    <AlertTriangle className="h-3 w-3" />
+                    Comparação de sequência indisponível
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {suggestion!.previewData.conflictAnalysis.reason}
+                  </p>
+                  <Badge className="text-[8px] text-amber-400 bg-amber-400/10 border-amber-400/30">
+                    {suggestion!.previewData.conflictAnalysis.subtype.replace(/_/g, " ")}
+                  </Badge>
+                </div>
+              )}
+
+              {/* Standard before/after for non-sequence fields, manual mode, or when diff is not possible */}
+              {(suggestion!.field !== "sequence" || manualMode || !suggestion!.oldValue || !suggestion!.proposedValue
+                || (suggestion!.previewData?.conflictAnalysis && !suggestion!.previewData.conflictAnalysis.canDiff)) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/20">
                     <p className="text-[9px] font-bold text-destructive uppercase tracking-wider mb-1.5">Antes</p>
