@@ -16,7 +16,7 @@ import {
   CheckCircle2, Clock, Database, Eye, Filter, Globe,
   Loader2, Play, RefreshCw, Search, Settings, Shield,
   Sparkles, TrendingUp, XCircle, Zap, FileText, FlaskConical,
-  Check, X, RotateCcw, Trash2, Upload, CheckCircle2
+  Check, X, RotateCcw, Trash2, Upload
 } from "lucide-react";
 
 // ── Types ──
