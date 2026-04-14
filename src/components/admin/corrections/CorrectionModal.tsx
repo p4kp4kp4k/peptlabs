@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CheckCircle2, XCircle, AlertTriangle, Loader2, ExternalLink,
   BookOpen, Beaker, ArrowRight, Shield, Sparkles, Clock, Edit3, History,
-  SearchX, RefreshCw,
+  SearchX, RefreshCw, Globe,
 } from "lucide-react";
 import { fieldLabel } from "./correctionEngine";
 import { generateSuggestion, type Suggestion } from "./suggestionEngine";
