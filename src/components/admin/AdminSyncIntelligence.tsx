@@ -1127,6 +1127,16 @@ function AuditTab() {
           </CardContent>
         </Card>
       )}
+
+      {/* Correction Modal */}
+      <CorrectionModal
+        finding={selectedFinding}
+        open={correctionOpen}
+        onOpenChange={(open) => {
+          setCorrectionOpen(open);
+          if (!open) setSelectedFinding(null);
+        }}
+      />
     </div>
   );
 }
