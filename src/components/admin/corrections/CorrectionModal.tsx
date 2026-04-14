@@ -408,14 +408,36 @@ export default function CorrectionModal({ finding, open, onOpenChange }: Correct
                 <ArrowRight className="h-3 w-3 text-primary" /> Antes × Depois
               </h4>
 
-              {/* Sequence Diff Engine — smart comparison */}
-              {suggestion!.field === "sequence" && !manualMode && suggestion!.oldValue && suggestion!.proposedValue && (
+              {/* Sequence Diff Engine — only when both sequences are valid and comparable */}
+              {suggestion!.field === "sequence" && !manualMode && suggestion!.oldValue && suggestion!.proposedValue
+                && typeof suggestion!.oldValue === "string" && typeof suggestion!.proposedValue === "string"
+                && suggestion!.oldValue.length >= 3 && suggestion!.proposedValue.length >= 3
+                && /^[A-Za-z\-]+$/.test(suggestion!.oldValue) && /^[A-Za-z\-]+$/.test(suggestion!.proposedValue)
+                && (!suggestion!.previewData?.conflictAnalysis || suggestion!.previewData.conflictAnalysis.canDiff) && (
                 <SequenceDiffView
-                  seqA={typeof suggestion!.oldValue === "string" ? suggestion!.oldValue : null}
-                  seqB={typeof suggestion!.proposedValue === "string" ? suggestion!.proposedValue : null}
+                  seqA={suggestion!.oldValue}
+                  seqB={suggestion!.proposedValue}
                   labelA="PeptLabs"
                   labelB={suggestion!.sourceProvider || "Fonte Externa"}
                 />
+              )}
+
+              {/* Conflict explanation when diff is not possible */}
+              {suggestion!.field === "sequence" && !manualMode
+                && suggestion!.previewData?.conflictAnalysis
+                && !suggestion!.previewData.conflictAnalysis.canDiff && (
+                <div className="p-3 rounded-lg bg-amber-400/5 border border-amber-400/20 space-y-1.5">
+                  <p className="text-[10px] font-medium text-amber-400 flex items-center gap-1.5">
+                    <AlertTriangle className="h-3 w-3" />
+                    Comparação de sequência indisponível
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {suggestion!.previewData.conflictAnalysis.reason}
+                  </p>
+                  <Badge className="text-[8px] text-amber-400 bg-amber-400/10 border-amber-400/30">
+                    {suggestion!.previewData.conflictAnalysis.subtype.replace(/_/g, " ")}
+                  </Badge>
+                </div>
               )}
 
               {/* Standard before/after for non-sequence or when one side is empty */}
