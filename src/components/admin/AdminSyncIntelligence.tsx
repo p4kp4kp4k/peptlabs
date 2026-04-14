@@ -1211,7 +1211,11 @@ function AuditTab() {
                 {severityFilter === "all" ? "Nenhum finding aberto" : `Nenhum finding ${severityFilter}`}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                {findings.length === 0 ? "Execute uma auditoria para verificar" : "Tudo limpo nesta categoria"}
+                {findings.length === 0 && scopeGlobal
+                  ? "Execute uma auditoria para verificar"
+                  : findings.length === 0 && !scopeGlobal
+                  ? "Esta execução não gerou findings — alterne para 'Todos abertos'"
+                  : "Tudo limpo nesta categoria"}
               </p>
             </div>
           ) : (
