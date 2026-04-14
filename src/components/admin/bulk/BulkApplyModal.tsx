@@ -692,19 +692,28 @@ function PreviewStep({
           {/* Items list */}
           <ScrollArea className="flex-1 min-h-0 max-h-[300px]">
             <div className="space-y-1.5 pr-3">
-              {candidates.map((c) => (
+              {candidates.map((c) => {
+                const lvl = c.confidenceAnalysis ? c.confidenceAnalysis.level : "low";
+                const decisionLabel = c.decision === "auto_apply" ? "Auto" : c.decision === "manual_review" ? "Revisão" : "Bloqueado";
+                const decisionColor = c.decision === "auto_apply" ? "text-emerald-400 border-emerald-400/30" : c.decision === "manual_review" ? "text-amber-400 border-amber-400/30" : "text-red-400 border-red-400/30";
+                
+                return (
                 <div
                   key={c.findingId}
                   className={`p-2.5 rounded-lg border text-[11px] ${
                     c.isEligible
                       ? "border-emerald-400/20 bg-emerald-400/5"
-                      : "border-amber-400/20 bg-amber-400/5"
+                      : c.decision === "blocked"
+                        ? "border-red-400/20 bg-red-400/5"
+                        : "border-amber-400/20 bg-amber-400/5"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       {c.isEligible ? (
                         <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+                      ) : c.decision === "blocked" ? (
+                        <XCircle className="h-3 w-3 text-red-400 shrink-0" />
                       ) : (
                         <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" />
                       )}
@@ -714,8 +723,11 @@ function PreviewStep({
                         <Badge variant="outline" className="text-[8px] shrink-0">{c.sourceProvider}</Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant="outline" className={`text-[8px] ${c.confidenceScore >= 75 ? "text-emerald-400 border-emerald-400/30" : c.confidenceScore >= 50 ? "text-amber-400 border-amber-400/30" : "text-red-400 border-red-400/30"}`}>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Badge variant="outline" className={`text-[8px] ${decisionColor}`}>
+                        {decisionLabel}
+                      </Badge>
+                      <Badge variant="outline" className={`text-[8px] ${c.confidenceAnalysis ? levelColor(lvl) : ""}`}>
                         {c.confidenceScore}%
                       </Badge>
                     </div>
@@ -723,13 +735,19 @@ function PreviewStep({
                   {c.skipReason && (
                     <p className="text-[9px] text-amber-400 mt-1 ml-5">{c.skipReason}</p>
                   )}
+                  {c.confidenceAnalysis?.reasoning && (
+                    <p className="text-[9px] text-muted-foreground mt-0.5 ml-5 truncate italic">
+                      {c.confidenceAnalysis.reasoning.slice(0, 150)}
+                    </p>
+                  )}
                   {c.newValue && (
                     <p className="text-[9px] text-muted-foreground mt-1 ml-5 truncate">
                       → {c.newValue.slice(0, 120)}{c.newValue.length > 120 ? "…" : ""}
                     </p>
                   )}
                 </div>
-              ))}
+                );
+              })}
               {candidates.length === 0 && (
                 <p className="text-center text-xs text-muted-foreground py-8">Nenhum item encontrado</p>
               )}
