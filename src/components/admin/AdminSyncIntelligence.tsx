@@ -421,7 +421,90 @@ function OverviewTab() {
   );
 }
 
-function SourceCard({ source }: { source: IntegrationSource }) {
+// ── Auto-Update Button ──
+
+function AutoUpdateButton() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [lastResult, setLastResult] = useState<any>(null);
+
+  const dryRunMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("auto-update", {
+        body: { mode: "dry_run" },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      setLastResult(data);
+      toast({
+        title: "Preview de auto-update",
+        description: `${data.stats.total} mudanças avaliadas. ${data.results.filter((r: any) => r.confidence >= 75).length} elegíveis para aplicação automática.`,
+      });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const autoApplyMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("auto-update", {
+        body: { mode: "auto", min_confidence: 75 },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      setLastResult(data);
+      toast({
+        title: "Auto-update concluído",
+        description: `${data.stats.applied} atualização(ões) aplicada(s), ${data.stats.skipped} ignorada(s).`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["pending-changes-count"] });
+      queryClient.invalidateQueries({ queryKey: ["detected-changes"] });
+      queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const isPending = dryRunMutation.isPending || autoApplyMutation.isPending;
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 text-[11px] border-emerald-400/30 hover:bg-emerald-400/10 text-emerald-400"
+        disabled={isPending}
+        onClick={() => dryRunMutation.mutate()}
+      >
+        {dryRunMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : <TrendingUp className="h-3 w-3 mr-1.5" />}
+        Preview Auto-Update
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 text-[11px] border-emerald-400/30 hover:bg-emerald-400/10 text-emerald-400"
+        disabled={isPending}
+        onClick={() => autoApplyMutation.mutate()}
+      >
+        {autoApplyMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : <Zap className="h-3 w-3 mr-1.5" />}
+        Aplicar Auto-Update
+      </Button>
+      {lastResult && (
+        <Badge variant="outline" className="text-[9px] h-5 border-border/30">
+          {lastResult.stats.applied ?? 0} aplicadas / {lastResult.stats.total ?? 0} total
+        </Badge>
+      )}
+    </div>
+  );
+}
+
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
