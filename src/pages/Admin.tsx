@@ -316,6 +316,12 @@ export default function Admin() {
           <SyncPanel />
         </TabsContent>
 
+        {/* Central de Integrações */}
+        <TabsContent value="integrations">
+          <AdminSyncIntelligence />
+        </TabsContent>
+        </TabsContent>
+
         {/* Products Tab */}
         <TabsContent value="products">
           <AdminProducts />
