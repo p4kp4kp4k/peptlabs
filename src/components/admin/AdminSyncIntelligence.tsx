@@ -861,9 +861,10 @@ function AuditTab() {
   const [page, setPage] = useState(0);
   const [selectedFinding, setSelectedFinding] = useState<AuditFinding | null>(null);
   const [correctionOpen, setCorrectionOpen] = useState(false);
+  const [scopeGlobal, setScopeGlobal] = useState(true);
   const PAGE_SIZE = 15;
 
-  const { data: auditRuns = [], isLoading } = useQuery({
+  const { data: auditRuns = [], isLoading: runsLoading } = useQuery({
     queryKey: ["audit-runs"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -878,21 +879,28 @@ function AuditTab() {
 
   const latestRun = auditRuns[0];
 
-  const { data: findings = [] } = useQuery({
-    queryKey: ["audit-findings", latestRun?.id],
+  const { data: findings = [], isLoading: findingsLoading } = useQuery({
+    queryKey: ["audit-findings", scopeGlobal ? "global" : latestRun?.id],
     queryFn: async () => {
-      if (!latestRun) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("audit_findings")
         .select("*, peptides(name)")
-        .eq("audit_run_id", latestRun.id)
         .order("severity", { ascending: true })
-        .limit(500);
+        .limit(1000);
+
+      if (!scopeGlobal && latestRun) {
+        query = query.eq("audit_run_id", latestRun.id);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
+      console.log("[AuditTab] findings loaded:", data?.length, "| scope:", scopeGlobal ? "global" : `run:${latestRun?.id}`, "| latestRun:", latestRun?.id);
       return data as AuditFinding[];
     },
-    enabled: !!latestRun,
+    enabled: scopeGlobal || !!latestRun,
   });
+
+  const isLoading = runsLoading || findingsLoading;
 
   const auditMutation = useMutation({
     mutationFn: async (scope: string) => {
@@ -1122,37 +1130,53 @@ function AuditTab() {
         </Button>
       </div>
 
-      {/* Audit Summary — derived from actual findings, not stale snapshot */}
-      {latestRun && (
-        <Card className="border-border/40 bg-card/80">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Findings da execução de {new Date(latestRun.started_at).toLocaleDateString("pt-BR")}
-              </CardTitle>
-              <Badge variant="outline" className="text-[9px]">
-                {latestRun.scope} • {latestRun.status}
-              </Badge>
+      {/* Scope Toggle + Audit Summary */}
+      <Card className="border-border/40 bg-card/80">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              {scopeGlobal
+                ? "Todos os findings abertos"
+                : latestRun
+                ? `Findings da execução de ${new Date(latestRun.started_at).toLocaleDateString("pt-BR")}`
+                : "Findings"}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <span className="text-[10px] text-muted-foreground">Apenas esta execução</span>
+                <button
+                  onClick={() => { setScopeGlobal(prev => !prev); setPage(0); }}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${scopeGlobal ? 'bg-primary' : 'bg-input'}`}
+                >
+                  <span className={`inline-block h-3.5 w-3.5 rounded-full bg-background shadow transition-transform ${scopeGlobal ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                </button>
+                <span className="text-[10px] text-muted-foreground">Todos abertos</span>
+              </label>
+              {latestRun && (
+                <Badge variant="outline" className="text-[9px]">
+                  {latestRun.scope} • {latestRun.status}
+                </Badge>
+              )}
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {[
-                { label: "Abertos", value: counts.open, color: "text-foreground" },
-                { label: "Críticos", value: counts.critical, color: "text-red-400" },
-                { label: "Médios", value: counts.medium, color: "text-amber-400" },
-                { label: "Baixos", value: counts.low, color: "text-blue-400" },
-                { label: "Resolvidos", value: counts.resolved, color: "text-emerald-400" },
-              ].map((s) => (
-                <div key={s.label} className="text-center">
-                  <p className={`text-lg font-bold ${s.color}`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
-                  <p className="text-[10px] text-muted-foreground">{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {[
+              { label: "Abertos", value: counts.open, color: "text-foreground" },
+              { label: "Críticos", value: counts.critical, color: "text-red-400" },
+              { label: "Médios", value: counts.medium, color: "text-amber-400" },
+              { label: "Baixos", value: counts.low, color: "text-blue-400" },
+              { label: "Resolvidos", value: counts.resolved, color: "text-emerald-400" },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <p className={`text-lg font-bold ${s.color}`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
+                <p className="text-[10px] text-muted-foreground">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Severity Filter Tabs */}
       <Card className="border-border/40 bg-card/80">
@@ -1187,7 +1211,11 @@ function AuditTab() {
                 {severityFilter === "all" ? "Nenhum finding aberto" : `Nenhum finding ${severityFilter}`}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                {findings.length === 0 ? "Execute uma auditoria para verificar" : "Tudo limpo nesta categoria"}
+                {findings.length === 0 && scopeGlobal
+                  ? "Execute uma auditoria para verificar"
+                  : findings.length === 0 && !scopeGlobal
+                  ? "Esta execução não gerou findings — alterne para 'Todos abertos'"
+                  : "Tudo limpo nesta categoria"}
               </p>
             </div>
           ) : (
