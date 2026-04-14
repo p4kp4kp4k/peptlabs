@@ -1029,13 +1029,13 @@ function AuditTab() {
                         {f.peptides?.name && (
                           <span className="text-[10px] text-muted-foreground">• {f.peptides.name}</span>
                         )}
-                        {/* Confidence & correction badges */}
-                        {f.status === "open" && f.peptide_id && isAutoCorrectible(f.category) && (
+                        {/* Correction badges based on real data availability */}
+                        {f.status === "open" && f.peptide_id && hasSuggestionFor(f) && (
                           <Badge className="text-[7px] px-1 py-0 text-emerald-400 bg-emerald-400/10 border-emerald-400/30">
                             <Wrench className="h-2 w-2 mr-0.5" /> Correção disponível
                           </Badge>
                         )}
-                        {f.status === "open" && f.peptide_id && !isAutoCorrectible(f.category) && (
+                        {f.status === "open" && f.peptide_id && !hasSuggestionFor(f) && (
                           <Badge className="text-[7px] px-1 py-0 text-purple-400 bg-purple-400/10 border-purple-400/30">
                             <Edit3 className="h-2 w-2 mr-0.5" /> Revisão manual
                           </Badge>
