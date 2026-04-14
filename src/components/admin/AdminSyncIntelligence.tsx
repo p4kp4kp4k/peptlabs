@@ -262,6 +262,9 @@ function NotificationBell() {
 // ── 1. Overview Tab ──
 
 function OverviewTab() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: sources = [], isLoading } = useQuery({
     queryKey: ["integration-sources"],
     queryFn: async () => {
@@ -309,13 +312,6 @@ function OverviewTab() {
       return count || 0;
     },
   });
-
-  if (isLoading) {
-    return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
-  }
-
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const syncAllMutation = useMutation({
     mutationFn: async () => {
