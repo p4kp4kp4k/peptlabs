@@ -1132,6 +1132,15 @@ function AuditTab() {
           disabled={auditMutation.isPending} onClick={() => auditMutation.mutate("cross_source")}>
           Apenas Cross-Source
         </Button>
+        <div className="flex-1" />
+        <Button
+          size="sm"
+          className="h-8 text-[11px] gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+          onClick={() => setBulkOpen(true)}
+        >
+          <Zap className="h-3 w-3" />
+          Aplicar Atualizações Confiáveis
+        </Button>
       </div>
 
       {/* Scope Toggle + Audit Summary */}
