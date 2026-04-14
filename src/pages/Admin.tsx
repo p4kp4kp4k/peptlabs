@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Users, Layers, BookOpen, Shield, TrendingUp, Search, Trash2, Edit,
-  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag, CreditCard, Package, Copy, Webhook, Link2, Facebook
+  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag, CreditCard, Package, Copy, Webhook, Link2, Facebook, Zap
 } from "lucide-react";
 import { fetchAllProfiles, fetchProfileCount } from "@/services/userService";
 import { fetchPeptides, fetchPeptideCount, deletePeptide } from "@/services/peptideService";
