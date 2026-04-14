@@ -642,6 +642,9 @@ function ChangesTab() {
 // ── 3. Audit Tab ──
 
 function AuditTab() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: auditRuns = [], isLoading } = useQuery({
     queryKey: ["audit-runs"],
     queryFn: async () => {
@@ -673,8 +676,62 @@ function AuditTab() {
     enabled: !!latestRun,
   });
 
+  const auditMutation = useMutation({
+    mutationFn: async (scope: string) => {
+      const { data, error } = await supabase.functions.invoke("audit-engine", {
+        body: { scope },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Auditoria concluída",
+        description: `${data.total_findings} findings detectados`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["audit-runs"] });
+      queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
+      queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+
   return (
     <div className="space-y-4">
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-[11px] border-primary/30 hover:bg-primary/10"
+          disabled={auditMutation.isPending}
+          onClick={() => auditMutation.mutate("full")}
+        >
+          {auditMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : <Eye className="h-3 w-3 mr-1.5" />}
+          Auditoria Completa
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-[11px]"
+          disabled={auditMutation.isPending}
+          onClick={() => auditMutation.mutate("internal")}
+        >
+          Apenas Interna
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-[11px]"
+          disabled={auditMutation.isPending}
+          onClick={() => auditMutation.mutate("cross_source")}
+        >
+          Apenas Cross-Source
+        </Button>
+      </div>
+
       {/* Audit Summary */}
       {latestRun ? (
         <Card className="border-border/40 bg-card/80">
