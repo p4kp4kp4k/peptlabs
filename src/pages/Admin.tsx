@@ -320,7 +320,6 @@ export default function Admin() {
         <TabsContent value="integrations">
           <AdminSyncIntelligence />
         </TabsContent>
-        </TabsContent>
 
         {/* Products Tab */}
         <TabsContent value="products">
