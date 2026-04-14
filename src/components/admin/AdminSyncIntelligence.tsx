@@ -1003,6 +1003,10 @@ function AuditTab() {
 // ── 4. Import Queue Tab ──
 
 function ImportQueueTab() {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: queue = [], isLoading } = useQuery({
     queryKey: ["import-queue"],
     queryFn: async () => {
@@ -1012,9 +1016,82 @@ function ImportQueueTab() {
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
-      return data as ImportQueueItem[];
+      return data as (ImportQueueItem & { collected_data?: any })[];
     },
   });
+
+  const publishMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const items = queue.filter((q) => ids.includes(q.id));
+      for (const item of items) {
+        const cd = item.collected_data || {};
+        const { error: insertErr } = await supabase.from("peptides").insert({
+          name: item.name,
+          slug: item.slug,
+          category: cd.category || "Pesquisa",
+          description: cd.description || null,
+          sequence: cd.sequence || null,
+          sequence_length: cd.sequence_length || null,
+          benefits: cd.benefits || [],
+          mechanism: cd.mechanism || null,
+          biological_activity: cd.biological_activity || [],
+          source_origins: cd.source_origins || [],
+          confidence_score: item.confidence_score,
+          tier: "essential",
+          access_level: "starter",
+        });
+        if (insertErr) throw insertErr;
+
+        await supabase
+          .from("peptide_import_queue")
+          .update({ status: "published", published_at: new Date().toISOString() })
+          .eq("id", item.id);
+      }
+    },
+    onSuccess: (_, ids) => {
+      toast({ title: "Publicação concluída", description: `${ids.length} peptídeo(s) publicados com sucesso.` });
+      setSelected(new Set());
+      queryClient.invalidateQueries({ queryKey: ["import-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["import-pending-count"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro na publicação", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase
+        .from("peptide_import_queue")
+        .update({ status: "rejected", reviewed_at: new Date().toISOString() })
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, ids) => {
+      toast({ title: "Itens rejeitados", description: `${ids.length} peptídeo(s) rejeitados.` });
+      setSelected(new Set());
+      queryClient.invalidateQueries({ queryKey: ["import-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["import-pending-count"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const toggleAll = () => {
+    const pending = queue.filter((q) => q.status === "pending");
+    if (selected.size === pending.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(pending.map((q) => q.id)));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelected(next);
+  };
 
   const statusLabel = (s: string) => {
     const map: Record<string, string> = {
@@ -1026,8 +1103,50 @@ function ImportQueueTab() {
     return map[s] || s;
   };
 
+  const pendingItems = queue.filter((q) => q.status === "pending");
+
   return (
     <div className="space-y-4">
+      {/* Bulk Actions */}
+      {selected.size > 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-3 flex items-center justify-between">
+            <span className="text-xs font-medium text-foreground">
+              {selected.size} {selected.size === 1 ? "peptídeo selecionado" : "peptídeos selecionados"}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-[10px] border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10"
+                disabled={publishMutation.isPending}
+                onClick={() => publishMutation.mutate(Array.from(selected))}
+              >
+                {publishMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Upload className="h-3 w-3 mr-1" />}
+                Publicar Selecionados
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-[10px] border-destructive/30 text-destructive hover:bg-destructive/10"
+                disabled={rejectMutation.isPending}
+                onClick={() => rejectMutation.mutate(Array.from(selected))}
+              >
+                <X className="h-3 w-3 mr-1" /> Rejeitar Selecionados
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-[10px]"
+                onClick={() => setSelected(new Set())}
+              >
+                Limpar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-border/40 bg-card/80">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
@@ -1049,17 +1168,32 @@ function ImportQueueTab() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8">
+                    <Checkbox
+                      checked={selected.size === pendingItems.length && pendingItems.length > 0}
+                      onCheckedChange={toggleAll}
+                    />
+                  </TableHead>
                   <TableHead className="text-xs">Nome</TableHead>
                   <TableHead className="text-xs">Fonte</TableHead>
                   <TableHead className="text-xs">Confiança</TableHead>
                   <TableHead className="text-xs">Pronto</TableHead>
                   <TableHead className="text-xs">Status</TableHead>
                   <TableHead className="text-xs">Data</TableHead>
+                  <TableHead className="text-xs w-28">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {queue.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow key={item.id} className={selected.has(item.id) ? "bg-primary/5" : ""}>
+                    <TableCell>
+                      {item.status === "pending" && (
+                        <Checkbox
+                          checked={selected.has(item.id)}
+                          onCheckedChange={() => toggleOne(item.id)}
+                        />
+                      )}
+                    </TableCell>
                     <TableCell className="text-xs font-medium">{item.name}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-[8px]">{item.integration_sources?.name || "—"}</Badge>
@@ -1083,12 +1217,36 @@ function ImportQueueTab() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={item.status === "pending" ? "secondary" : "outline"} className="text-[8px]">
+                      <Badge variant={item.status === "pending" ? "secondary" : item.status === "published" ? "default" : "outline"} className="text-[8px]">
                         {statusLabel(item.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-[10px] text-muted-foreground">
                       {new Date(item.created_at).toLocaleDateString("pt-BR")}
+                    </TableCell>
+                    <TableCell>
+                      {item.status === "pending" && (
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost" size="icon"
+                            className="h-6 w-6 text-emerald-400 hover:bg-emerald-400/10"
+                            onClick={() => publishMutation.mutate([item.id])}
+                            disabled={publishMutation.isPending}
+                            title="Publicar"
+                          >
+                            <Upload className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost" size="icon"
+                            className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                            onClick={() => rejectMutation.mutate([item.id])}
+                            disabled={rejectMutation.isPending}
+                            title="Rejeitar"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
