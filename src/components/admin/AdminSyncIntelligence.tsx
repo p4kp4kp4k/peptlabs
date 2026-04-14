@@ -858,6 +858,7 @@ function ChangesTab() {
 function AuditTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
   const [selectedFinding, setSelectedFinding] = useState<AuditFinding | null>(null);
