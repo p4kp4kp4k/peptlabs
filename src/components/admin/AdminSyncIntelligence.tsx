@@ -861,9 +861,10 @@ function AuditTab() {
   const [page, setPage] = useState(0);
   const [selectedFinding, setSelectedFinding] = useState<AuditFinding | null>(null);
   const [correctionOpen, setCorrectionOpen] = useState(false);
+  const [scopeGlobal, setScopeGlobal] = useState(true);
   const PAGE_SIZE = 15;
 
-  const { data: auditRuns = [], isLoading } = useQuery({
+  const { data: auditRuns = [], isLoading: runsLoading } = useQuery({
     queryKey: ["audit-runs"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -878,21 +879,28 @@ function AuditTab() {
 
   const latestRun = auditRuns[0];
 
-  const { data: findings = [] } = useQuery({
-    queryKey: ["audit-findings", latestRun?.id],
+  const { data: findings = [], isLoading: findingsLoading } = useQuery({
+    queryKey: ["audit-findings", scopeGlobal ? "global" : latestRun?.id],
     queryFn: async () => {
-      if (!latestRun) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("audit_findings")
         .select("*, peptides(name)")
-        .eq("audit_run_id", latestRun.id)
         .order("severity", { ascending: true })
-        .limit(500);
+        .limit(1000);
+
+      if (!scopeGlobal && latestRun) {
+        query = query.eq("audit_run_id", latestRun.id);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
+      console.log("[AuditTab] findings loaded:", data?.length, "| scope:", scopeGlobal ? "global" : `run:${latestRun?.id}`, "| latestRun:", latestRun?.id);
       return data as AuditFinding[];
     },
-    enabled: !!latestRun,
+    enabled: scopeGlobal || !!latestRun,
   });
+
+  const isLoading = runsLoading || findingsLoading;
 
   const auditMutation = useMutation({
     mutationFn: async (scope: string) => {
