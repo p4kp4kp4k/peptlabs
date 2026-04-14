@@ -865,6 +865,7 @@ function AuditTab() {
   const [selectedFinding, setSelectedFinding] = useState<AuditFinding | null>(null);
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [scopeGlobal, setScopeGlobal] = useState(true);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const PAGE_SIZE = 15;
 
   const { data: auditRuns = [], isLoading: runsLoading } = useQuery({
