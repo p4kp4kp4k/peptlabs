@@ -1,0 +1,1050 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import {
+  Activity, AlertTriangle, ArrowRightLeft, Bell, BookOpen,
+  CheckCircle2, Clock, Database, Eye, Filter, Globe,
+  Loader2, Play, RefreshCw, Search, Settings, Shield,
+  Sparkles, TrendingUp, XCircle, Zap, FileText, FlaskConical
+} from "lucide-react";
+
+// ── Types ──
+
+interface IntegrationSource {
+  id: string;
+  name: string;
+  slug: string;
+  api_base_url: string | null;
+  api_type: string;
+  is_active: boolean;
+  priority: number;
+  last_sync_at: string | null;
+  last_sync_status: string | null;
+  records_count: number;
+}
+
+interface SyncRun {
+  id: string;
+  source_id: string;
+  status: string;
+  mode: string;
+  started_at: string;
+  completed_at: string | null;
+  records_processed: number;
+  records_added: number;
+  records_updated: number;
+  conflicts_found: number;
+  errors_count: number;
+  error_message: string | null;
+  integration_sources?: { name: string; slug: string };
+}
+
+interface DetectedChange {
+  id: string;
+  source_id: string;
+  peptide_id: string | null;
+  change_type: string;
+  field_name: string | null;
+  old_value: string | null;
+  new_value: string | null;
+  severity: string;
+  status: string;
+  created_at: string;
+  integration_sources?: { name: string };
+  peptides?: { name: string } | null;
+}
+
+interface AuditRun {
+  id: string;
+  status: string;
+  scope: string;
+  started_at: string;
+  completed_at: string | null;
+  total_findings: number;
+  critical_count: number;
+  medium_count: number;
+  low_count: number;
+  resolved_count: number;
+}
+
+interface AuditFinding {
+  id: string;
+  audit_run_id: string;
+  category: string;
+  severity: string;
+  title: string;
+  description: string | null;
+  source_a: string | null;
+  source_b: string | null;
+  value_a: string | null;
+  value_b: string | null;
+  recommendation: string | null;
+  status: string;
+  peptides?: { name: string } | null;
+}
+
+interface ImportQueueItem {
+  id: string;
+  name: string;
+  slug: string;
+  confidence_score: number;
+  is_ready: boolean;
+  status: string;
+  created_at: string;
+  integration_sources?: { name: string };
+}
+
+interface AdminNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string | null;
+  severity: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+// ── Helpers ──
+
+const severityColor = (s: string) => {
+  switch (s) {
+    case "critical": return "text-red-400 bg-red-400/10 border-red-400/30";
+    case "high": return "text-orange-400 bg-orange-400/10 border-orange-400/30";
+    case "medium": return "text-amber-400 bg-amber-400/10 border-amber-400/30";
+    case "low": return "text-blue-400 bg-blue-400/10 border-blue-400/30";
+    case "info": return "text-muted-foreground bg-secondary border-border";
+    default: return "text-muted-foreground bg-secondary border-border";
+  }
+};
+
+const statusIcon = (status: string) => {
+  switch (status) {
+    case "success":
+    case "completed": return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />;
+    case "error":
+    case "failed": return <XCircle className="h-3.5 w-3.5 text-destructive" />;
+    case "running": return <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />;
+    case "never": return <Clock className="h-3.5 w-3.5 text-muted-foreground" />;
+    default: return <Clock className="h-3.5 w-3.5 text-amber-400" />;
+  }
+};
+
+const sourceIcon = (slug: string) => {
+  switch (slug) {
+    case "pubmed": return <BookOpen className="h-4 w-4" />;
+    case "uniprot": return <FlaskConical className="h-4 w-4" />;
+    case "pdb": return <Database className="h-4 w-4" />;
+    case "openfda": return <Shield className="h-4 w-4" />;
+    default: return <Globe className="h-4 w-4" />;
+  }
+};
+
+const sourceColor = (slug: string) => {
+  switch (slug) {
+    case "pubmed": return "text-blue-400";
+    case "uniprot": return "text-emerald-400";
+    case "pdb": return "text-purple-400";
+    case "openfda": return "text-amber-400";
+    case "peptipedia": return "text-pink-400";
+    case "dramp": return "text-orange-400";
+    case "apd": return "text-cyan-400";
+    default: return "text-muted-foreground";
+  }
+};
+
+const timeAgo = (date: string | null) => {
+  if (!date) return "Nunca";
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}min atrás`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h atrás`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d atrás`;
+};
+
+// ── Main Component ──
+
+export default function AdminSyncIntelligence() {
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <Zap className="h-5 w-5 text-primary" />
+            Central de Integrações
+          </h2>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Monitoramento, auditoria e sincronização de fontes científicas
+          </p>
+        </div>
+        <NotificationBell />
+      </div>
+
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="h-9 bg-secondary/60 p-0.5 flex-wrap">
+          <TabsTrigger value="overview" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Activity className="h-3.5 w-3.5" /> Visão Geral
+          </TabsTrigger>
+          <TabsTrigger value="changes" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <ArrowRightLeft className="h-3.5 w-3.5" /> Atualizações
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Eye className="h-3.5 w-3.5" /> Auditoria
+          </TabsTrigger>
+          <TabsTrigger value="import" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Sparkles className="h-3.5 w-3.5" /> Publicação
+          </TabsTrigger>
+          <TabsTrigger value="history" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <FileText className="h-3.5 w-3.5" /> Histórico
+          </TabsTrigger>
+          <TabsTrigger value="config" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Settings className="h-3.5 w-3.5" /> Configurações
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview"><OverviewTab /></TabsContent>
+        <TabsContent value="changes"><ChangesTab /></TabsContent>
+        <TabsContent value="audit"><AuditTab /></TabsContent>
+        <TabsContent value="import"><ImportQueueTab /></TabsContent>
+        <TabsContent value="history"><HistoryTab /></TabsContent>
+        <TabsContent value="config"><ConfigTab /></TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+// ── Notification Bell ──
+
+function NotificationBell() {
+  const { data: notifications = [] } = useQuery({
+    queryKey: ["admin-notifications"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_notifications")
+        .select("*")
+        .eq("is_read", false)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data as AdminNotification[];
+    },
+  });
+
+  const unread = notifications.length;
+
+  return (
+    <div className="relative">
+      <Button variant="ghost" size="icon" className="h-8 w-8 relative">
+        <Bell className="h-4 w-4" />
+        {unread > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground flex items-center justify-center">
+            {unread}
+          </span>
+        )}
+      </Button>
+    </div>
+  );
+}
+
+// ── 1. Overview Tab ──
+
+function OverviewTab() {
+  const { data: sources = [], isLoading } = useQuery({
+    queryKey: ["integration-sources"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("integration_sources")
+        .select("*")
+        .order("priority", { ascending: false });
+      if (error) throw error;
+      return data as IntegrationSource[];
+    },
+  });
+
+  const { data: pendingChanges = 0 } = useQuery({
+    queryKey: ["pending-changes-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("detected_changes")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const { data: openFindings = 0 } = useQuery({
+    queryKey: ["open-findings-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("audit_findings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "open");
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const { data: importPending = 0 } = useQuery({
+    queryKey: ["import-pending-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("peptide_import_queue")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  if (isLoading) {
+    return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Fontes Ativas", value: sources.filter(s => s.is_active).length, icon: Globe, color: "text-primary" },
+          { label: "Atualizações Pendentes", value: pendingChanges, icon: ArrowRightLeft, color: "text-amber-400" },
+          { label: "Findings Abertos", value: openFindings, icon: AlertTriangle, color: "text-orange-400" },
+          { label: "Fila de Publicação", value: importPending, icon: Sparkles, color: "text-emerald-400" },
+        ].map((s) => (
+          <Card key={s.label} className="border-border/40 bg-card/80">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <s.icon className={`h-4 w-4 ${s.color}`} />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
+                <p className="text-[10px] text-muted-foreground">{s.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Source Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {sources.map((src) => (
+          <SourceCard key={src.id} source={src} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SourceCard({ source }: { source: IntegrationSource }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const fnName = source.api_type === "rest" ? "sync-peptides" : "ingest-datasets";
+      const { data, error } = await supabase.functions.invoke(fnName, {
+        body: { source: source.slug },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Sincronização iniciada", description: `${source.name} está sendo processado.` });
+      queryClient.invalidateQueries({ queryKey: ["integration-sources"] });
+      queryClient.invalidateQueries({ queryKey: ["sync-runs"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+
+  return (
+    <Card className="border-border/40 bg-card/80 hover:border-primary/20 transition-colors">
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className={sourceColor(source.slug)}>
+              {sourceIcon(source.slug)}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">{source.name}</p>
+              <p className="text-[10px] text-muted-foreground">{source.api_type === "rest" ? "API REST" : "Dataset"}</p>
+            </div>
+          </div>
+          <Badge variant={source.is_active ? "default" : "secondary"} className="text-[9px]">
+            {source.is_active ? "Ativo" : "Inativo"}
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-[10px]">
+          <div>
+            <span className="text-muted-foreground">Última sync:</span>
+            <p className="text-foreground font-medium">{timeAgo(source.last_sync_at)}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Status:</span>
+            <div className="flex items-center gap-1 mt-0.5">
+              {statusIcon(source.last_sync_status || "never")}
+              <span className="text-foreground capitalize">{source.last_sync_status || "Nunca"}</span>
+            </div>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Registros:</span>
+            <p className="text-foreground font-medium">{source.records_count}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Prioridade:</span>
+            <p className="text-foreground font-medium">{source.priority}</p>
+          </div>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full h-7 text-[10px] border-border/30 hover:border-primary/40"
+          disabled={syncMutation.isPending || !source.is_active}
+          onClick={() => syncMutation.mutate()}
+        >
+          {syncMutation.isPending ? (
+            <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Sincronizando...</>
+          ) : (
+            <><Play className="h-3 w-3 mr-1" /> Sincronizar Agora</>
+          )}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ── 2. Changes Tab ──
+
+function ChangesTab() {
+  const [search, setSearch] = useState("");
+  const [filterSeverity, setFilterSeverity] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  const { data: changes = [], isLoading, refetch } = useQuery({
+    queryKey: ["detected-changes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("detected_changes")
+        .select("*, integration_sources(name), peptides(name)")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data as DetectedChange[];
+    },
+  });
+
+  const filtered = changes.filter((c) => {
+    if (filterSeverity !== "all" && c.severity !== filterSeverity) return false;
+    if (filterStatus !== "all" && c.status !== filterStatus) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return (
+        c.change_type.toLowerCase().includes(q) ||
+        (c.peptides?.name || "").toLowerCase().includes(q) ||
+        (c.field_name || "").toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
+
+  const changeTypeLabel = (type: string) => {
+    const map: Record<string, string> = {
+      new_peptide: "Novo Peptídeo",
+      sequence_change: "Alteração de Sequência",
+      description_change: "Alteração de Descrição",
+      name_change: "Alteração de Nome",
+      new_reference: "Nova Referência",
+      activity_change: "Alteração de Atividade",
+      structure_update: "Estrutura Atualizada",
+      regulatory_update: "Atualização Regulatória",
+      conflict: "Conflito entre Fontes",
+      data_removed: "Informação Removida",
+    };
+    return map[type] || type;
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Filters */}
+      <Card className="border-border/40 bg-card/80">
+        <CardContent className="p-3 flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-7 pl-8 text-[10px]" />
+          </div>
+          <select
+            className="h-7 rounded-md border border-border bg-secondary/50 px-2 text-[10px] text-foreground"
+            value={filterSeverity}
+            onChange={(e) => setFilterSeverity(e.target.value)}
+          >
+            <option value="all">Severidade</option>
+            <option value="critical">Crítico</option>
+            <option value="medium">Médio</option>
+            <option value="low">Baixo</option>
+          </select>
+          <select
+            className="h-7 rounded-md border border-border bg-secondary/50 px-2 text-[10px] text-foreground"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">Status</option>
+            <option value="pending">Pendente</option>
+            <option value="reviewed">Revisado</option>
+            <option value="synced">Sincronizado</option>
+            <option value="ignored">Ignorado</option>
+          </select>
+          <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => refetch()}>
+            <RefreshCw className="h-3 w-3 mr-1" /> Atualizar
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Changes List */}
+      <Card className="border-border/40 bg-card/80">
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-12">
+              <CheckCircle2 className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
+              <p className="text-sm text-foreground font-medium">Nenhuma atualização detectada</p>
+              <p className="text-[10px] text-muted-foreground">Execute uma sincronização para verificar mudanças</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Sev.</TableHead>
+                  <TableHead className="text-xs">Tipo</TableHead>
+                  <TableHead className="text-xs">Peptídeo</TableHead>
+                  <TableHead className="text-xs">Campo</TableHead>
+                  <TableHead className="text-xs">Fonte</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell>
+                      <Badge className={`text-[8px] px-1.5 py-0 ${severityColor(c.severity)}`}>
+                        {c.severity}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-[10px]">{changeTypeLabel(c.change_type)}</TableCell>
+                    <TableCell className="text-[10px] font-medium">{c.peptides?.name || "—"}</TableCell>
+                    <TableCell className="text-[10px] text-muted-foreground">{c.field_name || "—"}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[8px]">{c.integration_sources?.name || "—"}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={c.status === "pending" ? "secondary" : "outline"} className="text-[8px]">
+                        {c.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-[10px] text-muted-foreground">
+                      {new Date(c.created_at).toLocaleDateString("pt-BR")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ── 3. Audit Tab ──
+
+function AuditTab() {
+  const { data: auditRuns = [], isLoading } = useQuery({
+    queryKey: ["audit-runs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("audit_runs")
+        .select("*")
+        .order("started_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data as AuditRun[];
+    },
+  });
+
+  const latestRun = auditRuns[0];
+
+  const { data: findings = [] } = useQuery({
+    queryKey: ["audit-findings", latestRun?.id],
+    queryFn: async () => {
+      if (!latestRun) return [];
+      const { data, error } = await supabase
+        .from("audit_findings")
+        .select("*, peptides(name)")
+        .eq("audit_run_id", latestRun.id)
+        .order("severity", { ascending: true })
+        .limit(100);
+      if (error) throw error;
+      return data as AuditFinding[];
+    },
+    enabled: !!latestRun,
+  });
+
+  return (
+    <div className="space-y-4">
+      {/* Audit Summary */}
+      {latestRun ? (
+        <Card className="border-border/40 bg-card/80">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                Última Auditoria
+              </CardTitle>
+              <Badge variant="outline" className="text-[9px]">
+                {latestRun.scope} • {new Date(latestRun.started_at).toLocaleDateString("pt-BR")}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              {[
+                { label: "Total", value: latestRun.total_findings, color: "text-foreground" },
+                { label: "Críticos", value: latestRun.critical_count, color: "text-red-400" },
+                { label: "Médios", value: latestRun.medium_count, color: "text-amber-400" },
+                { label: "Baixos", value: latestRun.low_count, color: "text-blue-400" },
+                { label: "Resolvidos", value: latestRun.resolved_count, color: "text-emerald-400" },
+              ].map((s) => (
+                <div key={s.label} className="text-center">
+                  <p className={`text-lg font-bold ${s.color}`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
+                  <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Findings */}
+      <Card className="border-border/40 bg-card/80">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            Findings
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          ) : findings.length === 0 ? (
+            <div className="text-center py-12">
+              <Shield className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
+              <p className="text-sm text-foreground font-medium">Nenhum finding registrado</p>
+              <p className="text-[10px] text-muted-foreground">Execute uma auditoria para verificar</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {findings.map((f) => (
+                <div key={f.id} className={`p-3 rounded-lg border ${severityColor(f.severity)}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge className={`text-[8px] px-1.5 py-0 ${severityColor(f.severity)}`}>
+                          {f.severity}
+                        </Badge>
+                        <Badge variant="outline" className="text-[8px]">{f.category}</Badge>
+                        {f.peptides?.name && (
+                          <span className="text-[10px] text-muted-foreground">• {f.peptides.name}</span>
+                        )}
+                      </div>
+                      <p className="text-xs font-medium text-foreground">{f.title}</p>
+                      {f.description && <p className="text-[10px] text-muted-foreground mt-0.5">{f.description}</p>}
+                      
+                      {/* Diff View */}
+                      {(f.value_a || f.value_b) && (
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-[9px]">
+                          {f.value_a && (
+                            <div className="p-1.5 rounded bg-destructive/10 border border-destructive/20">
+                              <span className="text-destructive font-medium">{f.source_a || "Atual"}:</span>
+                              <p className="text-foreground mt-0.5 break-words">{f.value_a}</p>
+                            </div>
+                          )}
+                          {f.value_b && (
+                            <div className="p-1.5 rounded bg-emerald-400/10 border border-emerald-400/20">
+                              <span className="text-emerald-400 font-medium">{f.source_b || "Novo"}:</span>
+                              <p className="text-foreground mt-0.5 break-words">{f.value_b}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {f.recommendation && (
+                        <p className="text-[9px] text-primary mt-1.5 flex items-center gap-1">
+                          <Sparkles className="h-2.5 w-2.5" /> {f.recommendation}
+                        </p>
+                      )}
+                    </div>
+                    <Badge variant={f.status === "open" ? "secondary" : "outline"} className="text-[8px] shrink-0">
+                      {f.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Audit History */}
+      {auditRuns.length > 1 && (
+        <Card className="border-border/40 bg-card/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              Histórico de Auditorias
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Escopo</TableHead>
+                  <TableHead className="text-xs">Findings</TableHead>
+                  <TableHead className="text-xs">Críticos</TableHead>
+                  <TableHead className="text-xs">Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {auditRuns.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell>{statusIcon(r.status)}</TableCell>
+                    <TableCell className="text-[10px]">{r.scope}</TableCell>
+                    <TableCell className="text-[10px]">{r.total_findings}</TableCell>
+                    <TableCell className="text-[10px] text-red-400">{r.critical_count}</TableCell>
+                    <TableCell className="text-[10px] text-muted-foreground">
+                      {new Date(r.started_at).toLocaleDateString("pt-BR")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ── 4. Import Queue Tab ──
+
+function ImportQueueTab() {
+  const { data: queue = [], isLoading } = useQuery({
+    queryKey: ["import-queue"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("peptide_import_queue")
+        .select("*, integration_sources(name)")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data as ImportQueueItem[];
+    },
+  });
+
+  const statusLabel = (s: string) => {
+    const map: Record<string, string> = {
+      pending: "Pendente",
+      approved: "Aprovado",
+      published: "Publicado",
+      rejected: "Rejeitado",
+    };
+    return map[s] || s;
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card className="border-border/40 bg-card/80">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <Sparkles className="inline h-4 w-4 mr-2 text-primary" />
+            Fila de Publicação de Peptídeos
+          </CardTitle>
+          <p className="text-[10px] text-muted-foreground">Peptídeos novos detectados aguardando revisão e publicação</p>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          ) : queue.length === 0 ? (
+            <div className="text-center py-12">
+              <FlaskConical className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-foreground font-medium">Nenhum peptídeo na fila</p>
+              <p className="text-[10px] text-muted-foreground">Novos peptídeos aparecerão aqui após a sincronização</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Nome</TableHead>
+                  <TableHead className="text-xs">Fonte</TableHead>
+                  <TableHead className="text-xs">Confiança</TableHead>
+                  <TableHead className="text-xs">Pronto</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {queue.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="text-xs font-medium">{item.name}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[8px]">{item.integration_sources?.name || "—"}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-1.5 w-16 rounded-full bg-secondary overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${item.confidence_score >= 70 ? "bg-emerald-400" : item.confidence_score >= 40 ? "bg-amber-400" : "bg-red-400"}`}
+                            style={{ width: `${item.confidence_score}%` }}
+                          />
+                        </div>
+                        <span className="text-[9px] text-muted-foreground">{item.confidence_score}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {item.is_ready ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={item.status === "pending" ? "secondary" : "outline"} className="text-[8px]">
+                        {statusLabel(item.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-[10px] text-muted-foreground">
+                      {new Date(item.created_at).toLocaleDateString("pt-BR")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ── 5. History Tab ──
+
+function HistoryTab() {
+  const { data: runs = [], isLoading } = useQuery({
+    queryKey: ["sync-runs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sync_runs")
+        .select("*, integration_sources(name, slug)")
+        .order("started_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data as SyncRun[];
+    },
+  });
+
+  return (
+    <Card className="border-border/40 bg-card/80">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <FileText className="inline h-4 w-4 mr-2 text-primary" />
+          Histórico de Sincronizações
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+        ) : runs.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-8">Nenhuma sincronização realizada</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Status</TableHead>
+                <TableHead className="text-xs">Fonte</TableHead>
+                <TableHead className="text-xs">Modo</TableHead>
+                <TableHead className="text-xs">Processados</TableHead>
+                <TableHead className="text-xs">Novos</TableHead>
+                <TableHead className="text-xs">Atualizados</TableHead>
+                <TableHead className="text-xs">Conflitos</TableHead>
+                <TableHead className="text-xs">Erros</TableHead>
+                <TableHead className="text-xs">Data</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {runs.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell>{statusIcon(r.status)}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-[8px]">{r.integration_sources?.name || "—"}</Badge>
+                  </TableCell>
+                  <TableCell className="text-[10px] capitalize">{r.mode}</TableCell>
+                  <TableCell className="text-[10px]">{r.records_processed}</TableCell>
+                  <TableCell className="text-[10px] text-emerald-400">{r.records_added}</TableCell>
+                  <TableCell className="text-[10px] text-blue-400">{r.records_updated}</TableCell>
+                  <TableCell className="text-[10px] text-amber-400">{r.conflicts_found}</TableCell>
+                  <TableCell className="text-[10px] text-destructive">{r.errors_count}</TableCell>
+                  <TableCell className="text-[10px] text-muted-foreground">
+                    {new Date(r.started_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ── 6. Config Tab ──
+
+function ConfigTab() {
+  const { data: settings = [], isLoading } = useQuery({
+    queryKey: ["sync-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sync_settings")
+        .select("*")
+        .order("key");
+      if (error) throw error;
+      return data as { id: string; key: string; value: any; description: string | null }[];
+    },
+  });
+
+  const { data: priorityRules = [] } = useQuery({
+    queryKey: ["source-priority-rules"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("source_priority_rules")
+        .select("*, integration_sources(name)")
+        .order("data_domain");
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  const settingLabel = (key: string) => {
+    const map: Record<string, string> = {
+      sync_mode: "Modo de Sincronização",
+      auto_publish: "Auto-publicação",
+      min_confidence_score: "Score Mínimo de Confiança",
+      sync_interval_hours: "Intervalo de Sync (horas)",
+    };
+    return map[key] || key;
+  };
+
+  const settingValue = (value: any) => {
+    if (typeof value === "string") {
+      const map: Record<string, string> = {
+        manual: "Manual",
+        semi_auto: "Semi-automático",
+        auto: "Automático",
+        true: "Sim",
+        false: "Não",
+      };
+      return map[value] || value;
+    }
+    return String(value);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Sync Settings */}
+      <Card className="border-border/40 bg-card/80">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <Settings className="inline h-4 w-4 mr-2 text-primary" />
+            Configurações de Sincronização
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          ) : (
+            <div className="space-y-3">
+              {settings.map((s) => (
+                <div key={s.id} className="flex items-center justify-between p-3 rounded-lg border border-border/30 bg-secondary/20">
+                  <div>
+                    <p className="text-xs font-medium text-foreground">{settingLabel(s.key)}</p>
+                    {s.description && <p className="text-[9px] text-muted-foreground">{s.description}</p>}
+                  </div>
+                  <Badge variant="outline" className="text-[10px]">
+                    {settingValue(typeof s.value === "string" ? s.value.replace(/"/g, "") : s.value)}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Priority Rules */}
+      <Card className="border-border/40 bg-card/80">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <TrendingUp className="inline h-4 w-4 mr-2 text-primary" />
+            Regras de Prioridade por Fonte
+          </CardTitle>
+          <p className="text-[10px] text-muted-foreground">Define qual fonte é autoritativa para cada domínio de dados</p>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Domínio</TableHead>
+                <TableHead className="text-xs">Fonte</TableHead>
+                <TableHead className="text-xs">Prioridade</TableHead>
+                <TableHead className="text-xs">Autoritativa</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {priorityRules.map((r: any) => (
+                <TableRow key={r.id}>
+                  <TableCell className="text-[10px] capitalize font-medium">{r.data_domain}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-[8px]">{r.integration_sources?.name || "—"}</Badge>
+                  </TableCell>
+                  <TableCell className="text-[10px]">{r.priority}</TableCell>
+                  <TableCell>
+                    {r.is_authoritative ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    ) : (
+                      <XCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {priorityRules.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-4">Nenhuma regra configurada</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
