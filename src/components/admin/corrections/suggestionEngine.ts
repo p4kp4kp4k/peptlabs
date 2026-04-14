@@ -10,6 +10,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fieldLabel } from "./correctionEngine";
 import { isNoChange, normalizeReferences, normalizeSequence } from "./noChangeFilter";
+import { scoreSuggestion, type ConfidenceResult, type ConfidenceLevel, levelLabel } from "./confidenceEngine";
 
 export interface Suggestion {
   findingId: string;
@@ -28,6 +29,8 @@ export interface Suggestion {
   requiresManualReview: boolean;
   /** Info about global source sync status */
   sourceContext?: SourceContext;
+  /** Rich confidence analysis from the Confidence Engine */
+  confidenceAnalysis?: ConfidenceResult;
 }
 
 export interface SourceContext {
