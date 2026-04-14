@@ -132,44 +132,46 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList className="h-9 bg-secondary/60 p-0.5">
-          <TabsTrigger value="users" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <Users className="h-3.5 w-3.5" /> Usuários
-          </TabsTrigger>
-          <TabsTrigger value="peptides" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <FlaskConical className="h-3.5 w-3.5" /> Peptídeos
-          </TabsTrigger>
-          <TabsTrigger value="stacks" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <Layers className="h-3.5 w-3.5" /> Stacks
-          </TabsTrigger>
-          <TabsTrigger value="sync" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <Database className="h-3.5 w-3.5" /> Sync
-          </TabsTrigger>
-          <TabsTrigger value="integrations" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <Zap className="h-3.5 w-3.5" /> Central de Integrações
-          </TabsTrigger>
-          <TabsTrigger value="products" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <ShoppingBag className="h-3.5 w-3.5" /> Produtos
-          </TabsTrigger>
-          <TabsTrigger value="security" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <Shield className="h-3.5 w-3.5" /> Segurança
-          </TabsTrigger>
-          <TabsTrigger value="payments" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <CreditCard className="h-3.5 w-3.5" /> Pagamentos
-          </TabsTrigger>
-          <TabsTrigger value="orders" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <Package className="h-3.5 w-3.5" /> Pedidos
-          </TabsTrigger>
-          <TabsTrigger value="webhooks" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <Webhook className="h-3.5 w-3.5" /> Webhooks
-          </TabsTrigger>
-          <TabsTrigger value="plan-links" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <Link2 className="h-3.5 w-3.5" /> Links Planos
-          </TabsTrigger>
-          <TabsTrigger value="pixel" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
-            <Facebook className="h-3.5 w-3.5" /> Pixel
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 sm:-mx-6 sm:px-6">
+          <TabsList className="h-auto bg-secondary/60 p-1 inline-flex flex-wrap gap-1 w-full">
+            <TabsTrigger value="users" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <Users className="h-3.5 w-3.5" /> Usuários
+            </TabsTrigger>
+            <TabsTrigger value="peptides" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <FlaskConical className="h-3.5 w-3.5" /> Peptídeos
+            </TabsTrigger>
+            <TabsTrigger value="stacks" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <Layers className="h-3.5 w-3.5" /> Stacks
+            </TabsTrigger>
+            <TabsTrigger value="sync" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <Database className="h-3.5 w-3.5" /> Sync
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <Zap className="h-3.5 w-3.5" /> Integrações
+            </TabsTrigger>
+            <TabsTrigger value="products" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <ShoppingBag className="h-3.5 w-3.5" /> Produtos
+            </TabsTrigger>
+            <TabsTrigger value="security" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <Shield className="h-3.5 w-3.5" /> Segurança
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <CreditCard className="h-3.5 w-3.5" /> Pagamentos
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <Package className="h-3.5 w-3.5" /> Pedidos
+            </TabsTrigger>
+            <TabsTrigger value="webhooks" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <Webhook className="h-3.5 w-3.5" /> Webhooks
+            </TabsTrigger>
+            <TabsTrigger value="plan-links" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <Link2 className="h-3.5 w-3.5" /> Links Planos
+            </TabsTrigger>
+            <TabsTrigger value="pixel" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+              <Facebook className="h-3.5 w-3.5" /> Pixel
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Users Tab */}
         <TabsContent value="users">
