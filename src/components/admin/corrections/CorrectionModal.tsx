@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { fieldLabel } from "./correctionEngine";
 import { generateSuggestion, type Suggestion } from "./suggestionEngine";
+import SequenceDiffView from "./SequenceDiffView";
 
 interface AuditFinding {
   id: string;
