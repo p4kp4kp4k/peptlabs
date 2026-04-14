@@ -1069,14 +1069,15 @@ function AuditTab() {
     return f.recommendation;
   };
 
-  // Counts per severity
+  // Counts per severity — only open findings for severity tabs to match the filtered list
+  const openFindings = findings.filter(f => f.status === "open");
   const counts = {
     all: findings.length,
-    critical: findings.filter(f => f.severity === "critical").length,
-    medium: findings.filter(f => f.severity === "medium").length,
-    low: findings.filter(f => f.severity === "low").length,
+    critical: openFindings.filter(f => f.severity === "critical").length,
+    medium: openFindings.filter(f => f.severity === "medium").length,
+    low: openFindings.filter(f => f.severity === "low").length,
     resolved: findings.filter(f => f.status === "resolved" || f.status === "ignored").length,
-    open: findings.filter(f => f.status === "open").length,
+    open: openFindings.length,
   };
 
   const filtered = severityFilter === "all"
@@ -1121,25 +1122,27 @@ function AuditTab() {
         </Button>
       </div>
 
-      {/* Audit Summary */}
+      {/* Audit Summary — derived from actual findings, not stale snapshot */}
       {latestRun && (
         <Card className="border-border/40 bg-card/80">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Última Auditoria</CardTitle>
+              <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                Findings da execução de {new Date(latestRun.started_at).toLocaleDateString("pt-BR")}
+              </CardTitle>
               <Badge variant="outline" className="text-[9px]">
-                {latestRun.scope} • {new Date(latestRun.started_at).toLocaleDateString("pt-BR")}
+                {latestRun.scope} • {latestRun.status}
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {[
-                { label: "Total", value: latestRun.total_findings, color: "text-foreground" },
-                { label: "Críticos", value: latestRun.critical_count, color: "text-red-400" },
-                { label: "Médios", value: latestRun.medium_count, color: "text-amber-400" },
-                { label: "Baixos", value: latestRun.low_count, color: "text-blue-400" },
-                { label: "Resolvidos", value: latestRun.resolved_count, color: "text-emerald-400" },
+                { label: "Abertos", value: counts.open, color: "text-foreground" },
+                { label: "Críticos", value: counts.critical, color: "text-red-400" },
+                { label: "Médios", value: counts.medium, color: "text-amber-400" },
+                { label: "Baixos", value: counts.low, color: "text-blue-400" },
+                { label: "Resolvidos", value: counts.resolved, color: "text-emerald-400" },
               ].map((s) => (
                 <div key={s.label} className="text-center">
                   <p className={`text-lg font-bold ${s.color}`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
