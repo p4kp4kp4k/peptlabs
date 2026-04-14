@@ -843,6 +843,62 @@ function AuditTab() {
     },
   });
 
+  // Batch check which peptides have suggestion data available
+  const openPeptideIds = [...new Set(findings.filter(f => f.status === "open" && f.peptide_id).map(f => f.peptide_id!))];
+
+  const { data: suggestionAvailability = {} } = useQuery({
+    queryKey: ["suggestion-availability", openPeptideIds.join(",")],
+    queryFn: async () => {
+      if (openPeptideIds.length === 0) return {} as Record<string, Set<string>>;
+      
+      // Check detected_changes for pending data
+      const { data: changes } = await supabase
+        .from("detected_changes")
+        .select("peptide_id, field_name, change_type")
+        .in("peptide_id", openPeptideIds)
+        .eq("status", "pending");
+
+      // Check peptide_references  
+      const { data: refs } = await supabase
+        .from("peptide_references")
+        .select("peptide_id")
+        .in("peptide_id", openPeptideIds);
+
+      const availability: Record<string, Set<string>> = {};
+      
+      (changes || []).forEach((c: any) => {
+        if (!availability[c.peptide_id]) availability[c.peptide_id] = new Set();
+        if (c.field_name === "sequence") availability[c.peptide_id].add("missing_sequence");
+        if (c.change_type === "new_reference") availability[c.peptide_id].add("no_references");
+        availability[c.peptide_id].add("no_source");
+        availability[c.peptide_id].add("incomplete_data");
+      });
+
+      (refs || []).forEach((r: any) => {
+        if (!availability[r.peptide_id]) availability[r.peptide_id] = new Set();
+        availability[r.peptide_id].add("no_references");
+        availability[r.peptide_id].add("no_source");
+      });
+
+      // data_inconsistency is always correctable
+      openPeptideIds.forEach(id => {
+        if (!availability[id]) availability[id] = new Set();
+        availability[id].add("data_inconsistency");
+        availability[id].add("no_source"); // can always derive from external IDs
+      });
+
+      return availability;
+    },
+    enabled: openPeptideIds.length > 0,
+  });
+
+  const hasSuggestionFor = (finding: AuditFinding): boolean => {
+    if (!finding.peptide_id) return false;
+    const avail = suggestionAvailability[finding.peptide_id];
+    if (!avail) return false;
+    return avail.has(finding.category);
+  };
+
   // Counts per severity
   const counts = {
     all: findings.length,
