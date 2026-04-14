@@ -300,8 +300,59 @@ export default function SequenceSection({
     enabled: !!peptideId,
   });
 
+  const analysis = sequence ? analyzeSequence(sequence) : null;
+  const displayLength = sequenceLength || analysis?.length || 0;
+  const primarySource = sourceOrigins?.length ? sourceOrigins[0] : "Manual";
+
+  const confidenceLabel = confidenceScore != null
+    ? confidenceScore >= 80 ? "Alta" : confidenceScore >= 50 ? "Média" : "Baixa"
+    : null;
+  const confidenceColor = confidenceScore != null
+    ? confidenceScore >= 80 ? "text-emerald-400 border-emerald-500/25 bg-emerald-500/10"
+    : confidenceScore >= 50 ? "text-amber-400 border-amber-500/25 bg-amber-500/10"
+    : "text-red-400 border-red-500/25 bg-red-500/10"
+    : "";
+
+  const pdbId = structureInfo?.pdb_id || structureInfo?.pdbId || null;
+
+  const regions: FunctionalRegion[] = useMemo(() => {
+    if (!structureInfo?.regions && !structureInfo?.functional_regions) return [];
+    const raw = structureInfo.regions || structureInfo.functional_regions || [];
+    const colorMap: Record<string, string> = {
+      domain: "text-primary",
+      active_site: "text-emerald-400",
+      binding_site: "text-amber-400",
+      signal_peptide: "text-violet-400",
+      transmembrane: "text-rose-400",
+      default: "text-sky-400",
+    };
+    return (raw as any[]).map((r: any) => ({
+      label: r.label || r.name || r.type,
+      type: r.type || "domain",
+      start: r.start || 1,
+      end: r.end || (analysis?.length || 0),
+      color: colorMap[r.type] || colorMap.default,
+      description: r.description,
+    }));
+  }, [structureInfo, analysis?.length]);
+
+  const hasConflict = seqCorrections?.some(c => c.status === "pending") || false;
+
+  const previousSequence = useMemo(() => {
+    if (!changeHistory?.length || !sequence) return null;
+    for (const h of changeHistory) {
+      const before = h.before_snapshot as any;
+      if (before?.sequence && before.sequence !== sequence) {
+        return { seq: before.sequence as string, date: h.applied_at, origin: h.change_origin };
+      }
+    }
+    return null;
+  }, [changeHistory, sequence]);
+
+  const diffResult = previousSequence ? compareSequences(previousSequence.seq, sequence!) : null;
+
   /* ── Empty state ── */
-  if (!sequence) {
+  if (!sequence || !analysis) {
     return (
       <div className="space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
@@ -318,69 +369,6 @@ export default function SequenceSection({
       </div>
     );
   }
-
-  const analysis = analyzeSequence(sequence);
-  const displayLength = sequenceLength || analysis.length;
-  const primarySource = sourceOrigins?.length ? sourceOrigins[0] : "Manual";
-
-  const confidenceLabel = confidenceScore != null
-    ? confidenceScore >= 80 ? "Alta" : confidenceScore >= 50 ? "Média" : "Baixa"
-    : null;
-  const confidenceColor = confidenceScore != null
-    ? confidenceScore >= 80 ? "text-emerald-400 border-emerald-500/25 bg-emerald-500/10"
-    : confidenceScore >= 50 ? "text-amber-400 border-amber-500/25 bg-amber-500/10"
-    : "text-red-400 border-red-500/25 bg-red-500/10"
-    : "";
-
-  // Extract PDB ID from structure_info if available
-  const pdbId = structureInfo?.pdb_id || structureInfo?.pdbId || null;
-
-  // Parse functional regions from structure_info
-  const regions: FunctionalRegion[] = useMemo(() => {
-    if (!structureInfo?.regions && !structureInfo?.functional_regions) return [];
-    const raw = structureInfo.regions || structureInfo.functional_regions || [];
-    const colorMap: Record<string, string> = {
-      domain: "text-primary",
-      active_site: "text-emerald-400",
-      binding_site: "text-amber-400",
-      signal_peptide: "text-violet-400",
-      transmembrane: "text-rose-400",
-      default: "text-sky-400",
-    };
-    return (raw as any[]).map((r: any) => ({
-      label: r.label || r.name || r.type,
-      type: r.type || "domain",
-      start: r.start || 1,
-      end: r.end || analysis.length,
-      color: colorMap[r.type] || colorMap.default,
-      description: r.description,
-    }));
-  }, [structureInfo, analysis.length]);
-
-  // Check for sequence conflicts in corrections
-  const hasConflict = seqCorrections?.some(c => c.status === "pending") || false;
-
-  // Find the most recent previous sequence from history
-  const previousSequence = useMemo(() => {
-    if (!changeHistory?.length) return null;
-    for (const h of changeHistory) {
-      const before = h.before_snapshot as any;
-      if (before?.sequence && before.sequence !== sequence) {
-        return { seq: before.sequence as string, date: h.applied_at, origin: h.change_origin };
-      }
-    }
-    return null;
-  }, [changeHistory, sequence]);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(analysis.cleanSeq);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const formatMW = (mw: number) => mw >= 1000 ? `${(mw / 1000).toFixed(2)} kDa` : `${mw.toFixed(1)} Da`;
-
-  const diffResult = previousSequence ? compareSequences(previousSequence.seq, sequence) : null;
 
   /* ═══════════════════════════════════════════════════════════════
      RENDER
