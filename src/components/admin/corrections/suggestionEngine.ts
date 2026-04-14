@@ -223,6 +223,33 @@ export async function generateSuggestion(
   return null;
 }
 
+// ── Apply Confidence Engine to a suggestion ──
+
+function applyConfidenceEngine(suggestion: Suggestion): Suggestion {
+  const analysis = scoreSuggestion({
+    fieldName: suggestion.field,
+    sourceProvider: suggestion.sourceProvider,
+    changeType: suggestion.changeType === "manual_assist" || suggestion.changeType === "remove"
+      ? "replace"
+      : suggestion.changeType as "add" | "replace" | "merge",
+    currentValueExists: suggestion.oldValue !== null && suggestion.oldValue !== undefined && suggestion.oldValue !== "",
+    matchStrength: 0.75,
+    hasConflict: false,
+  });
+
+  // Override the simple score/level with the engine's result
+  suggestion.confidenceScore = Math.round(analysis.score * 100);
+  suggestion.confidenceLevel = analysis.level === "very_high" || analysis.level === "high"
+    ? "high"
+    : analysis.level === "medium"
+      ? "medium"
+      : "low";
+  suggestion.requiresManualReview = analysis.requiresManualReview || analysis.decision === "blocked";
+  suggestion.confidenceAnalysis = analysis;
+
+  return suggestion;
+}
+
 // ── Enrich with source context ──
 
 async function enrichWithSourceContext(suggestion: Suggestion | null, finding: FindingInput): Promise<Suggestion | null> {
