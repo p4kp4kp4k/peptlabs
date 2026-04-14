@@ -67,9 +67,15 @@ Deno.serve(async (req) => {
       allResults[source.slug] = result;
 
       // Update source status
+      const syncStatus = result.processed === 0 && result.errors > 0
+        ? "error"
+        : result.errors > 0
+        ? "partial"
+        : "success";
       await sb.from("integration_sources").update({
         last_sync_at: new Date().toISOString(),
-        last_sync_status: result.errors > 0 ? "partial" : "success",
+        last_sync_status: syncStatus,
+        records_count: result.processed + (source.records_count || 0),
       }).eq("id", source.id);
     }
 
