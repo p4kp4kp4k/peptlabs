@@ -348,6 +348,25 @@ async function callExternalSuggestion(
 
     console.log("[SuggestionEngine] External suggestion found:", ext.field, "from", ext.source);
 
+    // ── BLOCK generic placeholders without real evidence ──
+    if (ext.field === "source_origins") {
+      if (isGenericSourceOrigins(ext.proposed_value, ext.source_id, ext.extra)) {
+        console.log("[SuggestionEngine] BLOCKED: source_origins without real evidence (generic placeholder)");
+        await recordLookupResult(finding.peptide_id!, ext.source, "no_evidence", 0, false);
+        return null;
+      }
+    }
+
+    // ── BLOCK any suggestion without a source_id for fields that require it ──
+    if (!ext.source_id && ext.field !== "scientific_references") {
+      const fieldsRequiringId = ["sequence", "mechanism", "source_origins"];
+      if (fieldsRequiringId.includes(ext.field)) {
+        console.log("[SuggestionEngine] BLOCKED: field", ext.field, "requires source_id but none provided");
+        await recordLookupResult(finding.peptide_id!, ext.source, "no_evidence", 0, false);
+        return null;
+      }
+    }
+
     return {
       findingId: finding.id,
       peptideId: finding.peptide_id!,
@@ -469,30 +488,39 @@ async function suggestSourceOriginsLocal(
   finding: FindingInput,
   peptide: Record<string, any>
 ): Promise<Suggestion | null> {
-  const origins: string[] = [];
+  // Only add origins backed by real external IDs
+  const origins: Array<{ name: string; evidence: string }> = [];
 
-  if (peptide.ncbi_protein_id) origins.push("NCBI");
-  if (peptide.dramp_id) origins.push("DRAMP");
-  if (peptide.apd_id) origins.push("APD");
-  if (peptide.peptipedia_id) origins.push("Peptipedia");
+  if (peptide.ncbi_protein_id) origins.push({ name: "NCBI", evidence: peptide.ncbi_protein_id });
+  if (peptide.dramp_id) origins.push({ name: "DRAMP", evidence: peptide.dramp_id });
+  if (peptide.apd_id) origins.push({ name: "APD", evidence: peptide.apd_id });
+  if (peptide.peptipedia_id) origins.push({ name: "Peptipedia", evidence: peptide.peptipedia_id });
 
+  // Only count references that have a real PMID
   const { data: refs } = await supabase
     .from("peptide_references")
-    .select("source")
+    .select("source, pmid")
     .eq("peptide_id", finding.peptide_id!)
+    .not("pmid", "is", null)
     .limit(50);
 
   if (refs && refs.length > 0) {
     const uniqueSources = [...new Set(refs.map((r) => r.source))];
     uniqueSources.forEach((s) => {
-      if (!origins.includes(s)) origins.push(s);
+      if (!origins.find(o => o.name === s)) {
+        const refWithPmid = refs.find(r => r.source === s && r.pmid);
+        if (refWithPmid) {
+          origins.push({ name: s, evidence: `PMID:${refWithPmid.pmid}` });
+        }
+      }
     });
   }
 
   if (origins.length === 0) return null;
 
+  const originNames = origins.map(o => o.name);
   const currentOrigins = peptide.source_origins || [];
-  const newOrigins = origins.filter((o) => !currentOrigins.includes(o));
+  const newOrigins = originNames.filter((o) => !currentOrigins.includes(o));
   if (newOrigins.length === 0) return null;
 
   return {
@@ -500,15 +528,15 @@ async function suggestSourceOriginsLocal(
     peptideId: finding.peptide_id!,
     field: "source_origins",
     oldValue: currentOrigins,
-    proposedValue: [...new Set([...currentOrigins, ...origins])],
-    sourceProvider: origins.join(", "),
-    sourceReference: null,
+    proposedValue: [...new Set([...currentOrigins, ...originNames])],
+    sourceProvider: originNames.join(", "),
+    sourceReference: origins.map(o => `${o.name}:${o.evidence}`).join(", "),
     confidenceScore: 80,
     confidenceLevel: "high",
     changeType: "merge",
-    description: `Adicionar ${newOrigins.length} origem(ns) verificável(is) ao ${peptide.name}`,
+    description: `Adicionar ${newOrigins.length} origem(ns) com evidência real ao ${peptide.name}`,
     impact: "As origens serão registradas nos metadados de rastreabilidade",
-    previewData: { origins: newOrigins },
+    previewData: { origins: newOrigins, evidence: origins },
     requiresManualReview: false,
   };
 }
@@ -728,4 +756,41 @@ export async function getSourceChecksForPeptide(
     };
   });
   return result;
+}
+
+// ── Generic placeholder detection ──
+
+const KNOWN_SOURCE_NAMES = ["PubMed", "UniProt", "PDB", "openFDA", "NCBI", "DRAMP", "APD", "Peptipedia", "Crossref"];
+
+/**
+ * Detects if a source_origins suggestion is just a generic placeholder
+ * without real evidence (e.g. ["PubMed"] with no PMID or accession).
+ */
+function isGenericSourceOrigins(
+  proposedValue: any,
+  sourceId: string | null,
+  extra: any
+): boolean {
+  // If there's a real source_id with actual IDs, it's valid
+  if (sourceId && sourceId.length > 0) {
+    // Check it's not just the source name repeated
+    const isJustNames = KNOWN_SOURCE_NAMES.some(n => sourceId === n);
+    if (!isJustNames) return false;
+  }
+
+  // If extra has structured origins with IDs, it's valid
+  if (extra?.origins && Array.isArray(extra.origins)) {
+    const hasRealEvidence = extra.origins.some((o: any) => o.id && o.id.length > 0);
+    if (hasRealEvidence) return false;
+  }
+
+  // If proposed value is just an array of source names, it's a placeholder
+  if (Array.isArray(proposedValue)) {
+    const allGeneric = proposedValue.every((v: any) =>
+      typeof v === "string" && KNOWN_SOURCE_NAMES.includes(v)
+    );
+    if (allGeneric) return true;
+  }
+
+  return false;
 }
