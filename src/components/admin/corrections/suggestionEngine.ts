@@ -190,8 +190,10 @@ export async function generateSuggestion(
       return null;
     }
     console.log("[SuggestionEngine] Found local data for", finding.category);
-    await recordLookupResult(finding.peptide_id!, localResult.sourceProvider, "strong_match", localResult.confidenceScore, true);
-    return enrichWithSourceContext(localResult, finding);
+    // ── Apply Confidence Engine scoring ──
+    const enriched = applyConfidenceEngine(localResult);
+    await recordLookupResult(finding.peptide_id!, enriched.sourceProvider, "strong_match", enriched.confidenceScore, true);
+    return enrichWithSourceContext(enriched, finding);
   }
 
   // Step 2: Call edge function for real API data
@@ -206,8 +208,10 @@ export async function generateSuggestion(
       await recordLookupResult(finding.peptide_id!, externalResult.sourceProvider, "no_change", 0, false);
       return null;
     }
-    await recordLookupResult(finding.peptide_id!, externalResult.sourceProvider, "strong_match", externalResult.confidenceScore, true);
-    return enrichWithSourceContext(externalResult, finding);
+    // ── Apply Confidence Engine scoring ──
+    const enriched = applyConfidenceEngine(externalResult);
+    await recordLookupResult(finding.peptide_id!, enriched.sourceProvider, "strong_match", enriched.confidenceScore, true);
+    return enrichWithSourceContext(enriched, finding);
   }
 
   // No result found - record no_match for relevant sources
