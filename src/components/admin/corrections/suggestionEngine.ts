@@ -56,7 +56,90 @@ const CATEGORY_SOURCES: Record<string, string[]> = {
   no_source: ["UniProt", "PubMed", "Peptipedia"],
   incomplete_data: ["UniProt", "PubMed"],
   data_inconsistency: ["Internal"],
+  cross_source_conflict: ["UniProt", "PubMed", "Peptipedia"],
 };
+
+// ── Conflict sub-classification ──
+
+export type ConflictSubtype =
+  | "sequence_conflict_comparable"
+  | "sequence_missing_external"
+  | "sequence_missing_internal"
+  | "non_sequence_conflict"
+  | "low_confidence_match"
+  | "no_data_available";
+
+export interface ConflictAnalysis {
+  subtype: ConflictSubtype;
+  canDiff: boolean;
+  reason: string;
+  seqA: string | null;
+  seqB: string | null;
+}
+
+export function analyzeConflict(finding: FindingInput, peptide: Record<string, any>): ConflictAnalysis {
+  const fieldName = finding.value_a !== null || finding.value_b !== null
+    ? (finding.description?.match(/campo "(\w+)"/) || [])[1] || null
+    : null;
+
+  const isSequenceConflict = fieldName === "sequence"
+    || finding.category === "cross_source_conflict" && (
+      finding.value_a?.length > 10 || finding.value_b?.length > 10
+    );
+
+  if (!isSequenceConflict) {
+    return {
+      subtype: "non_sequence_conflict",
+      canDiff: false,
+      reason: "Este conflito não envolve sequências peptídicas — comparação de diff não aplicável.",
+      seqA: null,
+      seqB: null,
+    };
+  }
+
+  const seqA = finding.value_a?.trim() || peptide.sequence?.trim() || null;
+  const seqB = finding.value_b?.trim() || null;
+
+  const isValidSeq = (s: string | null) => s && s.length >= 3 && /^[A-Za-z\-]+$/.test(s);
+
+  if (!isValidSeq(seqA) && !isValidSeq(seqB)) {
+    return {
+      subtype: "no_data_available",
+      canDiff: false,
+      reason: "Nenhuma sequência válida disponível em nenhuma das fontes para comparação.",
+      seqA: null,
+      seqB: null,
+    };
+  }
+
+  if (!isValidSeq(seqA)) {
+    return {
+      subtype: "sequence_missing_internal",
+      canDiff: false,
+      reason: "Sequência ausente no PeptLabs — não é possível gerar comparação.",
+      seqA: null,
+      seqB,
+    };
+  }
+
+  if (!isValidSeq(seqB)) {
+    return {
+      subtype: "sequence_missing_external",
+      canDiff: false,
+      reason: `Nenhuma sequência confiável encontrada na fonte externa (${finding.source_b || "desconhecida"}).`,
+      seqA,
+      seqB: null,
+    };
+  }
+
+  return {
+    subtype: "sequence_conflict_comparable",
+    canDiff: true,
+    reason: "Duas sequências válidas encontradas — comparação disponível.",
+    seqA,
+    seqB,
+  };
+}
 
 // ── Main entry point ──
 
@@ -86,6 +169,9 @@ export async function generateSuggestion(
       break;
     case "data_inconsistency":
       return enrichWithSourceContext(suggestSlugFix(finding, peptide), finding);
+    case "cross_source_conflict":
+      localResult = await suggestCrossSourceConflict(finding, peptide);
+      break;
     default:
       break;
   }
@@ -453,8 +539,55 @@ export async function checkSuggestionAvailable(
     "no_source",
     "incomplete_data",
     "data_inconsistency",
+    "cross_source_conflict",
   ];
   return apiCategories.includes(findingCategory);
+}
+
+// ── Local: Cross-source conflict ──
+
+async function suggestCrossSourceConflict(
+  finding: FindingInput,
+  peptide: Record<string, any>
+): Promise<Suggestion | null> {
+  // Check detected_changes for the specific conflict
+  const { data: changes } = await supabase
+    .from("detected_changes")
+    .select("field_name, old_value, new_value, severity, integration_sources(name, slug)")
+    .eq("peptide_id", finding.peptide_id!)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  if (!changes || changes.length === 0) return null;
+
+  const change = changes[0];
+  const field = change.field_name || "description";
+  const source = (change as any).integration_sources;
+  const newValue = change.new_value;
+
+  if (!newValue) return null;
+
+  const analysis = analyzeConflict(finding, peptide);
+
+  return {
+    findingId: finding.id,
+    peptideId: finding.peptide_id!,
+    field,
+    oldValue: (peptide as any)[field] || finding.value_a || null,
+    proposedValue: newValue,
+    sourceProvider: source?.name || finding.source_b || "Fonte externa",
+    sourceReference: source?.slug || null,
+    confidenceScore: analysis.canDiff ? 70 : 50,
+    confidenceLevel: analysis.canDiff ? "medium" : "low",
+    changeType: "replace",
+    description: `Conflito detectado no campo "${fieldLabel(field)}" entre PeptLabs e ${source?.name || finding.source_b || "fonte externa"}`,
+    impact: `O campo "${fieldLabel(field)}" será atualizado com o valor da fonte externa`,
+    previewData: {
+      conflictAnalysis: analysis,
+    },
+    requiresManualReview: !analysis.canDiff || analysis.subtype !== "sequence_conflict_comparable",
+  };
 }
 
 // ── Get source context for a peptide (used by UI) ──
