@@ -16,8 +16,10 @@ import {
   CheckCircle2, Clock, Database, Eye, Filter, Globe,
   Loader2, Play, RefreshCw, Search, Settings, Shield,
   Sparkles, TrendingUp, XCircle, Zap, FileText, FlaskConical,
-  Check, X, RotateCcw, Trash2, Upload
+  Check, X, RotateCcw, Trash2, Upload, Edit3, History, Wrench
 } from "lucide-react";
+import CorrectionModal from "./corrections/CorrectionModal";
+import { isAutoCorrectible, confidenceBadgeColor } from "./corrections/correctionEngine";
 
 // ── Types ──
 
