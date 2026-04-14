@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       await sb.from("integration_sources").update({
         last_sync_at: new Date().toISOString(),
         last_sync_status: syncStatus,
-        records_count: result.processed + (source.records_count || 0),
+        records_count: result.processed,
       }).eq("id", source.id);
     }
 
@@ -189,8 +189,8 @@ async function syncUniProt(sb: SupabaseClient, source: any, peptides: any[], run
           peptide_id: pep.id,
           change_type: "sequence_change",
           field_name: "sequence",
-          old_value: pep.sequence?.substring(0, 200),
-          new_value: uniSeq.substring(0, 200),
+          old_value: pep.sequence,
+          new_value: uniSeq,
           severity: "critical",
           metadata: { uniprot_accession: uniAccession },
         });
@@ -203,7 +203,7 @@ async function syncUniProt(sb: SupabaseClient, source: any, peptides: any[], run
           change_type: "new_data",
           field_name: "sequence",
           old_value: null,
-          new_value: uniSeq.substring(0, 200),
+          new_value: uniSeq,
           severity: "low",
         });
         added++;
