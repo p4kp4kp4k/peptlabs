@@ -589,13 +589,23 @@ export async function checkSuggestionAvailable(
     return (count ?? 0) > 0;
   }
 
-  // References: only true if real references exist in DB
+  // References: only true if real NEW references exist that aren't already in the peptide
   if (findingCategory === "no_references") {
-    const { count: refCount } = await supabase
+    const { data: dbRefs } = await supabase
       .from("peptide_references")
-      .select("id", { count: "exact", head: true })
-      .eq("peptide_id", peptideId);
-    return (refCount ?? 0) > 0;
+      .select("pmid, title, year")
+      .eq("peptide_id", peptideId)
+      .limit(20);
+    if (!dbRefs || dbRefs.length === 0) return false;
+    // Fetch current peptide refs
+    const { data: pep } = await supabase
+      .from("peptides")
+      .select("scientific_references")
+      .eq("id", peptideId)
+      .single();
+    const currentRefs = pep?.scientific_references || [];
+    const noChange = isNoChange("scientific_references", currentRefs, dbRefs.map(r => ({ title: r.title, year: r.year, pmid: r.pmid })));
+    return !noChange.isNoChange;
   }
 
   // Source origins: only true if peptide has real external IDs
