@@ -8,6 +8,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { fieldLabel } from "./correctionEngine";
 
 export interface Suggestion {
   findingId: string;
