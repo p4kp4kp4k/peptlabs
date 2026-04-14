@@ -207,7 +207,7 @@ async function searchSources(name: string, aliases: string[]): Promise<any> {
     const cleanName = name.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
     const query = encodeURIComponent(cleanName);
     const res = await fetch(
-      `${UNIPROT_BASE}/search?query=${query}&size=1&format=json&fields=accession`,
+      `${UNIPROT_BASE}/search?query=${query}&size=1&format=json`,
       { signal: AbortSignal.timeout(8000), headers: { Accept: "application/json" } }
     );
     if (res.ok) {
