@@ -386,6 +386,7 @@ function OverviewTab() {
           {auditMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : <Eye className="h-3 w-3 mr-1.5" />}
           Executar Auditoria Completa
         </Button>
+        <AutoUpdateButton />
       </div>
 
       {/* Summary Cards */}
