@@ -198,11 +198,11 @@ async function searchReferences(name: string): Promise<any> {
   }
 }
 
-// ── Source origins search ──
+// ── Source origins search (REQUIRES real evidence, not just search hits) ──
 async function searchSources(name: string, aliases: string[]): Promise<any> {
-  const origins: string[] = [];
+  const origins: Array<{ source: string; id: string; detail: string }> = [];
 
-  // Check UniProt
+  // Check UniProt — only count if we get an accession ID
   try {
     const cleanName = name.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
     const query = encodeURIComponent(cleanName);
@@ -212,37 +212,58 @@ async function searchSources(name: string, aliases: string[]): Promise<any> {
     );
     if (res.ok) {
       const data = await res.json();
-      if ((data.results || []).length > 0) origins.push("UniProt");
+      const best = (data.results || [])[0];
+      if (best?.primaryAccession) {
+        origins.push({
+          source: "UniProt",
+          id: best.primaryAccession,
+          detail: best.proteinDescription?.recommendedName?.fullName?.value || cleanName,
+        });
+      }
     }
   } catch {}
 
-  // Check PubMed
+  // Check PubMed — only count if we get at least one real PMID
   try {
     const cleanName = name.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
     const query = encodeURIComponent(`${cleanName} peptide`);
     const res = await fetch(
-      `${PUBMED_BASE}/esearch.fcgi?db=pubmed&term=${query}&retmax=1&retmode=json`,
+      `${PUBMED_BASE}/esearch.fcgi?db=pubmed&term=${query}&retmax=3&retmode=json`,
       { signal: AbortSignal.timeout(8000) }
     );
     if (res.ok) {
       const data = await res.json();
-      if ((data.esearchresult?.idlist || []).length > 0) origins.push("PubMed");
+      const ids = data.esearchresult?.idlist || [];
+      if (ids.length > 0) {
+        origins.push({
+          source: "PubMed",
+          id: `PMID:${ids[0]}`,
+          detail: `${ids.length} artigo(s) encontrado(s)`,
+        });
+      }
     }
   } catch {}
 
   if (origins.length === 0) return null;
 
+  // Return structured origins with evidence, not just names
   return {
     field: "source_origins",
-    proposed_value: origins,
-    source: origins.join(", "),
-    source_id: null,
+    proposed_value: origins.map(o => o.source),
+    source: origins.map(o => o.source).join(", "),
+    source_id: origins.map(o => o.id).join(", "),
     confidence: 80,
     confidence_level: "high",
     change_type: "merge",
-    description: `${origins.length} origem(ns) verificável(is) encontrada(s) para "${name}"`,
+    description: `${origins.length} origem(ns) com evidência real para "${name}"`,
     impact: "As origens serão registradas nos metadados de rastreabilidade",
-    extra: { origins },
+    extra: {
+      origins: origins.map(o => ({
+        source: o.source,
+        id: o.id,
+        detail: o.detail,
+      })),
+    },
   };
 }
 
