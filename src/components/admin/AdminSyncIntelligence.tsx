@@ -770,6 +770,9 @@ function ChangesTab() {
 function AuditTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [severityFilter, setSeverityFilter] = useState<string>("all");
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 15;
 
   const { data: auditRuns = [], isLoading } = useQuery({
     queryKey: ["audit-runs"],
@@ -795,7 +798,7 @@ function AuditTab() {
         .select("*, peptides(name)")
         .eq("audit_run_id", latestRun.id)
         .order("severity", { ascending: true })
-        .limit(100);
+        .limit(500);
       if (error) throw error;
       return data as AuditFinding[];
     },
@@ -811,10 +814,7 @@ function AuditTab() {
       return data;
     },
     onSuccess: (data) => {
-      toast({
-        title: "Auditoria concluída",
-        description: `${data.total_findings} findings detectados`,
-      });
+      toast({ title: "Auditoria concluída", description: `${data.total_findings} findings detectados` });
       queryClient.invalidateQueries({ queryKey: ["audit-runs"] });
       queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
       queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
@@ -824,48 +824,97 @@ function AuditTab() {
     },
   });
 
+  const resolveMutation = useMutation({
+    mutationFn: async ({ findingId, note }: { findingId: string; note: string }) => {
+      const { error } = await supabase
+        .from("audit_findings")
+        .update({
+          status: "resolved",
+          resolved_at: new Date().toISOString(),
+          resolution_note: note || "Resolvido pelo admin",
+        })
+        .eq("id", findingId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Finding resolvido" });
+      queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
+      queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
+    },
+  });
+
+  const ignoreMutation = useMutation({
+    mutationFn: async (findingId: string) => {
+      const { error } = await supabase
+        .from("audit_findings")
+        .update({ status: "ignored", resolved_at: new Date().toISOString(), resolution_note: "Ignorado pelo admin" })
+        .eq("id", findingId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Finding ignorado" });
+      queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
+    },
+  });
+
+  // Counts per severity
+  const counts = {
+    all: findings.length,
+    critical: findings.filter(f => f.severity === "critical").length,
+    medium: findings.filter(f => f.severity === "medium").length,
+    low: findings.filter(f => f.severity === "low").length,
+    resolved: findings.filter(f => f.status === "resolved" || f.status === "ignored").length,
+    open: findings.filter(f => f.status === "open").length,
+  };
+
+  const filtered = severityFilter === "all"
+    ? findings.filter(f => f.status === "open")
+    : severityFilter === "resolved"
+    ? findings.filter(f => f.status === "resolved" || f.status === "ignored")
+    : findings.filter(f => f.severity === severityFilter && f.status === "open");
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  // Reset page when filter changes
+  const handleFilterChange = (val: string) => {
+    setSeverityFilter(val);
+    setPage(0);
+  };
+
+  const severityTabs = [
+    { key: "all", label: "Abertos", count: counts.open, color: "text-foreground" },
+    { key: "critical", label: "Críticos", count: counts.critical, color: "text-red-400" },
+    { key: "medium", label: "Médios", count: counts.medium, color: "text-amber-400" },
+    { key: "low", label: "Baixos", count: counts.low, color: "text-blue-400" },
+    { key: "resolved", label: "Resolvidos", count: counts.resolved, color: "text-emerald-400" },
+  ];
+
   return (
     <div className="space-y-4">
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-[11px] border-primary/30 hover:bg-primary/10"
-          disabled={auditMutation.isPending}
-          onClick={() => auditMutation.mutate("full")}
-        >
+        <Button variant="outline" size="sm" className="h-8 text-[11px] border-primary/30 hover:bg-primary/10"
+          disabled={auditMutation.isPending} onClick={() => auditMutation.mutate("full")}>
           {auditMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : <Eye className="h-3 w-3 mr-1.5" />}
           Auditoria Completa
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-[11px]"
-          disabled={auditMutation.isPending}
-          onClick={() => auditMutation.mutate("internal")}
-        >
+        <Button variant="outline" size="sm" className="h-8 text-[11px]"
+          disabled={auditMutation.isPending} onClick={() => auditMutation.mutate("internal")}>
           Apenas Interna
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-[11px]"
-          disabled={auditMutation.isPending}
-          onClick={() => auditMutation.mutate("cross_source")}
-        >
+        <Button variant="outline" size="sm" className="h-8 text-[11px]"
+          disabled={auditMutation.isPending} onClick={() => auditMutation.mutate("cross_source")}>
           Apenas Cross-Source
         </Button>
       </div>
 
       {/* Audit Summary */}
-      {latestRun ? (
+      {latestRun && (
         <Card className="border-border/40 bg-card/80">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Última Auditoria
-              </CardTitle>
+              <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Última Auditoria</CardTitle>
               <Badge variant="outline" className="text-[9px]">
                 {latestRun.scope} • {new Date(latestRun.started_at).toLocaleDateString("pt-BR")}
               </Badge>
@@ -888,34 +937,52 @@ function AuditTab() {
             </div>
           </CardContent>
         </Card>
-      ) : null}
+      )}
 
-      {/* Findings */}
+      {/* Severity Filter Tabs */}
       <Card className="border-border/40 bg-card/80">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Findings
-          </CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Findings</CardTitle>
+            <div className="flex gap-1 flex-wrap">
+              {severityTabs.map(tab => (
+                <Button
+                  key={tab.key}
+                  variant={severityFilter === tab.key ? "default" : "ghost"}
+                  size="sm"
+                  className={`h-7 text-[10px] px-2.5 gap-1 ${severityFilter !== tab.key ? tab.color : ""}`}
+                  onClick={() => handleFilterChange(tab.key)}
+                >
+                  {tab.label}
+                  <span className={`text-[9px] font-bold ${severityFilter === tab.key ? "" : "opacity-70"}`}>
+                    {tab.count}
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
-          ) : findings.length === 0 ? (
+          ) : paginated.length === 0 ? (
             <div className="text-center py-12">
               <Shield className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
-              <p className="text-sm text-foreground font-medium">Nenhum finding registrado</p>
-              <p className="text-[10px] text-muted-foreground">Execute uma auditoria para verificar</p>
+              <p className="text-sm text-foreground font-medium">
+                {severityFilter === "all" ? "Nenhum finding aberto" : `Nenhum finding ${severityFilter}`}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                {findings.length === 0 ? "Execute uma auditoria para verificar" : "Tudo limpo nesta categoria"}
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
-              {findings.map((f) => (
+              {paginated.map((f) => (
                 <div key={f.id} className={`p-3 rounded-lg border ${severityColor(f.severity)}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className={`text-[8px] px-1.5 py-0 ${severityColor(f.severity)}`}>
-                          {f.severity}
-                        </Badge>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <Badge className={`text-[8px] px-1.5 py-0 ${severityColor(f.severity)}`}>{f.severity}</Badge>
                         <Badge variant="outline" className="text-[8px]">{f.category}</Badge>
                         {f.peptides?.name && (
                           <span className="text-[10px] text-muted-foreground">• {f.peptides.name}</span>
@@ -923,8 +990,7 @@ function AuditTab() {
                       </div>
                       <p className="text-xs font-medium text-foreground">{f.title}</p>
                       {f.description && <p className="text-[10px] text-muted-foreground mt-0.5">{f.description}</p>}
-                      
-                      {/* Diff View */}
+
                       {(f.value_a || f.value_b) && (
                         <div className="mt-2 grid grid-cols-2 gap-2 text-[9px]">
                           {f.value_a && (
@@ -947,13 +1013,63 @@ function AuditTab() {
                           <Sparkles className="h-2.5 w-2.5" /> {f.recommendation}
                         </p>
                       )}
+
+                      {f.resolution_note && (
+                        <p className="text-[9px] text-emerald-400 mt-1 italic">✓ {f.resolution_note}</p>
+                      )}
                     </div>
-                    <Badge variant={f.status === "open" ? "secondary" : "outline"} className="text-[8px] shrink-0">
-                      {f.status}
-                    </Badge>
+
+                    {/* Action buttons */}
+                    <div className="flex flex-col gap-1 shrink-0">
+                      {f.status === "open" ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-[9px] px-2 border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10"
+                            disabled={resolveMutation.isPending}
+                            onClick={() => resolveMutation.mutate({ findingId: f.id, note: "Resolvido manualmente" })}
+                          >
+                            <CheckCircle2 className="h-2.5 w-2.5 mr-1" /> Resolver
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 text-[9px] px-2 text-muted-foreground hover:text-foreground"
+                            disabled={ignoreMutation.isPending}
+                            onClick={() => ignoreMutation.mutate(f.id)}
+                          >
+                            <XCircle className="h-2.5 w-2.5 mr-1" /> Ignorar
+                          </Button>
+                        </>
+                      ) : (
+                        <Badge variant="outline" className="text-[8px] text-emerald-400 border-emerald-400/30">
+                          {f.status}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
+              <p className="text-[10px] text-muted-foreground">
+                {filtered.length} findings • Página {page + 1} de {totalPages}
+              </p>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="sm" className="h-7 text-[10px] px-2"
+                  disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                  ← Anterior
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-[10px] px-2"
+                  disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+                  Próxima →
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -963,9 +1079,7 @@ function AuditTab() {
       {auditRuns.length > 1 && (
         <Card className="border-border/40 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Histórico de Auditorias
-            </CardTitle>
+            <CardTitle className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Histórico de Auditorias</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
