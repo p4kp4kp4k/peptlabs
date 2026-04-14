@@ -37,6 +37,7 @@ const Templates = lazy(() => import("./pages/Templates"));
 const StackDetail = lazy(() => import("./pages/StackDetail"));
 const Store = lazy(() => import("./pages/Store"));
 const ProductDetailStore = lazy(() => import("./pages/ProductDetailStore"));
+const CorrectionReviewPage = lazy(() => import("./components/admin/corrections/CorrectionReviewPage"));
 
 const queryClient = new QueryClient();
 
@@ -104,6 +105,7 @@ const App = () => (
             <Route path="/app/learn" element={<AppRoute><Learn /></AppRoute>} />
             <Route path="/app/learn/:slug" element={<AppRoute><Learn /></AppRoute>} />
             <Route path="/app/admin" element={<AppRoute requireAdmin><Admin /></AppRoute>} />
+            <Route path="/app/admin/review/:findingId" element={<AppRoute requireAdmin><CorrectionReviewPage /></AppRoute>} />
             <Route path="/app/admin/billing" element={<AppRoute requireAdmin><AdminBilling /></AppRoute>} />
             <Route path="/app/templates" element={<AppRoute><Templates /></AppRoute>} />
             <Route path="/app/store" element={<AppRoute><Store /></AppRoute>} />
