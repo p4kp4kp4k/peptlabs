@@ -312,8 +312,78 @@ function OverviewTab() {
     return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
 
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const syncAllMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("sync-orchestrator", {
+        body: { source: "all", mode: "manual" },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({ title: "Sync completo", description: `Todas as fontes foram processadas.` });
+      queryClient.invalidateQueries({ queryKey: ["integration-sources"] });
+      queryClient.invalidateQueries({ queryKey: ["sync-runs"] });
+      queryClient.invalidateQueries({ queryKey: ["detected-changes"] });
+      queryClient.invalidateQueries({ queryKey: ["pending-changes-count"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro no sync", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const auditMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("audit-engine", {
+        body: { scope: "full" },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Auditoria concluída",
+        description: `${data.total_findings} findings: ${data.critical_count} críticos, ${data.medium_count} médios, ${data.low_count} baixos`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["audit-runs"] });
+      queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
+      queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro na auditoria", description: err.message, variant: "destructive" });
+    },
+  });
+
   return (
     <div className="space-y-4">
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-[11px] border-primary/30 hover:bg-primary/10"
+          disabled={syncAllMutation.isPending}
+          onClick={() => syncAllMutation.mutate()}
+        >
+          {syncAllMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : <RefreshCw className="h-3 w-3 mr-1.5" />}
+          Sincronizar Todas as Fontes
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-[11px] border-primary/30 hover:bg-primary/10"
+          disabled={auditMutation.isPending}
+          onClick={() => auditMutation.mutate()}
+        >
+          {auditMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : <Eye className="h-3 w-3 mr-1.5" />}
+          Executar Auditoria Completa
+        </Button>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
