@@ -48,6 +48,7 @@ export default function CorrectionModal({ finding, open, onOpenChange }: Correct
   const [manualMode, setManualMode] = useState(false);
   const [manualValue, setManualValue] = useState("");
   const [notes, setNotes] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
 
   // Fetch full peptide data
   const { data: peptide } = useQuery({
