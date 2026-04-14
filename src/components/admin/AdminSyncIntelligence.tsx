@@ -355,6 +355,9 @@ function OverviewTab() {
       toast({ title: "Erro na auditoria", description: err.message, variant: "destructive" });
     },
   });
+  if (isLoading) {
+    return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  }
 
   return (
     <div className="space-y-4">
