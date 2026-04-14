@@ -1118,7 +1118,7 @@ function AuditTab() {
                         {/* Correction badges based on real data availability */}
                         {f.status === "open" && f.peptide_id && hasSuggestionFor(f) && (
                           <Badge className="text-[7px] px-1 py-0 text-emerald-400 bg-emerald-400/10 border-emerald-400/30">
-                            <Wrench className="h-2 w-2 mr-0.5" /> Correção disponível
+                            <Wrench className="h-2 w-2 mr-0.5" /> Sugestão disponível
                           </Badge>
                         )}
                         {f.status === "open" && f.peptide_id && !hasSuggestionFor(f) && (
@@ -1126,6 +1126,12 @@ function AuditTab() {
                             <Edit3 className="h-2 w-2 mr-0.5" /> Revisão manual
                           </Badge>
                         )}
+                        {/* Source-level status badges */}
+                        {f.status === "open" && getSourceBadges(f).map((b, i) => (
+                          <Badge key={i} className={`text-[7px] px-1 py-0 ${b.color}`}>
+                            {b.label}
+                          </Badge>
+                        ))}
                       </div>
                       <p className="text-xs font-medium text-foreground">{f.title}</p>
                       {f.description && <p className="text-[10px] text-muted-foreground mt-0.5">{f.description}</p>}
@@ -1147,9 +1153,9 @@ function AuditTab() {
                         </div>
                       )}
 
-                      {f.recommendation && (
+                      {getSemanticRecommendation(f) && (
                         <p className="text-[9px] text-primary mt-1.5 flex items-center gap-1">
-                          <Sparkles className="h-2.5 w-2.5" /> {f.recommendation}
+                          <Sparkles className="h-2.5 w-2.5" /> {getSemanticRecommendation(f)}
                         </p>
                       )}
 
