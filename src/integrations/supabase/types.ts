@@ -14,6 +14,166 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string | null
+          metadata: Json
+          severity: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          metadata?: Json
+          severity?: string
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          metadata?: Json
+          severity?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      audit_findings: {
+        Row: {
+          audit_run_id: string
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          peptide_id: string | null
+          recommendation: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source_a: string | null
+          source_b: string | null
+          status: string
+          title: string
+          value_a: string | null
+          value_b: string | null
+        }
+        Insert: {
+          audit_run_id: string
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          peptide_id?: string | null
+          recommendation?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source_a?: string | null
+          source_b?: string | null
+          status?: string
+          title: string
+          value_a?: string | null
+          value_b?: string | null
+        }
+        Update: {
+          audit_run_id?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          peptide_id?: string | null
+          recommendation?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source_a?: string | null
+          source_b?: string | null
+          status?: string
+          title?: string
+          value_a?: string | null
+          value_b?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_findings_audit_run_id_fkey"
+            columns: ["audit_run_id"]
+            isOneToOne: false
+            referencedRelation: "audit_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "peptides"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "v_peptides_visible"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          critical_count: number
+          id: string
+          low_count: number
+          medium_count: number
+          resolved_count: number
+          scope: string
+          started_at: string
+          status: string
+          summary: Json
+          total_findings: number
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          critical_count?: number
+          id?: string
+          low_count?: number
+          medium_count?: number
+          resolved_count?: number
+          scope?: string
+          started_at?: string
+          status?: string
+          summary?: Json
+          total_findings?: number
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          critical_count?: number
+          id?: string
+          low_count?: number
+          medium_count?: number
+          resolved_count?: number
+          scope?: string
+          started_at?: string
+          status?: string
+          summary?: Json
+          total_findings?: number
+        }
+        Relationships: []
+      }
       billing_events: {
         Row: {
           created_at: string
@@ -67,6 +227,86 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      detected_changes: {
+        Row: {
+          change_type: string
+          created_at: string
+          field_name: string | null
+          id: string
+          metadata: Json
+          new_value: string | null
+          old_value: string | null
+          peptide_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          severity: string
+          source_id: string
+          status: string
+          sync_run_id: string | null
+        }
+        Insert: {
+          change_type: string
+          created_at?: string
+          field_name?: string | null
+          id?: string
+          metadata?: Json
+          new_value?: string | null
+          old_value?: string | null
+          peptide_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          source_id: string
+          status?: string
+          sync_run_id?: string | null
+        }
+        Update: {
+          change_type?: string
+          created_at?: string
+          field_name?: string | null
+          id?: string
+          metadata?: Json
+          new_value?: string | null
+          old_value?: string | null
+          peptide_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          source_id?: string
+          status?: string
+          sync_run_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detected_changes_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "peptides"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detected_changes_peptide_id_fkey"
+            columns: ["peptide_id"]
+            isOneToOne: false
+            referencedRelation: "v_peptides_visible"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detected_changes_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "integration_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detected_changes_sync_run_id_fkey"
+            columns: ["sync_run_id"]
+            isOneToOne: false
+            referencedRelation: "sync_runs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       entitlements: {
         Row: {
@@ -164,6 +404,54 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_sources: {
+        Row: {
+          api_base_url: string | null
+          api_type: string
+          config: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          last_sync_at: string | null
+          last_sync_status: string | null
+          name: string
+          priority: number
+          records_count: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          api_base_url?: string | null
+          api_type?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          name: string
+          priority?: number
+          records_count?: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          api_base_url?: string | null
+          api_type?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          name?: string
+          priority?: number
+          records_count?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
@@ -220,6 +508,92 @@ export type Database = {
             columns: ["variant_id"]
             isOneToOne: false
             referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      peptide_import_queue: {
+        Row: {
+          collected_data: Json
+          confidence_score: number
+          created_at: string
+          external_id: string | null
+          id: string
+          is_ready: boolean
+          name: string
+          published_at: string | null
+          published_peptide_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          slug: string
+          source_id: string
+          status: string
+          sync_run_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          collected_data?: Json
+          confidence_score?: number
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          is_ready?: boolean
+          name: string
+          published_at?: string | null
+          published_peptide_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          slug: string
+          source_id: string
+          status?: string
+          sync_run_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          collected_data?: Json
+          confidence_score?: number
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          is_ready?: boolean
+          name?: string
+          published_at?: string | null
+          published_peptide_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          slug?: string
+          source_id?: string
+          status?: string
+          sync_run_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peptide_import_queue_published_peptide_id_fkey"
+            columns: ["published_peptide_id"]
+            isOneToOne: false
+            referencedRelation: "peptides"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "peptide_import_queue_published_peptide_id_fkey"
+            columns: ["published_peptide_id"]
+            isOneToOne: false
+            referencedRelation: "v_peptides_visible"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "peptide_import_queue_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "integration_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "peptide_import_queue_sync_run_id_fkey"
+            columns: ["sync_run_id"]
+            isOneToOne: false
+            referencedRelation: "sync_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -690,6 +1064,44 @@ export type Database = {
         }
         Relationships: []
       }
+      source_priority_rules: {
+        Row: {
+          created_at: string
+          data_domain: string
+          id: string
+          is_authoritative: boolean
+          priority: number
+          source_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_domain: string
+          id?: string
+          is_authoritative?: boolean
+          priority?: number
+          source_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_domain?: string
+          id?: string
+          is_authoritative?: boolean
+          priority?: number
+          source_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_priority_rules_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "integration_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stacks: {
         Row: {
           benefits: string[] | null
@@ -819,6 +1231,89 @@ export type Database = {
           source?: string
           started_at?: string
           status?: string
+        }
+        Relationships: []
+      }
+      sync_runs: {
+        Row: {
+          completed_at: string | null
+          conflicts_found: number
+          created_at: string
+          details: Json
+          error_message: string | null
+          errors_count: number
+          id: string
+          mode: string
+          records_added: number
+          records_processed: number
+          records_updated: number
+          source_id: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          conflicts_found?: number
+          created_at?: string
+          details?: Json
+          error_message?: string | null
+          errors_count?: number
+          id?: string
+          mode?: string
+          records_added?: number
+          records_processed?: number
+          records_updated?: number
+          source_id: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          conflicts_found?: number
+          created_at?: string
+          details?: Json
+          error_message?: string | null
+          errors_count?: number
+          id?: string
+          mode?: string
+          records_added?: number
+          records_processed?: number
+          records_updated?: number
+          source_id?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_runs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "integration_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sync_settings: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }

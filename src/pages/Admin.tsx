@@ -5,6 +5,7 @@ import AdminWebhooks from "@/components/admin/AdminWebhooks";
 import AdminPayments from "@/components/admin/AdminPayments";
 import AdminPlanLinks from "@/components/admin/AdminPlanLinks";
 import AdminPixel from "@/components/admin/AdminPixel";
+import AdminSyncIntelligence from "@/components/admin/AdminSyncIntelligence";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Users, Layers, BookOpen, Shield, TrendingUp, Search, Trash2, Edit,
-  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag, CreditCard, Package, Copy, Webhook, Link2, Facebook
+  FlaskConical, Plus, Loader2, RefreshCw, Database, CheckCircle2, AlertTriangle, Clock, ShoppingBag, CreditCard, Package, Copy, Webhook, Link2, Facebook, Zap
 } from "lucide-react";
 import { fetchAllProfiles, fetchProfileCount } from "@/services/userService";
 import { fetchPeptides, fetchPeptideCount, deletePeptide } from "@/services/peptideService";
@@ -143,6 +144,9 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="sync" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Database className="h-3.5 w-3.5" /> Sync
+          </TabsTrigger>
+          <TabsTrigger value="integrations" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
+            <Zap className="h-3.5 w-3.5" /> Central de Integrações
           </TabsTrigger>
           <TabsTrigger value="products" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <ShoppingBag className="h-3.5 w-3.5" /> Produtos
@@ -310,6 +314,11 @@ export default function Admin() {
         {/* Sync Tab */}
         <TabsContent value="sync">
           <SyncPanel />
+        </TabsContent>
+
+        {/* Central de Integrações */}
+        <TabsContent value="integrations">
+          <AdminSyncIntelligence />
         </TabsContent>
 
         {/* Products Tab */}
