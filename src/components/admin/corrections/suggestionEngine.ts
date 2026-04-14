@@ -528,21 +528,43 @@ function suggestSlugFix(
   };
 }
 
-// ── Check if a finding has available suggestion data (lightweight) ──
+// ── Check if a finding has available suggestion data (data-driven) ──
 
 export async function checkSuggestionAvailable(
   findingCategory: string,
-  _peptideId: string
+  peptideId: string
 ): Promise<boolean> {
-  const apiCategories = [
-    "missing_sequence",
-    "no_references",
-    "no_source",
-    "incomplete_data",
-    "data_inconsistency",
-    "cross_source_conflict",
-  ];
-  return apiCategories.includes(findingCategory);
+  // Categories that always have deterministic fixes
+  if (findingCategory === "data_inconsistency") return true;
+
+  // Check if there are pending detected_changes for this peptide
+  const { count } = await supabase
+    .from("detected_changes")
+    .select("id", { count: "exact", head: true })
+    .eq("peptide_id", peptideId)
+    .eq("status", "pending");
+  if (count && count > 0) return true;
+
+  // Check if there are references in the DB
+  if (findingCategory === "no_references") {
+    const { count: refCount } = await supabase
+      .from("peptide_references")
+      .select("id", { count: "exact", head: true })
+      .eq("peptide_id", peptideId);
+    if (refCount && refCount > 0) return true;
+  }
+
+  // For source origins, check if peptide has external IDs
+  if (findingCategory === "no_source") {
+    const { data: pep } = await supabase
+      .from("peptides")
+      .select("ncbi_protein_id, dramp_id, apd_id, peptipedia_id")
+      .eq("id", peptideId)
+      .single();
+    if (pep && (pep.ncbi_protein_id || pep.dramp_id || pep.apd_id || pep.peptipedia_id)) return true;
+  }
+
+  return false;
 }
 
 // ── Local: Cross-source conflict ──
