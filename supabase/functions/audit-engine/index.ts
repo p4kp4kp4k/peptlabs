@@ -9,6 +9,7 @@
  */
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
+import { reconcileOpenFindings } from "../_shared/audit-reconciliation.ts";
 
 // Canonical source names
 const SOURCE_NAMES: Record<string, string> = {
@@ -70,6 +71,12 @@ Deno.serve(async (req) => {
     if (peptideId) pepQuery = pepQuery.eq("id", peptideId);
     const { data: peptides } = await pepQuery;
 
+    const auditedPeptideIds = (peptides || []).map((peptide: any) => peptide.id).filter(Boolean);
+    const { resolvedCount: staleResolved } = await reconcileOpenFindings(sb, {
+      peptideIds: auditedPeptideIds.length > 0 ? auditedPeptideIds : (peptideId ? [peptideId] : undefined),
+      includeGlobal: !peptideId && scope === "full",
+    });
+
     // Pre-load all existing open findings for idempotency
     const { data: existingFindings } = await sb.from("audit_findings")
       .select("peptide_id, category")
@@ -127,6 +134,7 @@ Deno.serve(async (req) => {
       summary: {
         peptides_audited: peptides?.length || 0,
         scope,
+        stale_findings_resolved: staleResolved,
         skipped_duplicates: skipped,
         timestamp: new Date().toISOString(),
       },
@@ -149,6 +157,7 @@ Deno.serve(async (req) => {
       critical_count: critical,
       medium_count: medium,
       low_count: low,
+      stale_findings_resolved: staleResolved,
       skipped_duplicates: skipped,
     });
   } catch (err: any) {
