@@ -287,6 +287,21 @@ export default function CorrectionReviewPage() {
       if (!finding || !peptide || !suggestion) throw new Error("Dados insuficientes");
       const finalValue = manualMode ? tryParse(manualValue) : suggestion.proposedValue;
       const fieldName = suggestion.field;
+
+      // Whitelist of valid peptide columns to prevent schema errors
+      const VALID_PEPTIDE_FIELDS = new Set([
+        "name", "slug", "category", "description", "benefits", "dosage_info", "side_effects",
+        "mechanism", "classification", "half_life", "reconstitution", "alternative_names",
+        "timeline", "dosage_table", "protocol_phases", "reconstitution_steps", "mechanism_points",
+        "interactions", "stacks", "scientific_references", "goals", "application", "sequence",
+        "sequence_length", "organism", "biological_activity", "structure_info", "source_origins",
+        "confidence_score", "ncbi_protein_id", "dramp_id", "apd_id", "peptipedia_id",
+        "tier", "access_level", "evidence_level",
+      ]);
+      if (!VALID_PEPTIDE_FIELDS.has(fieldName)) {
+        throw new Error(`Campo '${fieldName}' não existe na tabela peptides. Resolva este finding manualmente ou ignore-o.`);
+      }
+
       const beforeSnapshot: Record<string, any> = {};
       beforeSnapshot[fieldName] = (peptide as any)[fieldName];
       const updatePayload: Record<string, any> = {};
