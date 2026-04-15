@@ -221,11 +221,12 @@ function handleCrossSourceConflict(findingData: any, terms: string[]): any {
   };
 }
 
-// ── Protocol search via PubMed ──
+// ── Protocol search via PubMed (simpler query to avoid zero results) ──
 async function searchProtocol(terms: string[]): Promise<any> {
   for (const term of terms) {
     try {
-      const query = encodeURIComponent(`${term} peptide dosage protocol`);
+      // Use just the peptide name — adding "dosage protocol" is too restrictive
+      const query = encodeURIComponent(`${term} peptide`);
       console.log(`[suggest-correction] PubMed protocol search: "${term}"`);
 
       const searchUrl = `${PUBMED_BASE}/esearch.fcgi?db=pubmed&term=${query}&retmax=3&retmode=json&sort=relevance`;
@@ -236,7 +237,6 @@ async function searchProtocol(terms: string[]): Promise<any> {
       const ids = searchData.esearchresult?.idlist || [];
       if (ids.length === 0) continue;
 
-      // Found protocol-related articles — suggest adding references as a starting point
       const summaryUrl = `${PUBMED_BASE}/esummary.fcgi?db=pubmed&id=${ids.join(",")}&retmode=json`;
       const summaryRes = await fetch(summaryUrl, { signal: AbortSignal.timeout(10000) });
       if (!summaryRes.ok) continue;
