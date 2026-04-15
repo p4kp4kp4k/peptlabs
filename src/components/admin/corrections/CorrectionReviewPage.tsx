@@ -373,6 +373,29 @@ export default function CorrectionReviewPage() {
             <ArrowLeft className="h-3 w-3" /> Voltar
           </Button>
 
+          {/* Prev / Next navigation */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline" size="sm" className="h-7 text-[10px] gap-0.5 px-2"
+              disabled={!prevFinding}
+              onClick={() => prevFinding && navigateToFinding(prevFinding.id)}
+            >
+              <ChevronLeft className="h-3 w-3" /> Anterior
+            </Button>
+            {siblingFindings.length > 0 && (
+              <span className="text-[9px] text-muted-foreground px-1">
+                {currentFindingIdx + 1}/{siblingFindings.length}
+              </span>
+            )}
+            <Button
+              variant="outline" size="sm" className="h-7 text-[10px] gap-0.5 px-2"
+              disabled={!nextFinding}
+              onClick={() => nextFinding && navigateToFinding(nextFinding.id)}
+            >
+              Próximo <ChevronRight className="h-3 w-3" />
+            </Button>
+          </div>
+
           <div className="h-4 w-px bg-border" />
 
           <div className="flex items-center gap-2 flex-wrap flex-1">
