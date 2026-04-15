@@ -591,12 +591,12 @@ async function suggestIncompleteDataLocal(
 
   if (changes && changes.length > 0) {
     const change = changes[0];
-    const field = change.field_name || "description";
-
-    return {
-      findingId: finding.id,
-      peptideId: finding.peptide_id!,
-      field,
+    const rawField = change.field_name || "description";
+    const field = mapField(rawField);
+    if (!field) {
+      console.log("[SuggestionEngine] SKIP invalid field from detected_changes:", rawField);
+      return null;
+    }
       oldValue: (peptide as any)[field] || null,
       proposedValue: change.new_value,
       sourceProvider: (change as any).integration_sources?.name || "Fonte externa",
@@ -742,7 +742,12 @@ async function suggestCrossSourceConflict(
   if (!changes || changes.length === 0) return null;
 
   const change = changes[0];
-  const field = change.field_name || "description";
+  const rawField = change.field_name || "description";
+  const field = mapField(rawField);
+  if (!field) {
+    console.log("[SuggestionEngine] SKIP invalid field from detected_changes:", rawField);
+    return null;
+  }
   const source = (change as any).integration_sources;
   const newValue = change.new_value;
 
