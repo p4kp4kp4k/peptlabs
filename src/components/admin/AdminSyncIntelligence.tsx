@@ -1112,10 +1112,17 @@ function AuditTab() {
     open: openFindings.length,
   };
 
+  const countWithSuggestion = openFindings.filter(f => hasSuggestionFor(f)).length;
+  const countManualOnly = openFindings.filter(f => !hasSuggestionFor(f)).length;
+
   const filtered = severityFilter === "all"
     ? findings.filter(f => f.status === "open")
     : severityFilter === "resolved"
     ? findings.filter(f => f.status === "resolved" || f.status === "ignored")
+    : severityFilter === "with_suggestion"
+    ? openFindings.filter(f => hasSuggestionFor(f))
+    : severityFilter === "manual_only"
+    ? openFindings.filter(f => !hasSuggestionFor(f))
     : findings.filter(f => f.severity === severityFilter && f.status === "open");
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -1138,6 +1145,8 @@ function AuditTab() {
     { key: "critical", label: "Críticos", count: counts.critical, color: "text-red-400" },
     { key: "medium", label: "Médios", count: counts.medium, color: "text-amber-400" },
     { key: "low", label: "Baixos", count: counts.low, color: "text-blue-400" },
+    { key: "with_suggestion", label: "Com Sugestão", count: countWithSuggestion, color: "text-cyan-400" },
+    { key: "manual_only", label: "Manual", count: countManualOnly, color: "text-purple-400" },
     { key: "resolved", label: "Resolvidos", count: counts.resolved, color: "text-emerald-400" },
   ];
 
