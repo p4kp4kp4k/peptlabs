@@ -8,6 +8,8 @@ const corsHeaders = {
 
 const UNIPROT_BASE = "https://rest.uniprot.org/uniprotkb";
 const PUBMED_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
+const NCBI_PROTEIN_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
+const PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest/pug";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
