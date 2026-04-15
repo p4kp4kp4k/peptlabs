@@ -704,7 +704,84 @@ export default function CorrectionReviewPage() {
             <h4 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
               Alterações
             </h4>
-            {changedFields.length === 0 && !suggestionLoading && (
+            {noChangeSuggestion && !suggestionLoading && (
+              <div className="mb-3 rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-3">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold text-foreground">Nenhuma alteração necessária</p>
+                    <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
+                      {suggestion?.noChangeReason || "Os dados encontrados já estão refletidos na página atual."}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => ignoreMutation.mutate()}>
+                    <CheckCircle2 className="h-3 w-3" /> Marcar como resolvido
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={handleRetrySearch}>
+                    <RefreshCw className="h-3 w-3" /> Tentar nova busca
+                  </Button>
+                </div>
+              </div>
+            )}
+            {!hasSuggestion && !noChangeSuggestion && !suggestionLoading && (
+              <div className="mb-3 rounded-xl border border-amber-500/20 bg-secondary/20 p-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold text-foreground">{emptySuggestionState.title}</p>
+                    <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">{emptySuggestionState.description}</p>
+                  </div>
+                </div>
+
+                {emptySuggestionState.directChecks.length > 0 && (
+                  <div className="mt-3 space-y-1.5">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Fontes consultadas</p>
+                    {emptySuggestionState.directChecks.map((check) => {
+                      const meta = SOURCE_STATUS_META[check.status] || SOURCE_STATUS_META.not_checked;
+                      return (
+                        <div key={check.provider} className="flex items-center justify-between gap-2 rounded-lg border border-border/40 bg-background/40 px-2.5 py-1.5">
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-medium text-foreground">{check.provider}</p>
+                            {check.lastChecked && <p className="text-[8px] text-muted-foreground">{new Date(check.lastChecked).toLocaleString("pt-BR")}</p>}
+                            {(check.matchedRecordName || check.matchedRecordId || check.notes) && (
+                              <p className="mt-0.5 truncate text-[8px] text-muted-foreground">
+                                {check.matchedRecordName || check.matchedRecordId || check.notes}
+                              </p>
+                            )}
+                          </div>
+                          <Badge className={cn("text-[8px] border", meta.className)}>{meta.label}</Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {emptySuggestionState.relatedChecks.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {emptySuggestionState.relatedChecks.map((check) => (
+                      <Badge key={`${check.provider}-${check.status}`} variant="outline" className="text-[8px]">
+                        {check.provider} · {SOURCE_STATUS_META[check.status]?.label || check.status}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setManualMode(true)}>
+                    <Edit3 className="h-3 w-3" /> Editar manualmente
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={handleRetrySearch}>
+                    <RefreshCw className="h-3 w-3" /> Tentar nova busca
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 text-muted-foreground" onClick={() => ignoreMutation.mutate()}>
+                    <XCircle className="h-3 w-3" /> Não aplicável
+                  </Button>
+                </div>
+              </div>
+            )}
+            {changedFields.length === 0 && hasSuggestion && !suggestionLoading && (
               <p className="text-[10px] text-muted-foreground italic">Nenhuma alteração proposta</p>
             )}
             {suggestionLoading && (
@@ -801,15 +878,7 @@ export default function CorrectionReviewPage() {
                 onScroll={() => handleScroll("right")}
                 className="h-full overflow-y-auto p-3"
               >
-                {hasSuggestion && correctedPeptide ? (
-                  <PeptidePreviewColumn
-                    peptide={correctedPeptide as Record<string, any>}
-                    changedFields={changedFields}
-                    showHighlights={showHighlights}
-                    onlyChanges={onlyChanges}
-                    label="Página Corrigida"
-                  />
-                ) : suggestionLoading ? (
+                {suggestionLoading ? (
                   <div className="space-y-3">
                     <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-2 mb-1">
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Página Corrigida</p>
@@ -819,104 +888,14 @@ export default function CorrectionReviewPage() {
                       <p className="text-xs text-muted-foreground">Buscando dados nas integrações...</p>
                     </div>
                   </div>
-                ) : noChangeSuggestion ? (
-                  <div className="space-y-3">
-                    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-2 mb-1">
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Página Corrigida</p>
-                    </div>
-                    <div className="flex flex-col items-center justify-center py-16 gap-4">
-                      <CheckCircle2 className="h-10 w-10 text-emerald-400/80" />
-                      <div className="text-center max-w-xs">
-                        <p className="text-sm font-medium text-foreground mb-1">Nenhuma alteração necessária</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {suggestion?.noChangeReason || "Os dados encontrados já estão refletidos na página atual."}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => ignoreMutation.mutate()}>
-                          <CheckCircle2 className="h-3 w-3" /> Marcar como resolvido
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={handleRetrySearch}>
-                          <RefreshCw className="h-3 w-3" /> Tentar nova busca
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
                 ) : (
-                  /* No suggestion — show peptide preview as-is with clear action panel */
-                  <div className="min-w-0 space-y-3">
-                    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-2 mb-1">
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Página Corrigida</p>
-                    </div>
-
-                    <div className="sticky top-8 z-20 px-1 pb-1">
-                      <div className="rounded-xl border border-amber-500/20 bg-background/95 p-4 shadow-lg backdrop-blur-sm">
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-foreground mb-1">{emptySuggestionState.title}</p>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed">{emptySuggestionState.description}</p>
-
-                          {/* Source checks inline */}
-                          {emptySuggestionState.directChecks.length > 0 && (
-                            <div className="mt-3 space-y-1.5">
-                              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Fontes consultadas</p>
-                              {emptySuggestionState.directChecks.map((check) => {
-                                const meta = SOURCE_STATUS_META[check.status] || SOURCE_STATUS_META.not_checked;
-                                return (
-                                  <div key={check.provider} className="flex items-center justify-between gap-2 rounded-lg border border-border/40 bg-secondary/20 px-2.5 py-1.5">
-                                     <div className="min-w-0">
-                                      <p className="text-[10px] font-medium text-foreground">{check.provider}</p>
-                                      {check.lastChecked && <p className="text-[8px] text-muted-foreground">{new Date(check.lastChecked).toLocaleString("pt-BR")}</p>}
-                                       {(check.matchedRecordName || check.matchedRecordId || check.notes) && (
-                                         <p className="mt-0.5 truncate text-[8px] text-muted-foreground">
-                                           {check.matchedRecordName || check.matchedRecordId || check.notes}
-                                         </p>
-                                       )}
-                                    </div>
-                                    <Badge className={cn("text-[8px] border", meta.className)}>{meta.label}</Badge>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {emptySuggestionState.relatedChecks.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-1">
-                              {emptySuggestionState.relatedChecks.map((check) => (
-                                <Badge key={`${check.provider}-${check.status}`} variant="outline" className="text-[8px]">
-                                  {check.provider} · {SOURCE_STATUS_META[check.status]?.label || check.status}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap gap-2 ml-8">
-                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setManualMode(true)}>
-                          <Edit3 className="h-3 w-3" /> Editar manualmente
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={handleRetrySearch}>
-                          <RefreshCw className="h-3 w-3" /> Tentar nova busca
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 text-muted-foreground" onClick={() => ignoreMutation.mutate()}>
-                          <XCircle className="h-3 w-3" /> Não aplicável
-                        </Button>
-                      </div>
-                    </div>
-                    </div>
-
-                    {peptide && (
-                      <PeptidePreviewColumn
-                        peptide={peptide as Record<string, any>}
-                        changedFields={[]}
-                        showHighlights={false}
-                        onlyChanges={false}
-                        label=""
-                      />
-                    )}
-                  </div>
+                  <PeptidePreviewColumn
+                    peptide={(hasSuggestion && correctedPeptide ? correctedPeptide : peptide) as Record<string, any>}
+                    changedFields={hasSuggestion ? changedFields : []}
+                    showHighlights={showHighlights}
+                    onlyChanges={onlyChanges}
+                    label="Página Corrigida"
+                  />
                 )}
               </div>
             </div>
@@ -962,21 +941,14 @@ export default function CorrectionReviewPage() {
                 <PeptidePreviewColumn peptide={peptide as Record<string, any>} changedFields={changedFields} showHighlights={showHighlights} onlyChanges={false} label="Página Atual" />
               </TabsContent>
               <TabsContent value="corrected" className="flex-1 overflow-y-auto p-3" ref={rightScrollRef as any}>
-                {hasSuggestion && correctedPeptide ? (
-                  <PeptidePreviewColumn peptide={correctedPeptide as Record<string, any>} changedFields={changedFields} showHighlights={showHighlights} onlyChanges={false} label="Página Corrigida" />
-                ) : peptide ? (
-                  <div className="space-y-3">
-                    <div className="rounded-xl border border-amber-500/20 bg-background/95 p-3 shadow-lg backdrop-blur-sm">
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-foreground">{emptySuggestionState.title}</p>
-                          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{emptySuggestionState.description}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <PeptidePreviewColumn peptide={peptide as Record<string, any>} changedFields={[]} showHighlights={false} onlyChanges={false} label="Página Corrigida" />
-                  </div>
+                {peptide ? (
+                  <PeptidePreviewColumn
+                    peptide={(hasSuggestion && correctedPeptide ? correctedPeptide : peptide) as Record<string, any>}
+                    changedFields={hasSuggestion ? changedFields : []}
+                    showHighlights={showHighlights}
+                    onlyChanges={false}
+                    label="Página Corrigida"
+                  />
                 ) : (
                   <div className="flex flex-col items-center justify-center py-16 gap-3">
                     <SearchX className="h-8 w-8 text-muted-foreground/50" />
@@ -993,7 +965,39 @@ export default function CorrectionReviewPage() {
                       <p className="text-[10px] text-muted-foreground mt-1">{suggestion?.description}</p>
                     </div>
                   ) : null;
-                }) : (
+                }) : noChangeSuggestion ? (
+                  <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-3">
+                    <p className="text-xs font-semibold text-foreground">Nenhuma alteração necessária</p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                      {suggestion?.noChangeReason || "Os dados encontrados já estão refletidos na página atual."}
+                    </p>
+                  </div>
+                ) : !hasSuggestion && !suggestionLoading ? (
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-amber-500/20 bg-secondary/20 p-3">
+                      <p className="text-xs font-semibold text-foreground">{emptySuggestionState.title}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{emptySuggestionState.description}</p>
+                    </div>
+                    {emptySuggestionState.directChecks.map((check) => {
+                      const meta = SOURCE_STATUS_META[check.status] || SOURCE_STATUS_META.not_checked;
+                      return (
+                        <div key={check.provider} className="rounded-lg border border-border bg-card p-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium text-foreground">{check.provider}</p>
+                              {(check.matchedRecordName || check.matchedRecordId || check.notes) && (
+                                <p className="mt-1 text-[10px] text-muted-foreground">
+                                  {check.matchedRecordName || check.matchedRecordId || check.notes}
+                                </p>
+                              )}
+                            </div>
+                            <Badge className={cn("text-[8px] border", meta.className)}>{meta.label}</Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
                   <p className="text-xs text-muted-foreground text-center py-8">Nenhuma alteração</p>
                 )}
               </TabsContent>
