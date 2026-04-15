@@ -1590,7 +1590,9 @@ function AutoApplySuggestionsButton({ onComplete }: { onComplete: () => void }) 
       Auto-aplicar Sugestões
     </Button>
   );
+}
 
+// ── Bulk Runs History ──
 
 function BulkRunsHistory() {
   const { toast } = useToast();
