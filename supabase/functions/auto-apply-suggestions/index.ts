@@ -82,6 +82,23 @@ Deno.serve(async (req) => {
         // Rate-limit: wait between calls to avoid 429
         await delay(1500);
         // Call suggest-correction to get a suggestion
+        const suggestPayload: Record<string, any> = {
+          peptide_name: peptide.name,
+          peptide_id: finding.peptide_id,
+          category: finding.category,
+          aliases: peptide.alternative_names || [],
+        };
+        // Pass finding metadata for cross_source_conflict
+        if (finding.category === "cross_source_conflict") {
+          suggestPayload.finding_data = {
+            value_a: finding.value_a,
+            value_b: finding.value_b,
+            source_a: finding.source_a,
+            source_b: finding.source_b,
+            title: (finding as any).title,
+            description: finding.description,
+          };
+        }
         const suggestRes = await fetch(
           `${Deno.env.get("SUPABASE_URL")}/functions/v1/suggest-correction`,
           {
@@ -90,12 +107,7 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
             },
-            body: JSON.stringify({
-              peptide_name: peptide.name,
-              peptide_id: finding.peptide_id,
-              category: finding.category,
-              aliases: peptide.alternative_names || [],
-            }),
+            body: JSON.stringify(suggestPayload),
             signal: AbortSignal.timeout(30000),
           }
         );
