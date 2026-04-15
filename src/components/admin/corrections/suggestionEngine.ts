@@ -752,18 +752,38 @@ async function suggestCrossSourceConflict(
 
 export async function getSourceChecksForPeptide(
   peptideId: string
-): Promise<Record<string, { status: string; confidence: number; lastChecked: string | null }>> {
+): Promise<Record<string, {
+  status: string;
+  confidence: number;
+  lastChecked: string | null;
+  suggestionGenerated: boolean;
+  matchedRecordId?: string | null;
+  matchedRecordName?: string | null;
+  notes?: string | null;
+}>> {
   const { data } = await supabase
     .from("peptide_source_checks" as any)
-    .select("source_provider, lookup_status, confidence_score, last_checked_at")
+    .select("source_provider, lookup_status, confidence_score, last_checked_at, suggestion_generated, matched_record_id, matched_record_name, notes")
     .eq("peptide_id", peptideId);
 
-  const result: Record<string, { status: string; confidence: number; lastChecked: string | null }> = {};
+  const result: Record<string, {
+    status: string;
+    confidence: number;
+    lastChecked: string | null;
+    suggestionGenerated: boolean;
+    matchedRecordId?: string | null;
+    matchedRecordName?: string | null;
+    notes?: string | null;
+  }> = {};
   (data || []).forEach((row: any) => {
     result[row.source_provider] = {
       status: row.lookup_status,
       confidence: row.confidence_score,
       lastChecked: row.last_checked_at,
+      suggestionGenerated: Boolean(row.suggestion_generated),
+      matchedRecordId: row.matched_record_id || null,
+      matchedRecordName: row.matched_record_name || null,
+      notes: row.notes || null,
     };
   });
   return result;
