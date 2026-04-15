@@ -36,7 +36,6 @@ export default function Admin() {
   const [searchUsers, setSearchUsers] = useState("");
   const [searchPeptides, setSearchPeptides] = useState("");
   const [searchStacks, setSearchStacks] = useState("");
-  const [searchStacks, setSearchStacks] = useState("");
 
   const { data: profiles = [], isLoading: loadingProfiles, refetch: refetchProfiles } = useQuery({
     queryKey: ["admin-profiles"],
