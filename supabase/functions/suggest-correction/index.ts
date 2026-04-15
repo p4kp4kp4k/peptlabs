@@ -11,6 +11,49 @@ const PUBMED_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
 const NCBI_PROTEIN_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
 const PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest/pug";
 
+// ── Smart name cleaning: normalize accents instead of stripping, remove parenthetical content ──
+function buildSearchTerms(name: string, aliases: string[]): string[] {
+  const terms: string[] = [];
+  const seen = new Set<string>();
+
+  const normalize = (s: string): string =>
+    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+  const addTerm = (t: string) => {
+    const cleaned = normalize(t).replace(/[^a-zA-Z0-9\s\-]/g, "").trim();
+    if (cleaned && cleaned.length >= 2 && !seen.has(cleaned.toLowerCase())) {
+      seen.add(cleaned.toLowerCase());
+      terms.push(cleaned);
+    }
+  };
+
+  // Full name without parentheses content
+  const baseName = name.replace(/\s*\(.*?\)\s*/g, " ").trim();
+  addTerm(baseName);
+
+  // Parenthetical content as separate term
+  const parenMatch = name.match(/\(([^)]+)\)/);
+  if (parenMatch) addTerm(parenMatch[1]);
+
+  // Full name as-is
+  addTerm(name);
+
+  // Each alias
+  for (const alias of aliases) {
+    if (alias) addTerm(alias);
+  }
+
+  // Core identifier (e.g. "BPC-157" from "BPC-157 Oral")
+  const coreParts = baseName.split(/\s+/);
+  if (coreParts.length > 1) {
+    addTerm(coreParts[0]); // first word often is the identifier
+    // Also try first two words for compound names
+    if (coreParts.length > 2) addTerm(`${coreParts[0]} ${coreParts[1]}`);
+  }
+
+  return terms;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
