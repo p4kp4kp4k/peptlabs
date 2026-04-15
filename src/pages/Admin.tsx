@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import AdminProducts from "@/components/admin/AdminProducts";
 import AdminOrders from "@/components/admin/AdminOrders";
 import AdminWebhooks from "@/components/admin/AdminWebhooks";
@@ -28,10 +29,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Admin() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "users";
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const [searchUsers, setSearchUsers] = useState("");
   const [searchPeptides, setSearchPeptides] = useState("");
+  const [searchStacks, setSearchStacks] = useState("");
   const [searchStacks, setSearchStacks] = useState("");
 
   const { data: profiles = [], isLoading: loadingProfiles, refetch: refetchProfiles } = useQuery({
@@ -131,7 +135,7 @@ export default function Admin() {
         ))}
       </div>
 
-      <Tabs defaultValue="users" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={(v) => setSearchParams({ tab: v })} className="space-y-4">
         <div className="overflow-x-auto -mx-4 px-4 sm:-mx-6 sm:px-6">
           <TabsList className="h-auto bg-secondary/60 p-1 inline-flex flex-wrap gap-1 w-full">
             <TabsTrigger value="users" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
