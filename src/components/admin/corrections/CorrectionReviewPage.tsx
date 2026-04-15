@@ -796,89 +796,108 @@ export default function CorrectionReviewPage() {
                     onlyChanges={onlyChanges}
                     label="Página Corrigida"
                   />
-                ) : (
+                ) : suggestionLoading ? (
                   <div className="space-y-3">
                     <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-2 mb-1">
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Página Corrigida</p>
                     </div>
                     <div className="flex flex-col items-center justify-center py-16 gap-4">
-                      {suggestionLoading ? (
-                        <>
-                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                          <p className="text-xs text-muted-foreground">Buscando dados nas integrações...</p>
-                        </>
-                      ) : noChangeSuggestion ? (
-                        <>
-                          <CheckCircle2 className="h-10 w-10 text-emerald-400/80" />
-                          <div className="text-center max-w-xs">
-                            <p className="text-sm font-medium text-foreground mb-1">Nenhuma alteração necessária</p>
-                            <p className="text-[11px] text-muted-foreground">
-                              {suggestion?.noChangeReason || "Os dados encontrados já estão refletidos na página atual."}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => ignoreMutation.mutate()}>
-                              <CheckCircle2 className="h-3 w-3" /> Marcar como resolvido
-                            </Button>
-                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={handleRetrySearch}>
-                              <RefreshCw className="h-3 w-3" /> Tentar nova busca
-                            </Button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <SearchX className="h-10 w-10 text-muted-foreground/50" />
-                          <div className="text-center max-w-xs">
-                            <p className="text-sm font-medium text-foreground mb-1">{emptySuggestionState.title}</p>
-                            <p className="text-[11px] text-muted-foreground">
-                              {emptySuggestionState.description}
-                            </p>
-                          </div>
-                          {(emptySuggestionState.directChecks.length > 0 || emptySuggestionState.relatedChecks.length > 0) && (
-                            <div className="w-full max-w-lg rounded-xl border border-border bg-card/60 p-3 text-left space-y-3">
-                              {emptySuggestionState.directChecks.length > 0 && (
-                                <div className="space-y-1.5">
-                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Fontes verificadas</p>
-                                  {emptySuggestionState.directChecks.map((check) => {
-                                    const meta = SOURCE_STATUS_META[check.status] || SOURCE_STATUS_META.not_checked;
-                                    return (
-                                      <div key={check.provider} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-secondary/20 px-2.5 py-2">
-                                        <div>
-                                          <p className="text-[11px] font-medium text-foreground">{check.provider}</p>
-                                          {check.lastChecked && <p className="text-[9px] text-muted-foreground">{new Date(check.lastChecked).toLocaleString("pt-BR")}</p>}
-                                        </div>
-                                        <Badge className={cn("text-[9px] border", meta.className)}>{meta.label}</Badge>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="text-xs text-muted-foreground">Buscando dados nas integrações...</p>
+                    </div>
+                  </div>
+                ) : noChangeSuggestion ? (
+                  <div className="space-y-3">
+                    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-2 mb-1">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Página Corrigida</p>
+                    </div>
+                    <div className="flex flex-col items-center justify-center py-16 gap-4">
+                      <CheckCircle2 className="h-10 w-10 text-emerald-400/80" />
+                      <div className="text-center max-w-xs">
+                        <p className="text-sm font-medium text-foreground mb-1">Nenhuma alteração necessária</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {suggestion?.noChangeReason || "Os dados encontrados já estão refletidos na página atual."}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => ignoreMutation.mutate()}>
+                          <CheckCircle2 className="h-3 w-3" /> Marcar como resolvido
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={handleRetrySearch}>
+                          <RefreshCw className="h-3 w-3" /> Tentar nova busca
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* No suggestion — show peptide preview as-is with clear action panel */
+                  <div className="space-y-3">
+                    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-2 mb-1">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Página Corrigida</p>
+                    </div>
 
-                              {emptySuggestionState.relatedChecks.length > 0 && (
-                                <div className="space-y-1.5 border-t border-border pt-3">
-                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Outros sinais encontrados</p>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {emptySuggestionState.relatedChecks.map((check) => (
-                                      <Badge key={`${check.provider}-${check.status}`} variant="outline" className="text-[9px]">
-                                        {check.provider} · {SOURCE_STATUS_META[check.status]?.label || check.status}
-                                      </Badge>
-                                    ))}
+                    {/* Info banner */}
+                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mx-1">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-foreground mb-1">{emptySuggestionState.title}</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">{emptySuggestionState.description}</p>
+
+                          {/* Source checks inline */}
+                          {emptySuggestionState.directChecks.length > 0 && (
+                            <div className="mt-3 space-y-1.5">
+                              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Fontes consultadas</p>
+                              {emptySuggestionState.directChecks.map((check) => {
+                                const meta = SOURCE_STATUS_META[check.status] || SOURCE_STATUS_META.not_checked;
+                                return (
+                                  <div key={check.provider} className="flex items-center justify-between gap-2 rounded-lg border border-border/40 bg-secondary/20 px-2.5 py-1.5">
+                                    <div>
+                                      <p className="text-[10px] font-medium text-foreground">{check.provider}</p>
+                                      {check.lastChecked && <p className="text-[8px] text-muted-foreground">{new Date(check.lastChecked).toLocaleString("pt-BR")}</p>}
+                                    </div>
+                                    <Badge className={cn("text-[8px] border", meta.className)}>{meta.label}</Badge>
                                   </div>
-                                </div>
-                              )}
+                                );
+                              })}
                             </div>
                           )}
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setManualMode(true)}>
-                              <Edit3 className="h-3 w-3" /> Editar manualmente
-                            </Button>
-                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={handleRetrySearch}>
-                              <RefreshCw className="h-3 w-3" /> Tentar nova busca
-                            </Button>
-                          </div>
-                        </>
-                      )}
+
+                          {emptySuggestionState.relatedChecks.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {emptySuggestionState.relatedChecks.map((check) => (
+                                <Badge key={`${check.provider}-${check.status}`} variant="outline" className="text-[8px]">
+                                  {check.provider} · {SOURCE_STATUS_META[check.status]?.label || check.status}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-3 ml-8">
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setManualMode(true)}>
+                          <Edit3 className="h-3 w-3" /> Editar manualmente
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={handleRetrySearch}>
+                          <RefreshCw className="h-3 w-3" /> Tentar nova busca
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 text-muted-foreground" onClick={() => ignoreMutation.mutate()}>
+                          <XCircle className="h-3 w-3" /> Não aplicável
+                        </Button>
+                      </div>
                     </div>
+
+                    {/* Still show the peptide preview below */}
+                    {peptide && (
+                      <PeptidePreviewColumn
+                        peptide={peptide as Record<string, any>}
+                        changedFields={[]}
+                        showHighlights={false}
+                        onlyChanges={false}
+                        label=""
+                      />
+                    )}
                   </div>
                 )}
               </div>
