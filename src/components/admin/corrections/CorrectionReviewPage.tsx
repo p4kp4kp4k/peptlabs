@@ -191,22 +191,47 @@ export default function CorrectionReviewPage() {
         const peptideIds = [...new Set(allFindings.map((f: any) => f.peptide_id).filter(Boolean))];
         const [{ data: sourceChecks }, { data: changes }, { data: refs }] = await Promise.all([
           supabase.from("peptide_source_checks" as any)
-            .select("peptide_id").eq("suggestion_generated", true).in("peptide_id", peptideIds),
+            .select("peptide_id, source_provider").eq("suggestion_generated", true).in("peptide_id", peptideIds),
           supabase.from("detected_changes")
             .select("peptide_id, field_name").eq("status", "pending").in("peptide_id", peptideIds),
           supabase.from("peptide_references")
             .select("peptide_id").in("peptide_id", peptideIds),
         ]);
 
-        const idsWithSuggestion = new Set<string>();
-        (sourceChecks || []).forEach((sc: any) => idsWithSuggestion.add(sc.peptide_id));
-        (changes || []).forEach((c: any) => idsWithSuggestion.add(c.peptide_id));
-        (refs || []).forEach((r: any) => idsWithSuggestion.add(r.peptide_id));
+        // Build per-peptide availability map keyed by finding category
+        const categoryAvail: Record<string, Set<string>> = {}; // peptide_id → Set<category>
+        (changes || []).forEach((c: any) => {
+          if (!categoryAvail[c.peptide_id]) categoryAvail[c.peptide_id] = new Set();
+          if (c.field_name === "sequence") categoryAvail[c.peptide_id].add("missing_sequence");
+          if (c.field_name === "scientific_reference") categoryAvail[c.peptide_id].add("no_references");
+          categoryAvail[c.peptide_id].add("cross_source_conflict");
+          categoryAvail[c.peptide_id].add("incomplete_data");
+        });
+        (refs || []).forEach((r: any) => {
+          if (!categoryAvail[r.peptide_id]) categoryAvail[r.peptide_id] = new Set();
+          categoryAvail[r.peptide_id].add("no_references");
+        });
+        const srcToCat: Record<string, string[]> = {
+          "UniProt": ["missing_sequence", "incomplete_data"],
+          "NCBI Protein": ["missing_sequence"],
+          "PubMed": ["no_references"],
+          "PubChem": ["no_source"],
+        };
+        (sourceChecks || []).forEach((sc: any) => {
+          if (!categoryAvail[sc.peptide_id]) categoryAvail[sc.peptide_id] = new Set();
+          (srcToCat[sc.source_provider] || []).forEach((cat: string) => categoryAvail[sc.peptide_id].add(cat));
+        });
+
+        // A finding "has suggestion" only if its category matches available data
+        const hasSuggForFinding = (f: any) => {
+          if (!f.peptide_id || !categoryAvail[f.peptide_id]) return false;
+          return categoryAvail[f.peptide_id].has(f.category);
+        };
 
         if (auditSeverity === "with_suggestion") {
-          return allFindings.filter((f: any) => f.peptide_id && idsWithSuggestion.has(f.peptide_id));
+          return allFindings.filter(hasSuggForFinding);
         } else {
-          return allFindings.filter((f: any) => !f.peptide_id || !idsWithSuggestion.has(f.peptide_id));
+          return allFindings.filter((f: any) => !hasSuggForFinding(f));
         }
       }
 
