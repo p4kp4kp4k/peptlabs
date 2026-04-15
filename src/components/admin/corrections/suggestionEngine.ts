@@ -597,6 +597,11 @@ async function suggestIncompleteDataLocal(
       console.log("[SuggestionEngine] SKIP invalid field from detected_changes:", rawField);
       return null;
     }
+
+    return {
+      findingId: finding.id,
+      peptideId: finding.peptide_id!,
+      field,
       oldValue: (peptide as any)[field] || null,
       proposedValue: change.new_value,
       sourceProvider: (change as any).integration_sources?.name || "Fonte externa",
