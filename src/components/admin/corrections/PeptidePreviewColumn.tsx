@@ -137,7 +137,7 @@ interface PeptidePreviewColumnProps {
   changedFields?: ChangedField[];
   showHighlights: boolean;
   onlyChanges: boolean;
-  label: string;
+  label?: string;
 }
 
 export default function PeptidePreviewColumn({
@@ -163,11 +163,13 @@ export default function PeptidePreviewColumn({
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       {/* Column label */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-2 mb-1">
-        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{label}</p>
-      </div>
+      {label ? (
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-2 mb-1">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{label}</p>
+        </div>
+      ) : null}
 
       {/* Hero mini */}
       {(!onlyChanges || getHighlight("hero")) && (
