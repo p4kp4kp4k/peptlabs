@@ -163,28 +163,54 @@ export default function CorrectionReviewPage() {
     queryFn: async () => {
       if (!finding) return [];
 
+      // For with_suggestion / manual_only, we need peptide_source_checks to know which have suggestions
       let query = supabase
         .from("audit_findings")
         .select("id, category, status, severity, peptide_id, peptides(name)")
-        .eq("status", "open")
         .order("created_at", { ascending: true });
+
+      if (auditSeverity === "resolved") {
+        query = query.in("status", ["resolved", "ignored"]);
+      } else {
+        query = query.eq("status", "open");
+      }
 
       if (auditScope === "run" && finding.audit_run_id) {
         query = query.eq("audit_run_id", finding.audit_run_id);
       }
 
-      if (auditSeverity === "resolved") {
-        query = query.in("status", ["resolved", "ignored"]);
-      } else if (auditSeverity === "with_suggestion") {
-        query = query.in("category", ["no_source", "no_references", "incomplete_data", "data_inconsistency"]);
-      } else if (auditSeverity === "manual_only") {
-        query = query.in("category", ["missing_sequence", "cross_source_conflict"]);
-      } else if (auditSeverity !== "all") {
+      if (!["all", "resolved", "with_suggestion", "manual_only"].includes(auditSeverity)) {
         query = query.eq("severity", auditSeverity);
       }
 
-      const { data } = await query;
-      return (data || []).filter((item: any) => item.status === "open" || auditSeverity === "resolved");
+      const { data: allFindings } = await query;
+      if (!allFindings || allFindings.length === 0) return [];
+
+      // For with_suggestion / manual_only, check peptide_source_checks
+      if (auditSeverity === "with_suggestion" || auditSeverity === "manual_only") {
+        const peptideIds = [...new Set(allFindings.map((f: any) => f.peptide_id).filter(Boolean))];
+        const [{ data: sourceChecks }, { data: changes }, { data: refs }] = await Promise.all([
+          supabase.from("peptide_source_checks" as any)
+            .select("peptide_id").eq("suggestion_generated", true).in("peptide_id", peptideIds),
+          supabase.from("detected_changes")
+            .select("peptide_id, field_name").eq("status", "pending").in("peptide_id", peptideIds),
+          supabase.from("peptide_references")
+            .select("peptide_id").in("peptide_id", peptideIds),
+        ]);
+
+        const idsWithSuggestion = new Set<string>();
+        (sourceChecks || []).forEach((sc: any) => idsWithSuggestion.add(sc.peptide_id));
+        (changes || []).forEach((c: any) => idsWithSuggestion.add(c.peptide_id));
+        (refs || []).forEach((r: any) => idsWithSuggestion.add(r.peptide_id));
+
+        if (auditSeverity === "with_suggestion") {
+          return allFindings.filter((f: any) => f.peptide_id && idsWithSuggestion.has(f.peptide_id));
+        } else {
+          return allFindings.filter((f: any) => !f.peptide_id || !idsWithSuggestion.has(f.peptide_id));
+        }
+      }
+
+      return allFindings;
     },
     enabled: !!finding,
   });

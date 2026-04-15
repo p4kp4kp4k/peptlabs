@@ -1000,16 +1000,22 @@ function AuditTab() {
     queryFn: async () => {
       if (openPeptideIds.length === 0) return {} as Record<string, Set<string>>;
       
-      const { data: changes } = await supabase
-        .from("detected_changes")
-        .select("peptide_id, field_name, change_type")
-        .in("peptide_id", openPeptideIds)
-        .eq("status", "pending");
-
-      const { data: refs } = await supabase
-        .from("peptide_references")
-        .select("peptide_id")
-        .in("peptide_id", openPeptideIds);
+      const [{ data: changes }, { data: refs }, { data: sourceChecks }] = await Promise.all([
+        supabase
+          .from("detected_changes")
+          .select("peptide_id, field_name, change_type")
+          .in("peptide_id", openPeptideIds)
+          .eq("status", "pending"),
+        supabase
+          .from("peptide_references")
+          .select("peptide_id")
+          .in("peptide_id", openPeptideIds),
+        supabase
+          .from("peptide_source_checks" as any)
+          .select("peptide_id, source_provider, lookup_status, suggestion_generated")
+          .in("peptide_id", openPeptideIds)
+          .eq("suggestion_generated", true),
+      ]);
 
       const availability: Record<string, Set<string>> = {};
       
@@ -1021,15 +1027,30 @@ function AuditTab() {
         availability[c.peptide_id].add("incomplete_data");
       });
 
-      // Only mark no_references if refs exist AND differ from peptide's current refs
-      // (The actual diff check happens in generateSuggestion; here we're conservative)
       (refs || []).forEach((r: any) => {
         if (!availability[r.peptide_id]) availability[r.peptide_id] = new Set();
-        // Don't blindly add no_references — the suggestion engine will validate
         availability[r.peptide_id].add("no_references");
       });
 
-      // Don't blindly mark everything as having suggestions
+      // Include peptide_source_checks with suggestion_generated=true
+      // Map source providers back to finding categories
+      const sourceToCategories: Record<string, string[]> = {
+        "UniProt": ["missing_sequence", "no_source", "incomplete_data"],
+        "NCBI Protein": ["missing_sequence", "no_source"],
+        "PubMed": ["no_references", "no_source"],
+        "PubChem": ["no_source"],
+        "Peptipedia": ["missing_sequence", "no_source"],
+        "DRAMP": ["missing_sequence", "no_source"],
+        "APD": ["missing_sequence", "no_source"],
+      };
+
+      (sourceChecks || []).forEach((sc: any) => {
+        if (!availability[sc.peptide_id]) availability[sc.peptide_id] = new Set();
+        const cats = sourceToCategories[sc.source_provider] || ["no_source"];
+        cats.forEach(cat => availability[sc.peptide_id].add(cat));
+      });
+
+      // data_inconsistency is always deterministic (slug check)
       openPeptideIds.forEach(id => {
         if (!availability[id]) availability[id] = new Set();
         availability[id].add("data_inconsistency");
