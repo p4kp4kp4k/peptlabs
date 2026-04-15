@@ -70,6 +70,9 @@ export default function CorrectionReviewPage() {
   const returnTo = rawReturnTo?.startsWith("/app/admin")
     ? rawReturnTo
     : "/app/admin?tab=integrations&subtab=audit";
+  const returnContext = new URLSearchParams(returnTo.split("?")[1] || "");
+  const auditSeverity = returnContext.get("auditSeverity") || "all";
+  const auditScope = returnContext.get("auditScope") || "global";
   const goBackToAudit = () => navigate(returnTo, { replace: true });
 
   // UI state
