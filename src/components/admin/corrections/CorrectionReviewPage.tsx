@@ -4,7 +4,7 @@
  * Full-page side-by-side comparison for audit corrections.
  * Replaces the old modal with a premium visual diff experience.
  */
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +24,7 @@ import {
   Link2, Unlink, Filter, FileCode, Wrench, Globe, Shield, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { fieldLabel } from "./correctionEngine";
-import { generateSuggestion, analyzeConflict, type Suggestion } from "./suggestionEngine";
+import { generateSuggestion, analyzeConflict, getSourceChecksForPeptide, type Suggestion } from "./suggestionEngine";
 import PeptidePreviewColumn, { SECTION_MAP, type ChangedField, type ChangeHighlightType } from "./PeptidePreviewColumn";
 
 /* ── Field → Section mapping ── */
@@ -58,6 +58,55 @@ const CHANGE_TYPE_MAP: Record<string, ChangeHighlightType> = {
   remove: "removed",
   manual_assist: "replaced",
 };
+
+type SourceCheckSummary = {
+  status: string;
+  confidence: number;
+  lastChecked: string | null;
+};
+
+const CATEGORY_PROVIDER_MAP: Record<string, string[]> = {
+  missing_sequence: ["UniProt", "NCBI Protein"],
+  no_references: ["PubMed"],
+  no_source: ["UniProt", "PubMed", "PubChem", "NCBI Protein"],
+  incomplete_data: ["UniProt", "PubMed"],
+  cross_source_conflict: ["UniProt", "PubMed", "Peptipedia"],
+  no_protocol: ["PubMed"],
+};
+
+const SOURCE_STATUS_META: Record<string, { label: string; className: string }> = {
+  strong_match: { label: "Encontrou dado", className: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30" },
+  no_change: { label: "Já refletido", className: "text-sky-400 bg-sky-400/10 border-sky-400/30" },
+  no_match: { label: "Sem resultado", className: "text-muted-foreground bg-secondary/40 border-border" },
+  no_evidence: { label: "Sem evidência", className: "text-amber-400 bg-amber-400/10 border-amber-400/30" },
+  not_checked: { label: "Não consultada", className: "text-muted-foreground bg-secondary/40 border-border" },
+};
+
+function normalizeSourceChecks(raw: Record<string, SourceCheckSummary>) {
+  const statusWeight: Record<string, number> = {
+    strong_match: 4,
+    no_change: 3,
+    no_evidence: 2,
+    no_match: 1,
+    not_checked: 0,
+  };
+
+  const normalized: Record<string, SourceCheckSummary> = {};
+
+  Object.entries(raw || {}).forEach(([providers, info]) => {
+    providers.split(",").map((provider) => provider.trim()).filter(Boolean).forEach((provider) => {
+      const current = normalized[provider];
+      const nextWeight = statusWeight[info.status] ?? 0;
+      const currentWeight = current ? (statusWeight[current.status] ?? 0) : -1;
+
+      if (!current || nextWeight > currentWeight || (nextWeight === currentWeight && info.confidence > current.confidence)) {
+        normalized[provider] = info;
+      }
+    });
+  });
+
+  return normalized;
+}
 
 export default function CorrectionReviewPage() {
   const { findingId } = useParams<{ findingId: string }>();
@@ -160,6 +209,15 @@ export default function CorrectionReviewPage() {
     enabled: !!finding?.peptide_id,
   });
 
+  const { data: sourceChecks = {}, refetch: refetchSourceChecks } = useQuery({
+    queryKey: ["review-source-checks", finding?.peptide_id],
+    queryFn: async () => {
+      if (!finding?.peptide_id) return {} as Record<string, SourceCheckSummary>;
+      return getSourceChecksForPeptide(finding.peptide_id) as Promise<Record<string, SourceCheckSummary>>;
+    },
+    enabled: !!finding?.peptide_id,
+  });
+
   // ── Sibling findings for next/prev navigation ──
   const { data: siblingFindings = [] } = useQuery({
     queryKey: ["sibling-findings", finding?.audit_run_id, auditSeverity, auditScope],
@@ -246,6 +304,44 @@ export default function CorrectionReviewPage() {
   const currentFindingIdx = siblingFindings.findIndex((f: any) => f.id === findingId);
   const prevFinding = currentFindingIdx > 0 ? siblingFindings[currentFindingIdx - 1] : null;
   const nextFinding = currentFindingIdx < siblingFindings.length - 1 ? siblingFindings[currentFindingIdx + 1] : null;
+
+  const emptySuggestionState = useMemo(() => {
+    const category = finding?.category || "";
+    const expectedProviders = CATEGORY_PROVIDER_MAP[category] || [];
+    const normalizedChecks = normalizeSourceChecks(sourceChecks);
+    const directChecks = expectedProviders.map((provider) => ({
+      provider,
+      ...(normalizedChecks[provider] || { status: "not_checked", confidence: 0, lastChecked: null }),
+    }));
+    const relatedChecks = Object.entries(normalizedChecks)
+      .filter(([provider, info]) => !expectedProviders.includes(provider) && ["strong_match", "no_change"].includes(info.status))
+      .map(([provider, info]) => ({ provider, ...info }));
+
+    if (category === "missing_sequence") {
+      return {
+        title: relatedChecks.length > 0
+          ? "Há evidências relacionadas, mas nenhuma sequência validada"
+          : "Nenhuma sequência validada foi encontrada",
+        description: relatedChecks.length > 0
+          ? "As integrações localizaram outros sinais para este peptídeo, mas nenhuma fonte retornou uma sequência confiável."
+          : "As fontes consultadas não retornaram uma sequência confiável para este peptídeo até agora.",
+        directChecks,
+        relatedChecks,
+      };
+    }
+
+    return {
+      title: "Nenhuma sugestão automática disponível",
+      description: "A busca automática não encontrou dados confiáveis para este finding.",
+      directChecks,
+      relatedChecks,
+    };
+  }, [finding?.category, sourceChecks]);
+
+  const handleRetrySearch = async () => {
+    await refetchSuggestion();
+    await refetchSourceChecks();
+  };
 
   const navigateToFinding = (id: string) => {
     navigate(`/app/admin/review/${id}?${searchParams.toString()}`, { replace: true });
@@ -457,7 +553,7 @@ export default function CorrectionReviewPage() {
   const statusMessage = (() => {
     if (suggestionLoading) return { text: "Buscando sugestão nas fontes...", color: "text-muted-foreground" };
     if (noChangeSuggestion) return { text: `Sem alteração necessária: ${suggestion?.noChangeReason || "os dados já estão atualizados"}.`, color: "text-emerald-400" };
-    if (!hasSuggestion) return { text: "Nenhuma sugestão automática confiável foi gerada. A página atual está à esquerda. Revise manualmente ou tente nova busca.", color: "text-amber-400" };
+    if (!hasSuggestion) return { text: emptySuggestionState.description, color: "text-amber-400" };
     if (suggestion!.confidenceLevel === "high") return { text: "Atualização segura sugerida com base em fonte confiável", color: "text-emerald-400" };
     if (suggestion!.confidenceLevel === "medium") return { text: "Revisão recomendada antes da aplicação", color: "text-amber-400" };
     return { text: "Aplicação automática não recomendada", color: "text-red-400" };
@@ -724,7 +820,7 @@ export default function CorrectionReviewPage() {
                             <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => ignoreMutation.mutate()}>
                               <CheckCircle2 className="h-3 w-3" /> Marcar como resolvido
                             </Button>
-                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => refetchSuggestion()}>
+                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={handleRetrySearch}>
                               <RefreshCw className="h-3 w-3" /> Tentar nova busca
                             </Button>
                           </div>
@@ -733,16 +829,50 @@ export default function CorrectionReviewPage() {
                         <>
                           <SearchX className="h-10 w-10 text-muted-foreground/50" />
                           <div className="text-center max-w-xs">
-                            <p className="text-sm font-medium text-foreground mb-1">Nenhuma sugestão automática disponível</p>
+                            <p className="text-sm font-medium text-foreground mb-1">{emptySuggestionState.title}</p>
                             <p className="text-[11px] text-muted-foreground">
-                              A página atual está à esquerda. Revise manualmente ou tente nova busca.
+                              {emptySuggestionState.description}
                             </p>
                           </div>
+                          {(emptySuggestionState.directChecks.length > 0 || emptySuggestionState.relatedChecks.length > 0) && (
+                            <div className="w-full max-w-lg rounded-xl border border-border bg-card/60 p-3 text-left space-y-3">
+                              {emptySuggestionState.directChecks.length > 0 && (
+                                <div className="space-y-1.5">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Fontes verificadas</p>
+                                  {emptySuggestionState.directChecks.map((check) => {
+                                    const meta = SOURCE_STATUS_META[check.status] || SOURCE_STATUS_META.not_checked;
+                                    return (
+                                      <div key={check.provider} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-secondary/20 px-2.5 py-2">
+                                        <div>
+                                          <p className="text-[11px] font-medium text-foreground">{check.provider}</p>
+                                          {check.lastChecked && <p className="text-[9px] text-muted-foreground">{new Date(check.lastChecked).toLocaleString("pt-BR")}</p>}
+                                        </div>
+                                        <Badge className={cn("text-[9px] border", meta.className)}>{meta.label}</Badge>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+
+                              {emptySuggestionState.relatedChecks.length > 0 && (
+                                <div className="space-y-1.5 border-t border-border pt-3">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Outros sinais encontrados</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {emptySuggestionState.relatedChecks.map((check) => (
+                                      <Badge key={`${check.provider}-${check.status}`} variant="outline" className="text-[9px]">
+                                        {check.provider} · {SOURCE_STATUS_META[check.status]?.label || check.status}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setManualMode(true)}>
                               <Edit3 className="h-3 w-3" /> Editar manualmente
                             </Button>
-                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => refetchSuggestion()}>
+                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={handleRetrySearch}>
                               <RefreshCw className="h-3 w-3" /> Tentar nova busca
                             </Button>
                           </div>
@@ -852,7 +982,7 @@ export default function CorrectionReviewPage() {
                 <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setManualMode(true)}>
                   <Edit3 className="h-3 w-3" /> Editar manualmente
                 </Button>
-                <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => refetchSuggestion()}>
+                <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={handleRetrySearch}>
                   <RefreshCw className="h-3 w-3" /> Tentar nova busca
                 </Button>
               </>
