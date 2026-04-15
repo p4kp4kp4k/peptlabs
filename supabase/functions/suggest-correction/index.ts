@@ -189,6 +189,12 @@ async function searchSequenceNCBI(name: string, aliases: string[]): Promise<any>
       const seq = lines.slice(1).join("").replace(/\s/g, "");
 
       if (seq && seq.length >= 3 && /^[A-Za-z]+$/.test(seq)) {
+        // ── Relevance check ──
+        if (!isRelevantMatch(cleanTerm, header, searchTerms)) {
+          console.log(`[suggest-correction] NCBI SKIPPED: header not relevant to "${cleanTerm}"`);
+          continue;
+        }
+
         console.log(`[suggest-correction] NCBI Protein found sequence (${seq.length} aa)`);
 
         return {
