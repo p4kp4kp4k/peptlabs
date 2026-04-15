@@ -154,6 +154,32 @@ export default function CorrectionReviewPage() {
     enabled: !!finding?.peptide_id,
   });
 
+  // ── Sibling findings for next/prev navigation ──
+  const { data: siblingFindings = [] } = useQuery({
+    queryKey: ["sibling-findings", finding?.audit_run_id, finding?.severity, finding?.category],
+    queryFn: async () => {
+      if (!finding) return [];
+      // Get open findings matching the current filter context
+      const query = supabase
+        .from("audit_findings")
+        .select("id, peptides(name)")
+        .eq("status", "open")
+        .order("created_at", { ascending: true });
+      
+      const { data } = await query;
+      return data || [];
+    },
+    enabled: !!finding,
+  });
+
+  const currentFindingIdx = siblingFindings.findIndex((f: any) => f.id === findingId);
+  const prevFinding = currentFindingIdx > 0 ? siblingFindings[currentFindingIdx - 1] : null;
+  const nextFinding = currentFindingIdx < siblingFindings.length - 1 ? siblingFindings[currentFindingIdx + 1] : null;
+
+  const navigateToFinding = (id: string) => {
+    navigate(`/app/admin/review/${id}?${searchParams.toString()}`, { replace: true });
+  };
+
   // ── Build corrected peptide ──
   const hasSuggestion = !!suggestion && suggestion.proposedValue !== null;
 
