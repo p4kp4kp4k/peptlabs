@@ -21,7 +21,7 @@ interface RawDosageRow { indicacao?: string; objetivo?: string; dose: string; fr
 interface NormalizedDosageRow { indicacao: string; dose: string; frequencia: string; duracao: string; }
 interface RawPhaseRow { fase: string; dose?: string; notas?: string; unidades?: string; duracao?: string; descricao?: string; }
 interface NormalizedPhaseRow { fase: string; dose: string; detalhes: string; }
-interface Reference { titulo: string; fonte: string; ano: number; pmid?: string; }
+interface Reference { titulo?: string; title?: string; fonte?: string; source?: string; journal?: string; ano?: number; year?: number; pmid?: string; authors?: string; }
 interface OldInteraction { nome: string; status: string; descricao: string; }
 interface OldInteractionsData { peptideos?: OldInteraction[]; outras_substancias?: OldInteraction[]; }
 interface NewInteraction { tipo: string; peptideo: string; descricao: string; }
@@ -391,18 +391,43 @@ export default function PeptidePreviewColumn({
       {refs && refs.length > 0 && (
         <PreviewSection id="refs" icon={BookOpen} title={`Referências Científicas (${refs.length})`} highlight={getHighlight("refs")} showHighlights={showHighlights} onlyChanges={onlyChanges}>
           <div className="space-y-1">
-            {refs.map((ref, i) => (
-              <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-secondary/30 border border-border">
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[8px] font-bold mt-0.5">{i + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-foreground font-semibold leading-relaxed">{ref.titulo}</p>
-                  <p className="text-[9px] text-muted-foreground">
-                    {ref.fonte} · {ref.ano}
-                    {ref.pmid && <> · <span className="text-primary">PMID: {ref.pmid}</span></>}
-                  </p>
+            {refs.map((ref, i) => {
+              const title = ref.titulo || ref.title || "";
+              const source = ref.fonte || ref.source || ref.journal || "";
+              const year = ref.ano || ref.year || null;
+              const pmid = ref.pmid;
+              return (
+                <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-secondary/30 border border-border">
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[8px] font-bold mt-0.5">{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    {title ? (
+                      <p className="text-[10px] text-foreground font-semibold leading-relaxed">{title}</p>
+                    ) : pmid ? (
+                      <p className="text-[10px] text-foreground font-semibold leading-relaxed">PMID: {pmid}</p>
+                    ) : null}
+                    <p className="text-[9px] text-muted-foreground">
+                      {source}{source && year ? " · " : ""}{year}
+                      {pmid && (
+                        <>
+                          {(source || year) ? " · " : ""}
+                          <a
+                            href={`https://pubmed.ncbi.nlm.nih.gov/${pmid}/`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline inline-flex items-center gap-0.5"
+                          >
+                            PubMed <ExternalLink className="h-2 w-2" />
+                          </a>
+                        </>
+                      )}
+                    </p>
+                    {ref.authors && (
+                      <p className="text-[8px] text-muted-foreground/60 mt-0.5">{ref.authors}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </PreviewSection>
       )}
