@@ -322,7 +322,12 @@ export default function CorrectionReviewPage() {
     onSuccess: () => {
       toast({ title: "Finding ignorado" });
       queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
-      goBackToAudit();
+      queryClient.invalidateQueries({ queryKey: ["sibling-findings"] });
+      if (nextFinding) {
+        navigateToFinding(nextFinding.id);
+      } else {
+        goBackToAudit();
+      }
     },
   });
 
