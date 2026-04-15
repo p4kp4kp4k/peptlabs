@@ -298,7 +298,12 @@ export default function CorrectionReviewPage() {
       toast({ title: "Correção aplicada", description: "Dados atualizados com sucesso" });
       queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
       queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
-      goBackToAudit();
+      queryClient.invalidateQueries({ queryKey: ["sibling-findings"] });
+      if (nextFinding) {
+        navigateToFinding(nextFinding.id);
+      } else {
+        goBackToAudit();
+      }
     },
     onError: (err: any) => {
       toast({ title: "Erro ao aplicar correção", description: err.message, variant: "destructive" });
