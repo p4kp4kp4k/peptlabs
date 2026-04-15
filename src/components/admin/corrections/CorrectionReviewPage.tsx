@@ -272,7 +272,7 @@ export default function CorrectionReviewPage() {
       toast({ title: "Correção aplicada", description: "Dados atualizados com sucesso" });
       queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
       queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
-      navigate("/app/admin?tab=integrations");
+      goBackToAudit();
     },
     onError: (err: any) => {
       toast({ title: "Erro ao aplicar correção", description: err.message, variant: "destructive" });
@@ -291,7 +291,7 @@ export default function CorrectionReviewPage() {
     onSuccess: () => {
       toast({ title: "Finding ignorado" });
       queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
-      navigate("/app/admin?tab=integrations");
+      goBackToAudit();
     },
   });
 
@@ -310,7 +310,7 @@ export default function CorrectionReviewPage() {
       <div className="flex items-center justify-center min-h-[60vh] flex-col gap-3">
         <AlertTriangle className="h-8 w-8 text-amber-400" />
         <p className="text-sm text-muted-foreground">Peptídeo não encontrado para este finding.</p>
-        <Button variant="outline" size="sm" onClick={() => navigate("/app/admin?tab=integrations")}>Voltar</Button>
+        <Button variant="outline" size="sm" onClick={goBackToAudit}>Voltar</Button>
       </div>
     );
   }
@@ -343,7 +343,7 @@ export default function CorrectionReviewPage() {
       {/* ── TOPBAR ── */}
       <div className="shrink-0 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2.5 z-20">
         <div className="flex items-center gap-3 flex-wrap">
-          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => navigate("/app/admin?tab=integrations")}>
+          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={goBackToAudit}>
             <ArrowLeft className="h-3 w-3" /> Voltar
           </Button>
 
@@ -660,7 +660,7 @@ export default function CorrectionReviewPage() {
         <div className="flex items-center justify-between gap-3 flex-wrap">
           {/* Left actions */}
           <div className="flex items-center gap-2 flex-wrap">
-            <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground" onClick={() => navigate("/app/admin?tab=integrations")}>
+            <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground" onClick={goBackToAudit}>
               Cancelar
             </Button>
             <Button variant="ghost" size="sm" className="h-7 text-[10px] text-amber-400 hover:text-amber-300"
