@@ -76,16 +76,16 @@ Deno.serve(async (req) => {
 
     switch (category) {
       case "missing_sequence":
-        result = await searchSequence(peptide_name, aliases || []);
+        result = await searchSequence(searchTerms);
         break;
       case "no_references":
-        result = await searchReferences(peptide_name);
+        result = await searchReferences(searchTerms);
         break;
       case "no_source":
-        result = await searchSources(peptide_name, aliases || []);
+        result = await searchSources(searchTerms);
         break;
       case "incomplete_data":
-        result = await searchIncompleteData(peptide_name, aliases || []);
+        result = await searchIncompleteData(searchTerms);
         break;
       default:
         result = null;
