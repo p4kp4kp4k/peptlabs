@@ -70,6 +70,9 @@ export default function CorrectionReviewPage() {
   const returnTo = rawReturnTo?.startsWith("/app/admin")
     ? rawReturnTo
     : "/app/admin?tab=integrations&subtab=audit";
+  const returnContext = new URLSearchParams(returnTo.split("?")[1] || "");
+  const auditSeverity = returnContext.get("auditSeverity") || "all";
+  const auditScope = returnContext.get("auditScope") || "global";
   const goBackToAudit = () => navigate(returnTo, { replace: true });
 
   // UI state
@@ -156,18 +159,32 @@ export default function CorrectionReviewPage() {
 
   // ── Sibling findings for next/prev navigation ──
   const { data: siblingFindings = [] } = useQuery({
-    queryKey: ["sibling-findings", finding?.audit_run_id, finding?.severity, finding?.category],
+    queryKey: ["sibling-findings", finding?.audit_run_id, auditSeverity, auditScope],
     queryFn: async () => {
       if (!finding) return [];
-      // Get open findings matching the current filter context
-      const query = supabase
+
+      let query = supabase
         .from("audit_findings")
-        .select("id, peptides(name)")
+        .select("id, category, status, severity, peptide_id, peptides(name)")
         .eq("status", "open")
         .order("created_at", { ascending: true });
-      
+
+      if (auditScope === "run" && finding.audit_run_id) {
+        query = query.eq("audit_run_id", finding.audit_run_id);
+      }
+
+      if (auditSeverity === "resolved") {
+        query = query.in("status", ["resolved", "ignored"]);
+      } else if (auditSeverity === "with_suggestion") {
+        query = query.in("category", ["no_source", "no_references", "incomplete_data", "data_inconsistency"]);
+      } else if (auditSeverity === "manual_only") {
+        query = query.in("category", ["missing_sequence", "cross_source_conflict"]);
+      } else if (auditSeverity !== "all") {
+        query = query.eq("severity", auditSeverity);
+      }
+
       const { data } = await query;
-      return data || [];
+      return (data || []).filter((item: any) => item.status === "open" || auditSeverity === "resolved");
     },
     enabled: !!finding,
   });
