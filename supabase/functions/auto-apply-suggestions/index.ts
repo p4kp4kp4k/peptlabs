@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     const details: any[] = [];
 
     // Categories that support auto-suggestions
-    const supportedCategories = ["missing_sequence", "no_references", "no_source", "incomplete_data"];
+    const supportedCategories = ["missing_sequence", "no_references", "no_source", "incomplete_data", "cross_source_conflict", "no_protocol"];
 
     const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

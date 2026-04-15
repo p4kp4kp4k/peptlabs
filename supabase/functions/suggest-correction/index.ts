@@ -11,7 +11,24 @@ const PUBMED_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
 const NCBI_PROTEIN_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
 const PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest/pug";
 
-// ── Smart name cleaning: normalize accents instead of stripping, remove parenthetical content ──
+// ── Valid peptide DB columns ──
+const VALID_PEPTIDE_FIELDS = new Set([
+  "name","slug","category","description","benefits","dosage_info","side_effects",
+  "mechanism","classification","half_life","reconstitution","alternative_names",
+  "timeline","dosage_table","protocol_phases","reconstitution_steps","mechanism_points",
+  "interactions","stacks","scientific_references","goals","application","sequence",
+  "sequence_length","organism","biological_activity","structure_info","source_origins",
+  "confidence_score","ncbi_protein_id","dramp_id","apd_id","peptipedia_id",
+  "tier","access_level","evidence_level",
+]);
+
+// ── Field mapping: external field names → valid DB columns ──
+const FIELD_MAP: Record<string, string> = {
+  "adverse_events": "side_effects",
+  "regulatory_update": "side_effects",
+};
+
+// ── Smart name cleaning ──
 function buildSearchTerms(name: string, aliases: string[]): string[] {
   const terms: string[] = [];
   const seen = new Set<string>();
@@ -27,27 +44,21 @@ function buildSearchTerms(name: string, aliases: string[]): string[] {
     }
   };
 
-  // Full name without parentheses content
   const baseName = name.replace(/\s*\(.*?\)\s*/g, " ").trim();
   addTerm(baseName);
 
-  // Parenthetical content as separate term
   const parenMatch = name.match(/\(([^)]+)\)/);
   if (parenMatch) addTerm(parenMatch[1]);
 
-  // Full name as-is
   addTerm(name);
 
-  // Each alias
   for (const alias of aliases) {
     if (alias) addTerm(alias);
   }
 
-  // Core identifier (e.g. "BPC-157" from "BPC-157 Oral")
   const coreParts = baseName.split(/\s+/);
   if (coreParts.length > 1) {
-    addTerm(coreParts[0]); // first word often is the identifier
-    // Also try first two words for compound names
+    addTerm(coreParts[0]);
     if (coreParts.length > 2) addTerm(`${coreParts[0]} ${coreParts[1]}`);
   }
 
@@ -60,7 +71,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { peptide_name, peptide_id, category, aliases } = await req.json();
+    const { peptide_name, peptide_id, category, aliases, finding_data } = await req.json();
 
     if (!peptide_name || !category) {
       return new Response(
@@ -87,6 +98,12 @@ Deno.serve(async (req) => {
       case "incomplete_data":
         result = await searchIncompleteData(searchTerms);
         break;
+      case "cross_source_conflict":
+        result = handleCrossSourceConflict(finding_data, searchTerms);
+        break;
+      case "no_protocol":
+        result = await searchProtocol(searchTerms);
+        break;
       default:
         result = null;
     }
@@ -105,7 +122,145 @@ Deno.serve(async (req) => {
   }
 });
 
-// ── Name relevance check to avoid false positives ──
+// ── Cross-source conflict handler ──
+function handleCrossSourceConflict(findingData: any, terms: string[]): any {
+  if (!findingData) return null;
+  
+  const { value_a, value_b, source_a, source_b, title, description } = findingData;
+  if (!value_b || !source_b) return null;
+
+  // Determine which field is conflicting from the title
+  let field = "sequence"; // default
+  if (title?.includes("adverse_events") || title?.includes("regulatory_update")) {
+    field = "side_effects";
+  } else if (title?.includes("sequence")) {
+    field = "sequence";
+  } else if (title?.includes("mechanism")) {
+    field = "mechanism";
+  } else if (title?.includes("description")) {
+    field = "description";
+  }
+
+  // Map invalid external field names to valid ones
+  const mappedField = FIELD_MAP[field] || field;
+  
+  // Ensure mapped field is valid
+  if (!VALID_PEPTIDE_FIELDS.has(mappedField)) {
+    console.log(`[suggest-correction] Cross-source conflict: field "${field}" → "${mappedField}" is invalid, skipping`);
+    return null;
+  }
+
+  // For sequence conflicts from authoritative sources (UniProt, NCBI), propose the external value
+  const isAuthoritative = ["UniProt", "NCBI", "NCBI_Protein"].some(s => 
+    source_b?.toLowerCase().includes(s.toLowerCase())
+  );
+
+  // For adverse_events/regulatory from openFDA → map to side_effects
+  const isRegulatoryUpdate = title?.includes("regulatory_update") || title?.includes("adverse_events");
+  
+  if (isRegulatoryUpdate) {
+    // Append to side_effects rather than replace
+    return {
+      field: "side_effects",
+      proposed_value: value_b,
+      source: source_b,
+      source_id: null,
+      confidence: 65,
+      confidence_level: "medium",
+      change_type: "replace",
+      description: `Atualização regulatória de ${source_b}: efeitos adversos reportados`,
+      impact: "Os efeitos colaterais serão atualizados com dados regulatórios",
+      extra: { original_field: "adverse_events", source: source_b },
+    };
+  }
+
+  if (mappedField === "sequence" && isAuthoritative) {
+    const seqLength = value_b?.length || 0;
+    return {
+      field: "sequence",
+      proposed_value: value_b,
+      source: source_b,
+      source_id: null,
+      confidence: 75,
+      confidence_level: "medium",
+      change_type: "replace",
+      description: `Sequência de ${source_b} (${seqLength} aa) difere da atual. Fonte autoritativa priorizada.`,
+      impact: "A sequência será atualizada com a versão da fonte autoritativa",
+      extra: { current_length: value_a?.length || 0, proposed_length: seqLength, source: source_b },
+    };
+  }
+
+  // Generic conflict: propose external value with moderate confidence
+  return {
+    field: mappedField,
+    proposed_value: value_b,
+    source: source_b,
+    source_id: null,
+    confidence: 60,
+    confidence_level: "medium",
+    change_type: "replace",
+    description: `Conflito entre ${source_a || "PeptLabs"} e ${source_b}: valor externo proposto`,
+    impact: `O campo "${mappedField}" será atualizado com o valor de ${source_b}`,
+    extra: { source_a, source_b },
+  };
+}
+
+// ── Protocol search via PubMed ──
+async function searchProtocol(terms: string[]): Promise<any> {
+  for (const term of terms) {
+    try {
+      const query = encodeURIComponent(`${term} peptide dosage protocol`);
+      console.log(`[suggest-correction] PubMed protocol search: "${term}"`);
+
+      const searchUrl = `${PUBMED_BASE}/esearch.fcgi?db=pubmed&term=${query}&retmax=3&retmode=json&sort=relevance`;
+      const searchRes = await fetch(searchUrl, { signal: AbortSignal.timeout(10000) });
+      if (!searchRes.ok) continue;
+
+      const searchData = await searchRes.json();
+      const ids = searchData.esearchresult?.idlist || [];
+      if (ids.length === 0) continue;
+
+      // Found protocol-related articles — suggest adding references as a starting point
+      const summaryUrl = `${PUBMED_BASE}/esummary.fcgi?db=pubmed&id=${ids.join(",")}&retmode=json`;
+      const summaryRes = await fetch(summaryUrl, { signal: AbortSignal.timeout(10000) });
+      if (!summaryRes.ok) continue;
+
+      const summaryData = await summaryRes.json();
+      const articles = ids
+        .map((id: string) => {
+          const article = summaryData.result?.[id];
+          if (!article || !article.title) return null;
+          return {
+            title: article.title.replace(/<[^>]*>/g, ""),
+            journal: article.fulljournalname || article.source || null,
+            year: parseInt((article.pubdate || "").substring(0, 4)) || null,
+            pmid: id,
+          };
+        })
+        .filter(Boolean);
+
+      if (articles.length > 0) {
+        return {
+          field: "scientific_references",
+          proposed_value: articles,
+          source: "PubMed",
+          source_id: null,
+          confidence: 55,
+          confidence_level: "medium",
+          change_type: "merge",
+          description: `${articles.length} artigo(s) sobre protocolo/dosagem encontrado(s) no PubMed`,
+          impact: "Referências sobre protocolo serão adicionadas para embasar futuras adições de protocolo",
+          extra: { count: articles.length, search_type: "protocol" },
+        };
+      }
+    } catch (e) {
+      console.log(`[suggest-correction] Protocol search error:`, e.message);
+    }
+  }
+  return null;
+}
+
+// ── Name relevance check ──
 function isRelevantMatch(searchTerm: string, resultName: string, allTerms: string[]): boolean {
   const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
   const normalizedResult = normalize(resultName);
@@ -113,9 +268,7 @@ function isRelevantMatch(searchTerm: string, resultName: string, allTerms: strin
   for (const term of [searchTerm, ...allTerms]) {
     const normalizedTerm = normalize(term);
     if (!normalizedTerm) continue;
-    // Direct substring match
     if (normalizedResult.includes(normalizedTerm) || normalizedTerm.includes(normalizedResult)) return true;
-    // Core name match (e.g. "bpc157" in "bodyprotectioncompound157")
     const core = normalizedTerm.replace(/oral|injectable|nasal|subcutaneous/g, "").trim();
     if (core && normalizedResult.includes(core)) return true;
   }
@@ -313,11 +466,9 @@ async function searchReferences(terms: string[]): Promise<any> {
 async function searchSources(terms: string[]): Promise<any> {
   const origins: Array<{ source: string; id: string; detail: string }> = [];
 
-  // Check UniProt
   for (const term of terms) {
     if (origins.find(o => o.source === "UniProt")) break;
     try {
-      console.log(`[suggest-correction] Source UniProt search: "${term}"`);
       const res = await fetch(
         `${UNIPROT_BASE}/search?query=${encodeURIComponent(term)}&size=3&format=json`,
         { signal: AbortSignal.timeout(8000), headers: { Accept: "application/json" } }
@@ -337,11 +488,9 @@ async function searchSources(terms: string[]): Promise<any> {
     } catch {}
   }
 
-  // Check PubMed
   for (const term of terms) {
     if (origins.find(o => o.source === "PubMed")) break;
     try {
-      console.log(`[suggest-correction] Source PubMed search: "${term}"`);
       const res = await fetch(
         `${PUBMED_BASE}/esearch.fcgi?db=pubmed&term=${encodeURIComponent(`${term} peptide`)}&retmax=5&retmode=json`,
         { signal: AbortSignal.timeout(8000) }
@@ -353,11 +502,9 @@ async function searchSources(terms: string[]): Promise<any> {
     } catch {}
   }
 
-  // Check PubChem
   for (const term of terms) {
     if (origins.find(o => o.source === "PubChem")) break;
     try {
-      console.log(`[suggest-correction] Source PubChem search: "${term}"`);
       const res = await fetch(`${PUBCHEM_BASE}/compound/name/${encodeURIComponent(term)}/JSON`, { signal: AbortSignal.timeout(8000) });
       if (res.ok) {
         const cid = (await res.json())?.PC_Compounds?.[0]?.id?.id?.cid;
@@ -366,11 +513,9 @@ async function searchSources(terms: string[]): Promise<any> {
     } catch {}
   }
 
-  // Check NCBI Protein
   for (const term of terms) {
     if (origins.find(o => o.source === "NCBI Protein")) break;
     try {
-      console.log(`[suggest-correction] Source NCBI search: "${term}"`);
       const res = await fetch(
         `${NCBI_PROTEIN_BASE}/esearch.fcgi?db=protein&term=${encodeURIComponent(`${term} peptide`)}&retmax=1&retmode=json`,
         { signal: AbortSignal.timeout(8000) }
