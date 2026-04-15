@@ -44,11 +44,22 @@ function buildSearchTerms(name: string, aliases: string[]): string[] {
     }
   };
 
-  const baseName = name.replace(/\s*\(.*?\)\s*/g, " ").trim();
+  // Strip product info like "(10IU Vial)", dosage forms, "Peptídico", "Peptídeo", etc.
+  const stripProductInfo = (s: string): string =>
+    s.replace(/\s*\(.*?\)\s*/g, " ")
+     .replace(/\b\d+\s*(IU|mg|mcg|ml|iu)\b/gi, "")
+     .replace(/\b(vial|peptidico|peptideo|peptidica|nootropico|ansiolitico|neurotrofico|mimetico)\b/gi, "")
+     .replace(/\s+/g, " ")
+     .trim();
+
+  const baseName = stripProductInfo(name);
   addTerm(baseName);
 
   const parenMatch = name.match(/\(([^)]+)\)/);
-  if (parenMatch) addTerm(parenMatch[1]);
+  if (parenMatch) {
+    const inner = stripProductInfo(parenMatch[1]);
+    if (inner) addTerm(inner);
+  }
 
   addTerm(name);
 
@@ -56,11 +67,16 @@ function buildSearchTerms(name: string, aliases: string[]): string[] {
     if (alias) addTerm(alias);
   }
 
-  const coreParts = baseName.split(/\s+/);
+  // Add the first word (usually the core peptide name like "Selank", "Cerebrolysin")
+  const coreParts = baseName.split(/\s+/).filter(p => p.length >= 2);
   if (coreParts.length > 1) {
     addTerm(coreParts[0]);
     if (coreParts.length > 2) addTerm(`${coreParts[0]} ${coreParts[1]}`);
   }
+
+  // Also add first word of original name if different
+  const origFirst = name.split(/[\s\-]+/)[0]?.replace(/[^a-zA-Z0-9]/g, "");
+  if (origFirst && origFirst.length >= 3) addTerm(origFirst);
 
   return terms;
 }
