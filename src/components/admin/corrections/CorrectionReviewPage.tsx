@@ -142,6 +142,9 @@ export default function CorrectionReviewPage() {
     enabled: !!finding?.peptide_id && !!peptide,
   });
 
+  const noChangeSuggestion = !!suggestion?.noChangeReason;
+  const hasRenderableSuggestion = !!suggestion && suggestion.proposedValue !== null && !noChangeSuggestion;
+
   const { data: history = [] } = useQuery({
     queryKey: ["correction-history-review", finding?.peptide_id],
     queryFn: async () => {
@@ -249,7 +252,7 @@ export default function CorrectionReviewPage() {
   };
 
   // ── Build corrected peptide ──
-  const hasSuggestion = !!suggestion && suggestion.proposedValue !== null;
+  const hasSuggestion = hasRenderableSuggestion;
 
   const correctedPeptide = (() => {
     if (!peptide || !hasSuggestion || !suggestion) return peptide;
@@ -268,7 +271,6 @@ export default function CorrectionReviewPage() {
     return copy;
   })();
 
-  // ── Build changed fields list ──
   const changedFields: ChangedField[] = hasSuggestion && suggestion ? [{
     field: suggestion.field,
     sectionId: FIELD_TO_SECTION[suggestion.field] || "hero",
@@ -396,16 +398,20 @@ export default function CorrectionReviewPage() {
   const ignoreMutation = useMutation({
     mutationFn: async () => {
       if (!finding) return;
+      const defaultResolution = noChangeSuggestion
+        ? `Auto-resolvido no review: ${suggestion?.noChangeReason || "sem alteração necessária"}`
+        : "Ignorado pelo admin";
       await supabase.from("audit_findings").update({
-        status: "ignored",
+        status: noChangeSuggestion ? "resolved" : "ignored",
         resolved_at: new Date().toISOString(),
-        resolution_note: notes || "Ignorado pelo admin",
+        resolution_note: notes || defaultResolution,
       }).eq("id", finding.id);
     },
     onSuccess: () => {
-      toast({ title: "Finding ignorado" });
+      toast({ title: noChangeSuggestion ? "Finding resolvido" : "Finding ignorado" });
       queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
       queryClient.invalidateQueries({ queryKey: ["sibling-findings"] });
+      queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
       if (nextFinding) {
         navigateToFinding(nextFinding.id);
       } else {
@@ -450,6 +456,7 @@ export default function CorrectionReviewPage() {
   // Status message
   const statusMessage = (() => {
     if (suggestionLoading) return { text: "Buscando sugestão nas fontes...", color: "text-muted-foreground" };
+    if (noChangeSuggestion) return { text: `Sem alteração necessária: ${suggestion?.noChangeReason || "os dados já estão atualizados"}.`, color: "text-emerald-400" };
     if (!hasSuggestion) return { text: "Nenhuma sugestão automática confiável foi gerada. A página atual está à esquerda. Revise manualmente ou tente nova busca.", color: "text-amber-400" };
     if (suggestion!.confidenceLevel === "high") return { text: "Atualização segura sugerida com base em fonte confiável", color: "text-emerald-400" };
     if (suggestion!.confidenceLevel === "medium") return { text: "Revisão recomendada antes da aplicação", color: "text-amber-400" };
@@ -703,6 +710,24 @@ export default function CorrectionReviewPage() {
                         <>
                           <Loader2 className="h-8 w-8 animate-spin text-primary" />
                           <p className="text-xs text-muted-foreground">Buscando dados nas integrações...</p>
+                        </>
+                      ) : noChangeSuggestion ? (
+                        <>
+                          <CheckCircle2 className="h-10 w-10 text-emerald-400/80" />
+                          <div className="text-center max-w-xs">
+                            <p className="text-sm font-medium text-foreground mb-1">Nenhuma alteração necessária</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {suggestion?.noChangeReason || "Os dados encontrados já estão refletidos na página atual."}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => ignoreMutation.mutate()}>
+                              <CheckCircle2 className="h-3 w-3" /> Marcar como resolvido
+                            </Button>
+                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => refetchSuggestion()}>
+                              <RefreshCw className="h-3 w-3" /> Tentar nova busca
+                            </Button>
+                          </div>
                         </>
                       ) : (
                         <>

@@ -27,6 +27,7 @@ export interface Suggestion {
   impact: string;
   previewData: any;
   requiresManualReview: boolean;
+  noChangeReason?: string | null;
   /** Info about global source sync status */
   sourceContext?: SourceContext;
   /** Rich confidence analysis from the Confidence Engine */
@@ -182,39 +183,49 @@ export async function generateSuggestion(
   }
 
   if (localResult) {
-    // ── NO_CHANGE filter: skip if proposed === current ──
     const noChange = isNoChange(localResult.field, localResult.oldValue, localResult.proposedValue);
     if (noChange.isNoChange) {
       console.log("[SuggestionEngine] NO_CHANGE detected for", finding.category, ":", noChange.reason);
       await recordLookupResult(finding.peptide_id!, localResult.sourceProvider, "no_change", 0, false);
-      return null;
+      return enrichWithSourceContext({
+        ...localResult,
+        confidenceScore: 100,
+        confidenceLevel: "high",
+        noChangeReason: noChange.reason,
+        description: `Sem alteração necessária em ${fieldLabel(localResult.field)}`,
+        impact: "Os dados sugeridos já estão refletidos na página atual",
+        requiresManualReview: false,
+      }, finding);
     }
     console.log("[SuggestionEngine] Found local data for", finding.category);
-    // ── Apply Confidence Engine scoring ──
     const enriched = applyConfidenceEngine(localResult);
     await recordLookupResult(finding.peptide_id!, enriched.sourceProvider, "strong_match", enriched.confidenceScore, true);
     return enrichWithSourceContext(enriched, finding);
   }
 
-  // Step 2: Call edge function for real API data
   console.log("[SuggestionEngine] No local data, calling external APIs...");
   const externalResult = await callExternalSuggestion(finding, peptide);
 
   if (externalResult) {
-    // ── NO_CHANGE filter for external results too ──
     const noChange = isNoChange(externalResult.field, externalResult.oldValue, externalResult.proposedValue);
     if (noChange.isNoChange) {
       console.log("[SuggestionEngine] NO_CHANGE (external) for", finding.category, ":", noChange.reason);
       await recordLookupResult(finding.peptide_id!, externalResult.sourceProvider, "no_change", 0, false);
-      return null;
+      return enrichWithSourceContext({
+        ...externalResult,
+        confidenceScore: 100,
+        confidenceLevel: "high",
+        noChangeReason: noChange.reason,
+        description: `Sem alteração necessária em ${fieldLabel(externalResult.field)}`,
+        impact: "Os dados encontrados nas fontes já estão refletidos na página atual",
+        requiresManualReview: false,
+      }, finding);
     }
-    // ── Apply Confidence Engine scoring ──
     const enriched = applyConfidenceEngine(externalResult);
     await recordLookupResult(finding.peptide_id!, enriched.sourceProvider, "strong_match", enriched.confidenceScore, true);
     return enrichWithSourceContext(enriched, finding);
   }
 
-  // No result found - record no_match for relevant sources
   const sources = CATEGORY_SOURCES[finding.category] || [];
   for (const src of sources) {
     await recordLookupResult(finding.peptide_id!, src, "no_match", 0, false);
