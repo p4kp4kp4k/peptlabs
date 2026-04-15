@@ -63,6 +63,10 @@ type SourceCheckSummary = {
   status: string;
   confidence: number;
   lastChecked: string | null;
+  suggestionGenerated?: boolean;
+  matchedRecordId?: string | null;
+  matchedRecordName?: string | null;
+  notes?: string | null;
 };
 
 const CATEGORY_PROVIDER_MAP: Record<string, string[]> = {
@@ -76,6 +80,7 @@ const CATEGORY_PROVIDER_MAP: Record<string, string[]> = {
 
 const SOURCE_STATUS_META: Record<string, { label: string; className: string }> = {
   strong_match: { label: "Encontrou dado", className: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30" },
+  strong_match_without_suggestion: { label: "Match sem sugestão", className: "text-amber-400 bg-amber-400/10 border-amber-400/30" },
   no_change: { label: "Já refletido", className: "text-sky-400 bg-sky-400/10 border-sky-400/30" },
   no_match: { label: "Sem resultado", className: "text-muted-foreground bg-secondary/40 border-border" },
   no_evidence: { label: "Sem evidência", className: "text-amber-400 bg-amber-400/10 border-amber-400/30" },
@@ -85,6 +90,7 @@ const SOURCE_STATUS_META: Record<string, { label: string; className: string }> =
 function normalizeSourceChecks(raw: Record<string, SourceCheckSummary>) {
   const statusWeight: Record<string, number> = {
     strong_match: 4,
+    strong_match_without_suggestion: 3,
     no_change: 3,
     no_evidence: 2,
     no_match: 1,
@@ -95,12 +101,19 @@ function normalizeSourceChecks(raw: Record<string, SourceCheckSummary>) {
 
   Object.entries(raw || {}).forEach(([providers, info]) => {
     providers.split(",").map((provider) => provider.trim()).filter(Boolean).forEach((provider) => {
+      const effectiveStatus = info.status === "strong_match" && !info.suggestionGenerated
+        ? "strong_match_without_suggestion"
+        : info.status;
+      const normalizedInfo = {
+        ...info,
+        status: effectiveStatus,
+      };
       const current = normalized[provider];
-      const nextWeight = statusWeight[info.status] ?? 0;
+      const nextWeight = statusWeight[normalizedInfo.status] ?? 0;
       const currentWeight = current ? (statusWeight[current.status] ?? 0) : -1;
 
-      if (!current || nextWeight > currentWeight || (nextWeight === currentWeight && info.confidence > current.confidence)) {
-        normalized[provider] = info;
+      if (!current || nextWeight > currentWeight || (nextWeight === currentWeight && normalizedInfo.confidence > current.confidence)) {
+        normalized[provider] = normalizedInfo;
       }
     });
   });
@@ -309,9 +322,9 @@ export default function CorrectionReviewPage() {
     const category = finding?.category || "";
     const expectedProviders = CATEGORY_PROVIDER_MAP[category] || [];
     const normalizedChecks = normalizeSourceChecks(sourceChecks);
-    const directChecks = expectedProviders.map((provider) => ({
+      const directChecks = expectedProviders.map((provider) => ({
       provider,
-      ...(normalizedChecks[provider] || { status: "not_checked", confidence: 0, lastChecked: null }),
+      ...(normalizedChecks[provider] || { status: "not_checked", confidence: 0, lastChecked: null, suggestionGenerated: false, matchedRecordId: null, matchedRecordName: null, notes: null }),
     }));
     const relatedChecks = Object.entries(normalizedChecks)
       .filter(([provider, info]) => !expectedProviders.includes(provider) && ["strong_match", "no_change"].includes(info.status))
@@ -852,9 +865,14 @@ export default function CorrectionReviewPage() {
                                 const meta = SOURCE_STATUS_META[check.status] || SOURCE_STATUS_META.not_checked;
                                 return (
                                   <div key={check.provider} className="flex items-center justify-between gap-2 rounded-lg border border-border/40 bg-secondary/20 px-2.5 py-1.5">
-                                    <div>
+                                     <div className="min-w-0">
                                       <p className="text-[10px] font-medium text-foreground">{check.provider}</p>
                                       {check.lastChecked && <p className="text-[8px] text-muted-foreground">{new Date(check.lastChecked).toLocaleString("pt-BR")}</p>}
+                                       {(check.matchedRecordName || check.matchedRecordId || check.notes) && (
+                                         <p className="mt-0.5 truncate text-[8px] text-muted-foreground">
+                                           {check.matchedRecordName || check.matchedRecordId || check.notes}
+                                         </p>
+                                       )}
                                     </div>
                                     <Badge className={cn("text-[8px] border", meta.className)}>{meta.label}</Badge>
                                   </div>
