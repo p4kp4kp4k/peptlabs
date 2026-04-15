@@ -12,6 +12,28 @@ import { fieldLabel } from "./correctionEngine";
 import { isNoChange, normalizeReferences, normalizeSequence } from "./noChangeFilter";
 import { scoreSuggestion, type ConfidenceResult, type ConfidenceLevel, levelLabel } from "./confidenceEngine";
 
+// ── Field mapping: external field names → valid DB columns ──
+const FIELD_MAP: Record<string, string> = {
+  adverse_events: "side_effects",
+  regulatory_update: "side_effects",
+};
+
+const VALID_PEPTIDE_FIELDS = new Set([
+  "name","slug","category","description","benefits","dosage_info","side_effects",
+  "mechanism","classification","half_life","reconstitution","alternative_names",
+  "timeline","dosage_table","protocol_phases","reconstitution_steps","mechanism_points",
+  "interactions","stacks","scientific_references","goals","application","sequence",
+  "sequence_length","organism","biological_activity","structure_info","source_origins",
+  "confidence_score","ncbi_protein_id","dramp_id","apd_id","peptipedia_id",
+  "tier","access_level","evidence_level",
+]);
+
+/** Map external field names to valid DB columns, skip invalid ones */
+function mapField(raw: string): string | null {
+  const mapped = FIELD_MAP[raw] || raw;
+  return VALID_PEPTIDE_FIELDS.has(mapped) ? mapped : null;
+}
+
 export interface Suggestion {
   findingId: string;
   peptideId: string;
