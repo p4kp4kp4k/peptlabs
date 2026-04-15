@@ -44,11 +44,22 @@ function buildSearchTerms(name: string, aliases: string[]): string[] {
     }
   };
 
-  const baseName = name.replace(/\s*\(.*?\)\s*/g, " ").trim();
+  // Strip product info like "(10IU Vial)", dosage forms, "Peptídico", "Peptídeo", etc.
+  const stripProductInfo = (s: string): string =>
+    s.replace(/\s*\(.*?\)\s*/g, " ")
+     .replace(/\b\d+\s*(IU|mg|mcg|ml|iu)\b/gi, "")
+     .replace(/\b(vial|peptidico|peptideo|peptidica|nootropico|ansiolitico|neurotrofico|mimetico)\b/gi, "")
+     .replace(/\s+/g, " ")
+     .trim();
+
+  const baseName = stripProductInfo(name);
   addTerm(baseName);
 
   const parenMatch = name.match(/\(([^)]+)\)/);
-  if (parenMatch) addTerm(parenMatch[1]);
+  if (parenMatch) {
+    const inner = stripProductInfo(parenMatch[1]);
+    if (inner) addTerm(inner);
+  }
 
   addTerm(name);
 
@@ -56,11 +67,16 @@ function buildSearchTerms(name: string, aliases: string[]): string[] {
     if (alias) addTerm(alias);
   }
 
-  const coreParts = baseName.split(/\s+/);
+  // Add the first word (usually the core peptide name like "Selank", "Cerebrolysin")
+  const coreParts = baseName.split(/\s+/).filter(p => p.length >= 2);
   if (coreParts.length > 1) {
     addTerm(coreParts[0]);
     if (coreParts.length > 2) addTerm(`${coreParts[0]} ${coreParts[1]}`);
   }
+
+  // Also add first word of original name if different
+  const origFirst = name.split(/[\s\-]+/)[0]?.replace(/[^a-zA-Z0-9]/g, "");
+  if (origFirst && origFirst.length >= 3) addTerm(origFirst);
 
   return terms;
 }
@@ -205,11 +221,12 @@ function handleCrossSourceConflict(findingData: any, terms: string[]): any {
   };
 }
 
-// ── Protocol search via PubMed ──
+// ── Protocol search via PubMed (simpler query to avoid zero results) ──
 async function searchProtocol(terms: string[]): Promise<any> {
   for (const term of terms) {
     try {
-      const query = encodeURIComponent(`${term} peptide dosage protocol`);
+      // Use just the peptide name — adding "dosage protocol" is too restrictive
+      const query = encodeURIComponent(`${term} peptide`);
       console.log(`[suggest-correction] PubMed protocol search: "${term}"`);
 
       const searchUrl = `${PUBMED_BASE}/esearch.fcgi?db=pubmed&term=${query}&retmax=3&retmode=json&sort=relevance`;
@@ -220,7 +237,6 @@ async function searchProtocol(terms: string[]): Promise<any> {
       const ids = searchData.esearchresult?.idlist || [];
       if (ids.length === 0) continue;
 
-      // Found protocol-related articles — suggest adding references as a starting point
       const summaryUrl = `${PUBMED_BASE}/esummary.fcgi?db=pubmed&id=${ids.join(",")}&retmode=json`;
       const summaryRes = await fetch(summaryUrl, { signal: AbortSignal.timeout(10000) });
       if (!summaryRes.ok) continue;
@@ -543,8 +559,9 @@ async function searchSources(terms: string[]): Promise<any> {
   };
 }
 
-// ── Incomplete data search ──
+// ── Incomplete data search (UniProt → PubMed fallback) ──
 async function searchIncompleteData(terms: string[]): Promise<any> {
+  // Try UniProt for mechanism of action
   for (const term of terms) {
     try {
       const res = await fetch(
@@ -572,5 +589,55 @@ async function searchIncompleteData(terms: string[]): Promise<any> {
       }
     } catch (e) { console.log(`[suggest-correction] Incomplete data error:`, e.message); }
   }
+
+  // Fallback: search PubMed for general references about the peptide
+  for (const term of terms) {
+    try {
+      const query = encodeURIComponent(`${term} peptide`);
+      console.log(`[suggest-correction] Incomplete data PubMed fallback: "${term}"`);
+
+      const searchUrl = `${PUBMED_BASE}/esearch.fcgi?db=pubmed&term=${query}&retmax=5&retmode=json&sort=relevance`;
+      const searchRes = await fetch(searchUrl, { signal: AbortSignal.timeout(10000) });
+      if (!searchRes.ok) continue;
+
+      const searchData = await searchRes.json();
+      const ids = searchData.esearchresult?.idlist || [];
+      if (ids.length === 0) continue;
+
+      const summaryUrl = `${PUBMED_BASE}/esummary.fcgi?db=pubmed&id=${ids.join(",")}&retmode=json`;
+      const summaryRes = await fetch(summaryUrl, { signal: AbortSignal.timeout(10000) });
+      if (!summaryRes.ok) continue;
+
+      const summaryData = await summaryRes.json();
+      const articles = ids
+        .map((id: string) => {
+          const article = summaryData.result?.[id];
+          if (!article || !article.title) return null;
+          return {
+            title: article.title.replace(/<[^>]*>/g, ""),
+            journal: article.fulljournalname || article.source || null,
+            year: parseInt((article.pubdate || "").substring(0, 4)) || null,
+            pmid: id,
+          };
+        })
+        .filter(Boolean);
+
+      if (articles.length > 0) {
+        return {
+          field: "scientific_references",
+          proposed_value: articles,
+          source: "PubMed",
+          source_id: null,
+          confidence: 60,
+          confidence_level: "medium",
+          change_type: "merge",
+          description: `${articles.length} referência(s) encontrada(s) no PubMed para complementar dados de "${term}"`,
+          impact: "Referências científicas serão adicionadas ao peptídeo",
+          extra: { count: articles.length, search_type: "incomplete_data_fallback" },
+        };
+      }
+    } catch (e) { console.log(`[suggest-correction] Incomplete data PubMed error:`, e.message); }
+  }
+
   return null;
 }
