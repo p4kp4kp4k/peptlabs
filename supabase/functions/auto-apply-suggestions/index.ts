@@ -134,6 +134,22 @@ Deno.serve(async (req) => {
         }
 
         // Apply the suggestion
+        const VALID_FIELDS = new Set([
+          "name","slug","category","description","benefits","dosage_info","side_effects",
+          "mechanism","classification","half_life","reconstitution","alternative_names",
+          "timeline","dosage_table","protocol_phases","reconstitution_steps","mechanism_points",
+          "interactions","stacks","scientific_references","goals","application","sequence",
+          "sequence_length","organism","biological_activity","structure_info","source_origins",
+          "confidence_score","ncbi_protein_id","dramp_id","apd_id","peptipedia_id",
+          "tier","access_level","evidence_level",
+        ]);
+        if (!VALID_FIELDS.has(suggestion.field)) {
+          console.log(`[auto-apply] SKIP invalid field "${suggestion.field}" for ${peptide.name}`);
+          skipped++;
+          details.push({ finding_id: finding.id, peptide: peptide.name, action: "invalid_field", field: suggestion.field });
+          continue;
+        }
+
         const currentValue = (peptide as any)[suggestion.field] || null;
         const updatePayload: Record<string, any> = {};
 
