@@ -61,9 +61,25 @@ Deno.serve(async (req) => {
   }
 });
 
+// ── Name relevance check to avoid false positives ──
+function isRelevantMatch(searchTerm: string, resultName: string, allTerms: string[]): boolean {
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normalizedResult = normalize(resultName);
+
+  for (const term of [searchTerm, ...allTerms]) {
+    const normalizedTerm = normalize(term);
+    if (!normalizedTerm) continue;
+    // Direct substring match
+    if (normalizedResult.includes(normalizedTerm) || normalizedTerm.includes(normalizedResult)) return true;
+    // Core name match (e.g. "bpc157" in "bodyprotectioncompound157")
+    const core = normalizedTerm.replace(/oral|injectable|nasal|subcutaneous/g, "").trim();
+    if (core && normalizedResult.includes(core)) return true;
+  }
+  return false;
+}
+
 // ── Multi-source sequence search ──
 async function searchSequence(name: string, aliases: string[]): Promise<any> {
-  // Try sources in priority order: UniProt → NCBI Protein → PubChem
   const result =
     (await searchSequenceUniProt(name, aliases)) ||
     (await searchSequenceNCBI(name, aliases)) ||
@@ -104,6 +120,12 @@ async function searchSequenceUniProt(name: string, aliases: string[]): Promise<a
             best.proteinDescription?.recommendedName?.fullName?.value ||
             best.proteinDescription?.submittedName?.[0]?.fullName?.value ||
             cleanTerm;
+
+          // ── Relevance check: reject false positives ──
+          if (!isRelevantMatch(cleanTerm, proteinName, searchTerms)) {
+            console.log(`[suggest-correction] UniProt SKIPPED: "${proteinName}" not relevant to "${cleanTerm}"`);
+            continue;
+          }
 
           console.log(`[suggest-correction] UniProt found: ${proteinName} (${seq.length} aa)`);
 
