@@ -8,6 +8,8 @@ const corsHeaders = {
 
 const UNIPROT_BASE = "https://rest.uniprot.org/uniprotkb";
 const PUBMED_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
+const NCBI_PROTEIN_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
+const PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest/pug";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -59,8 +61,34 @@ Deno.serve(async (req) => {
   }
 });
 
-// ── UniProt sequence search ──
+// ── Name relevance check to avoid false positives ──
+function isRelevantMatch(searchTerm: string, resultName: string, allTerms: string[]): boolean {
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normalizedResult = normalize(resultName);
+
+  for (const term of [searchTerm, ...allTerms]) {
+    const normalizedTerm = normalize(term);
+    if (!normalizedTerm) continue;
+    // Direct substring match
+    if (normalizedResult.includes(normalizedTerm) || normalizedTerm.includes(normalizedResult)) return true;
+    // Core name match (e.g. "bpc157" in "bodyprotectioncompound157")
+    const core = normalizedTerm.replace(/oral|injectable|nasal|subcutaneous/g, "").trim();
+    if (core && normalizedResult.includes(core)) return true;
+  }
+  return false;
+}
+
+// ── Multi-source sequence search ──
 async function searchSequence(name: string, aliases: string[]): Promise<any> {
+  const result =
+    (await searchSequenceUniProt(name, aliases)) ||
+    (await searchSequenceNCBI(name, aliases)) ||
+    (await searchSequencePubChem(name, aliases));
+  return result;
+}
+
+// ── UniProt ──
+async function searchSequenceUniProt(name: string, aliases: string[]): Promise<any> {
   const searchTerms = [name, ...aliases].filter(Boolean);
 
   for (const term of searchTerms) {
@@ -93,6 +121,12 @@ async function searchSequence(name: string, aliases: string[]): Promise<any> {
             best.proteinDescription?.submittedName?.[0]?.fullName?.value ||
             cleanTerm;
 
+          // ── Relevance check: reject false positives ──
+          if (!isRelevantMatch(cleanTerm, proteinName, searchTerms)) {
+            console.log(`[suggest-correction] UniProt SKIPPED: "${proteinName}" not relevant to "${cleanTerm}"`);
+            continue;
+          }
+
           console.log(`[suggest-correction] UniProt found: ${proteinName} (${seq.length} aa)`);
 
           return {
@@ -116,6 +150,140 @@ async function searchSequence(name: string, aliases: string[]): Promise<any> {
       }
     } catch (e) {
       console.log(`[suggest-correction] UniProt error for "${term}":`, e.message);
+    }
+  }
+
+  return null;
+}
+
+// ── NCBI Protein (via ESearch + EFetch) ──
+async function searchSequenceNCBI(name: string, aliases: string[]): Promise<any> {
+  const searchTerms = [name, ...aliases].filter(Boolean);
+
+  for (const term of searchTerms) {
+    try {
+      const cleanTerm = term.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
+      const query = encodeURIComponent(`${cleanTerm} peptide`);
+
+      console.log(`[suggest-correction] NCBI Protein search: "${cleanTerm}"`);
+
+      // Step 1: Search for protein IDs
+      const searchUrl = `${NCBI_PROTEIN_BASE}/esearch.fcgi?db=protein&term=${query}&retmax=3&retmode=json`;
+      const searchRes = await fetch(searchUrl, { signal: AbortSignal.timeout(10000) });
+      if (!searchRes.ok) { await searchRes.text(); continue; }
+
+      const searchData = await searchRes.json();
+      const ids = searchData.esearchresult?.idlist || [];
+      if (ids.length === 0) continue;
+
+      console.log(`[suggest-correction] NCBI Protein found ${ids.length} IDs`);
+
+      // Step 2: Fetch FASTA for first result
+      const fastaUrl = `${NCBI_PROTEIN_BASE}/efetch.fcgi?db=protein&id=${ids[0]}&rettype=fasta&retmode=text`;
+      const fastaRes = await fetch(fastaUrl, { signal: AbortSignal.timeout(10000) });
+      if (!fastaRes.ok) { await fastaRes.text(); continue; }
+
+      const fastaText = await fastaRes.text();
+      const lines = fastaText.split("\n");
+      const header = lines[0] || "";
+      const seq = lines.slice(1).join("").replace(/\s/g, "");
+
+      if (seq && seq.length >= 3 && /^[A-Za-z]+$/.test(seq)) {
+        // ── Relevance check ──
+        if (!isRelevantMatch(cleanTerm, header, searchTerms)) {
+          console.log(`[suggest-correction] NCBI SKIPPED: header not relevant to "${cleanTerm}"`);
+          continue;
+        }
+
+        console.log(`[suggest-correction] NCBI Protein found sequence (${seq.length} aa)`);
+
+        return {
+          field: "sequence",
+          proposed_value: seq,
+          source: "NCBI Protein",
+          source_id: `GI:${ids[0]}`,
+          confidence: 70,
+          confidence_level: "medium",
+          change_type: "add",
+          description: `Sequência encontrada no NCBI Protein (${seq.length} aminoácidos)`,
+          impact: "A sequência aparecerá na seção de informações moleculares",
+          extra: {
+            ncbi_id: ids[0],
+            header: header.substring(0, 200),
+            length: seq.length,
+          },
+        };
+      }
+    } catch (e) {
+      console.log(`[suggest-correction] NCBI Protein error for "${term}":`, e.message);
+    }
+  }
+
+  return null;
+}
+
+// ── PubChem (compound search → canonical SMILES or IUPAC, fallback for small peptides) ──
+async function searchSequencePubChem(name: string, aliases: string[]): Promise<any> {
+  const searchTerms = [name, ...aliases].filter(Boolean);
+
+  for (const term of searchTerms) {
+    try {
+      const cleanTerm = term.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
+
+      console.log(`[suggest-correction] PubChem search: "${cleanTerm}"`);
+
+      // Search compound by name
+      const url = `${PUBCHEM_BASE}/compound/name/${encodeURIComponent(cleanTerm)}/JSON`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+
+      if (!res.ok) {
+        await res.text();
+        continue;
+      }
+
+      const data = await res.json();
+      const compound = data?.PC_Compounds?.[0];
+      if (!compound) continue;
+
+      const cid = compound.id?.id?.cid;
+      if (!cid) continue;
+
+      // Try to get amino acid sequence from compound properties
+      const propsUrl = `${PUBCHEM_BASE}/compound/cid/${cid}/property/IUPACName,MolecularFormula,CanonicalSMILES/JSON`;
+      const propsRes = await fetch(propsUrl, { signal: AbortSignal.timeout(8000) });
+      if (!propsRes.ok) { await propsRes.text(); continue; }
+
+      const propsData = await propsRes.json();
+      const props = propsData?.PropertyTable?.Properties?.[0];
+      if (!props) continue;
+
+      const iupacName = props.IUPACName || "";
+      const formula = props.MolecularFormula || "";
+
+      // PubChem doesn't give amino acid sequences directly,
+      // but we can report the molecular identity as useful metadata
+      if (iupacName || formula) {
+        console.log(`[suggest-correction] PubChem found CID:${cid} for "${cleanTerm}"`);
+
+        return {
+          field: "source_origins",
+          proposed_value: ["PubChem"],
+          source: "PubChem",
+          source_id: `CID:${cid}`,
+          confidence: 55,
+          confidence_level: "medium",
+          change_type: "merge",
+          description: `Composto encontrado no PubChem (CID:${cid}) — identidade molecular confirmada`,
+          impact: "O PubChem CID será adicionado às origens rastreadas",
+          extra: {
+            cid,
+            iupac_name: iupacName.substring(0, 300),
+            molecular_formula: formula,
+          },
+        };
+      }
+    } catch (e) {
+      console.log(`[suggest-correction] PubChem error for "${term}":`, e.message);
     }
   }
 
