@@ -369,17 +369,19 @@ async function searchSequenceNCBI(terms: string[]): Promise<any> {
       const seq = lines.slice(1).join("").replace(/\s/g, "");
 
       if (seq && seq.length >= 3 && /^[A-Za-z]+$/.test(seq)) {
-        if (!isRelevantMatch(term, header, terms)) {
-          console.log(`[suggest-correction] NCBI SKIPPED: header not relevant to "${term}"`);
-          continue;
-        }
-        console.log(`[suggest-correction] NCBI Protein found sequence (${seq.length} aa)`);
+        const relevant = isRelevantMatch(term, header, terms);
+        // Accept NCBI results even without name match — the search query was specific enough.
+        // Lower confidence when header doesn't match the peptide name directly.
+        const confidence = relevant ? 70 : 50;
+        const level = relevant ? "medium" : "low";
+        const note = relevant ? "" : " (correspondência indireta — requer revisão manual)";
+        console.log(`[suggest-correction] NCBI Protein found sequence (${seq.length} aa)${relevant ? "" : " [indirect match]"}`);
         return {
           field: "sequence", proposed_value: seq, source: "NCBI Protein",
-          source_id: `GI:${ids[0]}`, confidence: 70, confidence_level: "medium", change_type: "add",
-          description: `Sequência encontrada no NCBI Protein (${seq.length} aminoácidos)`,
+          source_id: `GI:${ids[0]}`, confidence, confidence_level: level, change_type: "add",
+          description: `Sequência encontrada no NCBI Protein (${seq.length} aminoácidos)${note}`,
           impact: "A sequência aparecerá na seção de informações moleculares",
-          extra: { ncbi_id: ids[0], header: header.substring(0, 200), length: seq.length },
+          extra: { ncbi_id: ids[0], header: header.substring(0, 200), length: seq.length, indirect_match: !relevant },
         };
       }
     } catch (e) { console.log(`[suggest-correction] NCBI Protein error for "${term}":`, e.message); }
