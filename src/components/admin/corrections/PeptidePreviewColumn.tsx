@@ -21,7 +21,7 @@ interface RawDosageRow { indicacao?: string; objetivo?: string; dose: string; fr
 interface NormalizedDosageRow { indicacao: string; dose: string; frequencia: string; duracao: string; }
 interface RawPhaseRow { fase: string; dose?: string; notas?: string; unidades?: string; duracao?: string; descricao?: string; }
 interface NormalizedPhaseRow { fase: string; dose: string; detalhes: string; }
-interface Reference { titulo: string; fonte: string; ano: number; pmid?: string; }
+interface Reference { titulo?: string; title?: string; fonte?: string; source?: string; journal?: string; ano?: number; year?: number; pmid?: string; authors?: string; }
 interface OldInteraction { nome: string; status: string; descricao: string; }
 interface OldInteractionsData { peptideos?: OldInteraction[]; outras_substancias?: OldInteraction[]; }
 interface NewInteraction { tipo: string; peptideo: string; descricao: string; }
