@@ -559,8 +559,9 @@ async function searchSources(terms: string[]): Promise<any> {
   };
 }
 
-// ── Incomplete data search ──
+// ── Incomplete data search (UniProt → PubMed fallback) ──
 async function searchIncompleteData(terms: string[]): Promise<any> {
+  // Try UniProt for mechanism of action
   for (const term of terms) {
     try {
       const res = await fetch(
@@ -588,5 +589,55 @@ async function searchIncompleteData(terms: string[]): Promise<any> {
       }
     } catch (e) { console.log(`[suggest-correction] Incomplete data error:`, e.message); }
   }
+
+  // Fallback: search PubMed for general references about the peptide
+  for (const term of terms) {
+    try {
+      const query = encodeURIComponent(`${term} peptide`);
+      console.log(`[suggest-correction] Incomplete data PubMed fallback: "${term}"`);
+
+      const searchUrl = `${PUBMED_BASE}/esearch.fcgi?db=pubmed&term=${query}&retmax=5&retmode=json&sort=relevance`;
+      const searchRes = await fetch(searchUrl, { signal: AbortSignal.timeout(10000) });
+      if (!searchRes.ok) continue;
+
+      const searchData = await searchRes.json();
+      const ids = searchData.esearchresult?.idlist || [];
+      if (ids.length === 0) continue;
+
+      const summaryUrl = `${PUBMED_BASE}/esummary.fcgi?db=pubmed&id=${ids.join(",")}&retmode=json`;
+      const summaryRes = await fetch(summaryUrl, { signal: AbortSignal.timeout(10000) });
+      if (!summaryRes.ok) continue;
+
+      const summaryData = await summaryRes.json();
+      const articles = ids
+        .map((id: string) => {
+          const article = summaryData.result?.[id];
+          if (!article || !article.title) return null;
+          return {
+            title: article.title.replace(/<[^>]*>/g, ""),
+            journal: article.fulljournalname || article.source || null,
+            year: parseInt((article.pubdate || "").substring(0, 4)) || null,
+            pmid: id,
+          };
+        })
+        .filter(Boolean);
+
+      if (articles.length > 0) {
+        return {
+          field: "scientific_references",
+          proposed_value: articles,
+          source: "PubMed",
+          source_id: null,
+          confidence: 60,
+          confidence_level: "medium",
+          change_type: "merge",
+          description: `${articles.length} referência(s) encontrada(s) no PubMed para complementar dados de "${term}"`,
+          impact: "Referências científicas serão adicionadas ao peptídeo",
+          extra: { count: articles.length, search_type: "incomplete_data_fallback" },
+        };
+      }
+    } catch (e) { console.log(`[suggest-correction] Incomplete data PubMed error:`, e.message); }
+  }
+
   return null;
 }
