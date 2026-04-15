@@ -19,9 +19,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
-  ArrowLeft, CheckCircle2, XCircle, AlertTriangle, Loader2,
+  ArrowLeft, ArrowRight, CheckCircle2, XCircle, AlertTriangle, Loader2,
   Sparkles, Edit3, RefreshCw, History, SearchX, Eye, EyeOff,
-  Link2, Unlink, Filter, FileCode, Wrench, Globe, Shield
+  Link2, Unlink, Filter, FileCode, Wrench, Globe, Shield, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { fieldLabel } from "./correctionEngine";
 import { generateSuggestion, analyzeConflict, type Suggestion } from "./suggestionEngine";
