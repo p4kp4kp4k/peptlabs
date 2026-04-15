@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -182,6 +182,23 @@ const timeAgo = (date: string | null) => {
 // ── Main Component ──
 
 export default function AdminSyncIntelligence() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("subtab") || "overview";
+
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", "integrations");
+    next.set("subtab", value);
+
+    if (value !== "audit") {
+      next.delete("auditSeverity");
+      next.delete("auditPage");
+      next.delete("auditScope");
+    }
+
+    setSearchParams(next, { replace: true });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -198,7 +215,7 @@ export default function AdminSyncIntelligence() {
         <NotificationBell />
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList className="h-9 bg-secondary/60 p-0.5 flex-wrap">
           <TabsTrigger value="overview" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Activity className="h-3.5 w-3.5" /> Visão Geral
@@ -860,11 +877,12 @@ function AuditTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [severityFilter, setSeverityFilter] = useState<string>("all");
-  const [page, setPage] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const severityFilter = searchParams.get("auditSeverity") || "all";
+  const page = Number(searchParams.get("auditPage") || "0");
   const [selectedFinding, setSelectedFinding] = useState<AuditFinding | null>(null);
   const [correctionOpen, setCorrectionOpen] = useState(false);
-  const [scopeGlobal, setScopeGlobal] = useState(true);
+  const scopeGlobal = searchParams.get("auditScope") !== "run";
   const [bulkOpen, setBulkOpen] = useState(false);
   const PAGE_SIZE = 15;
 
@@ -1103,10 +1121,16 @@ function AuditTab() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  // Reset page when filter changes
+  const updateAuditParams = (updates: Record<string, string>) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", "integrations");
+    next.set("subtab", "audit");
+    Object.entries(updates).forEach(([key, value]) => next.set(key, value));
+    setSearchParams(next, { replace: true });
+  };
+
   const handleFilterChange = (val: string) => {
-    setSeverityFilter(val);
-    setPage(0);
+    updateAuditParams({ auditSeverity: val, auditPage: "0" });
   };
 
   const severityTabs = [
@@ -1161,7 +1185,7 @@ function AuditTab() {
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <span className="text-[10px] text-muted-foreground">Apenas esta execução</span>
                 <button
-                  onClick={() => { setScopeGlobal(prev => !prev); setPage(0); }}
+                  onClick={() => updateAuditParams({ auditScope: scopeGlobal ? "run" : "global", auditPage: "0" })}
                   className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${scopeGlobal ? 'bg-primary' : 'bg-input'}`}
                 >
                   <span className={`inline-block h-3.5 w-3.5 rounded-full bg-background shadow transition-transform ${scopeGlobal ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
@@ -1304,7 +1328,7 @@ function AuditTab() {
                               variant="outline"
                               size="sm"
                               className="h-6 text-[9px] px-2 border-primary/30 text-primary hover:bg-primary/10"
-                              onClick={() => navigate(`/app/admin/review/${f.id}`)}
+                              onClick={() => navigate(`/app/admin/review/${f.id}?returnTo=${encodeURIComponent(`/app/admin?tab=integrations&subtab=audit&auditSeverity=${severityFilter}&auditPage=${page}&auditScope=${scopeGlobal ? "global" : "run"}`)}`)}
                             >
                               <Wrench className="h-2.5 w-2.5 mr-1" /> Ver sugestão
                             </Button>
@@ -1314,7 +1338,7 @@ function AuditTab() {
                               variant="outline"
                               size="sm"
                               className="h-6 text-[9px] px-2 border-purple-400/30 text-purple-400 hover:bg-purple-400/10"
-                              onClick={() => navigate(`/app/admin/review/${f.id}`)}
+                              onClick={() => navigate(`/app/admin/review/${f.id}?returnTo=${encodeURIComponent(`/app/admin?tab=integrations&subtab=audit&auditSeverity=${severityFilter}&auditPage=${page}&auditScope=${scopeGlobal ? "global" : "run"}`)}`)}
                             >
                               <Edit3 className="h-2.5 w-2.5 mr-1" /> Editar manualmente
                             </Button>
@@ -1349,11 +1373,11 @@ function AuditTab() {
               </p>
               <div className="flex gap-1">
                 <Button variant="ghost" size="sm" className="h-7 text-[10px] px-2"
-                  disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                  disabled={page === 0} onClick={() => updateAuditParams({ auditPage: String(page - 1) })}>
                   ← Anterior
                 </Button>
                 <Button variant="ghost" size="sm" className="h-7 text-[10px] px-2"
-                  disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+                  disabled={page >= totalPages - 1} onClick={() => updateAuditParams({ auditPage: String(page + 1) })}>
                   Próxima →
                 </Button>
               </div>
