@@ -1169,6 +1169,10 @@ function AuditTab() {
         </Button>
         <div className="flex-1" />
         <CleanNoiseButton />
+        <AutoApplySuggestionsButton onComplete={() => {
+          queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
+          queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
+        }} />
         <Button
           size="sm"
           className="h-8 text-[11px] gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -1544,6 +1548,46 @@ function CleanNoiseButton() {
     >
       {cleanMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Trash2 className="h-3 w-3 mr-1" />}
       Limpar Ruído
+    </Button>
+  );
+}
+
+// ── Auto Apply Suggestions Button ──
+
+function AutoApplySuggestionsButton({ onComplete }: { onComplete: () => void }) {
+  const { toast } = useToast();
+  const [isRunning, setIsRunning] = useState(false);
+
+  const handleAutoApply = async () => {
+    setIsRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-apply-suggestions", {
+        body: { min_confidence: 60, dry_run: false },
+      });
+      if (error) throw error;
+
+      toast({
+        title: "Sugestões auto-aplicadas",
+        description: `${data.applied} aplicada(s), ${data.skipped} ignorada(s), ${data.errors} erro(s)`,
+      });
+      onComplete();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-8 text-[11px] gap-1.5 border-cyan-400/30 text-cyan-400 hover:bg-cyan-400/10"
+      disabled={isRunning}
+      onClick={handleAutoApply}
+    >
+      {isRunning ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
+      Auto-aplicar Sugestões
     </Button>
   );
 }
