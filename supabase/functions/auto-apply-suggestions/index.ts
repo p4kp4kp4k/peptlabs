@@ -51,6 +51,8 @@ Deno.serve(async (req) => {
     // Categories that support auto-suggestions
     const supportedCategories = ["missing_sequence", "no_references", "no_source", "incomplete_data"];
 
+    const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
     for (const finding of findings) {
       if (!supportedCategories.includes(finding.category)) {
         skipped++;
