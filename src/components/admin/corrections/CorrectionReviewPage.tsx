@@ -683,7 +683,7 @@ export default function CorrectionReviewPage() {
       </div>
 
       {/* ── BODY ── */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex min-w-0 overflow-hidden">
 
         {/* Changes nav sidebar (desktop only) */}
         {!isMobile && (
@@ -763,9 +763,9 @@ export default function CorrectionReviewPage() {
 
         {/* ── Side-by-side columns (desktop) ── */}
         {!isMobile ? (
-          <div className="flex-1 flex">
+          <div className="flex min-w-0 flex-1">
             {/* Left: Current */}
-            <div className="flex-1 border-r border-border overflow-hidden">
+            <div className="min-w-0 flex-1 overflow-hidden border-r border-border">
               <div
                 ref={leftScrollRef}
                 onScroll={() => handleScroll("left")}
@@ -782,7 +782,7 @@ export default function CorrectionReviewPage() {
             </div>
 
             {/* Right: Corrected */}
-            <div className="flex-1 overflow-hidden">
+            <div className="min-w-0 flex-1 overflow-hidden">
               <div
                 ref={rightScrollRef}
                 onScroll={() => handleScroll("right")}
@@ -831,13 +831,13 @@ export default function CorrectionReviewPage() {
                   </div>
                 ) : (
                   /* No suggestion — show peptide preview as-is with clear action panel */
-                  <div className="space-y-3">
+                  <div className="min-w-0 space-y-3">
                     <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-2 mb-1">
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Página Corrigida</p>
                     </div>
 
-                    {/* Info banner */}
-                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mx-1">
+                    <div className="sticky top-8 z-20 px-1 pb-1">
+                      <div className="rounded-xl border border-amber-500/20 bg-background/95 p-4 shadow-lg backdrop-blur-sm">
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                         <div className="flex-1 min-w-0">
@@ -875,7 +875,7 @@ export default function CorrectionReviewPage() {
                         </div>
                       </div>
 
-                      <div className="flex gap-2 mt-3 ml-8">
+                      <div className="mt-3 flex flex-wrap gap-2 ml-8">
                         <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setManualMode(true)}>
                           <Edit3 className="h-3 w-3" /> Editar manualmente
                         </Button>
@@ -887,8 +887,8 @@ export default function CorrectionReviewPage() {
                         </Button>
                       </div>
                     </div>
+                    </div>
 
-                    {/* Still show the peptide preview below */}
                     {peptide && (
                       <PeptidePreviewColumn
                         peptide={peptide as Record<string, any>}
@@ -946,6 +946,19 @@ export default function CorrectionReviewPage() {
               <TabsContent value="corrected" className="flex-1 overflow-y-auto p-3" ref={rightScrollRef as any}>
                 {hasSuggestion && correctedPeptide ? (
                   <PeptidePreviewColumn peptide={correctedPeptide as Record<string, any>} changedFields={changedFields} showHighlights={showHighlights} onlyChanges={false} label="Página Corrigida" />
+                ) : peptide ? (
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-amber-500/20 bg-background/95 p-3 shadow-lg backdrop-blur-sm">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-foreground">{emptySuggestionState.title}</p>
+                          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{emptySuggestionState.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <PeptidePreviewColumn peptide={peptide as Record<string, any>} changedFields={[]} showHighlights={false} onlyChanges={false} label="Página Corrigida" />
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-16 gap-3">
                     <SearchX className="h-8 w-8 text-muted-foreground/50" />
