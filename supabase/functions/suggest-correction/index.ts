@@ -69,7 +69,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[suggest-correction] Start: ${category} for "${peptide_name}"`);
+    const searchTerms = buildSearchTerms(peptide_name, aliases || []);
+    console.log(`[suggest-correction] Start: ${category} for "${peptide_name}" → terms: ${searchTerms.join(", ")}`);
 
     let result: any = null;
 
