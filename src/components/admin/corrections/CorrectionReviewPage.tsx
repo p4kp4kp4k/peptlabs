@@ -19,9 +19,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
-  ArrowLeft, CheckCircle2, XCircle, AlertTriangle, Loader2,
+  ArrowLeft, ArrowRight, CheckCircle2, XCircle, AlertTriangle, Loader2,
   Sparkles, Edit3, RefreshCw, History, SearchX, Eye, EyeOff,
-  Link2, Unlink, Filter, FileCode, Wrench, Globe, Shield
+  Link2, Unlink, Filter, FileCode, Wrench, Globe, Shield, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { fieldLabel } from "./correctionEngine";
 import { generateSuggestion, analyzeConflict, type Suggestion } from "./suggestionEngine";
@@ -154,6 +154,32 @@ export default function CorrectionReviewPage() {
     enabled: !!finding?.peptide_id,
   });
 
+  // ── Sibling findings for next/prev navigation ──
+  const { data: siblingFindings = [] } = useQuery({
+    queryKey: ["sibling-findings", finding?.audit_run_id, finding?.severity, finding?.category],
+    queryFn: async () => {
+      if (!finding) return [];
+      // Get open findings matching the current filter context
+      const query = supabase
+        .from("audit_findings")
+        .select("id, peptides(name)")
+        .eq("status", "open")
+        .order("created_at", { ascending: true });
+      
+      const { data } = await query;
+      return data || [];
+    },
+    enabled: !!finding,
+  });
+
+  const currentFindingIdx = siblingFindings.findIndex((f: any) => f.id === findingId);
+  const prevFinding = currentFindingIdx > 0 ? siblingFindings[currentFindingIdx - 1] : null;
+  const nextFinding = currentFindingIdx < siblingFindings.length - 1 ? siblingFindings[currentFindingIdx + 1] : null;
+
+  const navigateToFinding = (id: string) => {
+    navigate(`/app/admin/review/${id}?${searchParams.toString()}`, { replace: true });
+  };
+
   // ── Build corrected peptide ──
   const hasSuggestion = !!suggestion && suggestion.proposedValue !== null;
 
@@ -272,7 +298,12 @@ export default function CorrectionReviewPage() {
       toast({ title: "Correção aplicada", description: "Dados atualizados com sucesso" });
       queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
       queryClient.invalidateQueries({ queryKey: ["open-findings-count"] });
-      goBackToAudit();
+      queryClient.invalidateQueries({ queryKey: ["sibling-findings"] });
+      if (nextFinding) {
+        navigateToFinding(nextFinding.id);
+      } else {
+        goBackToAudit();
+      }
     },
     onError: (err: any) => {
       toast({ title: "Erro ao aplicar correção", description: err.message, variant: "destructive" });
@@ -291,7 +322,12 @@ export default function CorrectionReviewPage() {
     onSuccess: () => {
       toast({ title: "Finding ignorado" });
       queryClient.invalidateQueries({ queryKey: ["audit-findings"] });
-      goBackToAudit();
+      queryClient.invalidateQueries({ queryKey: ["sibling-findings"] });
+      if (nextFinding) {
+        navigateToFinding(nextFinding.id);
+      } else {
+        goBackToAudit();
+      }
     },
   });
 
@@ -346,6 +382,29 @@ export default function CorrectionReviewPage() {
           <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={goBackToAudit}>
             <ArrowLeft className="h-3 w-3" /> Voltar
           </Button>
+
+          {/* Prev / Next navigation */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline" size="sm" className="h-7 text-[10px] gap-0.5 px-2"
+              disabled={!prevFinding}
+              onClick={() => prevFinding && navigateToFinding(prevFinding.id)}
+            >
+              <ChevronLeft className="h-3 w-3" /> Anterior
+            </Button>
+            {siblingFindings.length > 0 && (
+              <span className="text-[9px] text-muted-foreground px-1">
+                {currentFindingIdx + 1}/{siblingFindings.length}
+              </span>
+            )}
+            <Button
+              variant="outline" size="sm" className="h-7 text-[10px] gap-0.5 px-2"
+              disabled={!nextFinding}
+              onClick={() => nextFinding && navigateToFinding(nextFinding.id)}
+            >
+              Próximo <ChevronRight className="h-3 w-3" />
+            </Button>
+          </div>
 
           <div className="h-4 w-px bg-border" />
 

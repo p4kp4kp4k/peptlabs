@@ -369,48 +369,112 @@ async function searchReferences(name: string): Promise<any> {
 // ── Source origins search (REQUIRES real evidence, not just search hits) ──
 async function searchSources(name: string, aliases: string[]): Promise<any> {
   const origins: Array<{ source: string; id: string; detail: string }> = [];
+  const searchTerms = [name, ...aliases].filter(Boolean);
 
-  // Check UniProt — only count if we get an accession ID
-  try {
-    const cleanName = name.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
-    const query = encodeURIComponent(cleanName);
-    const res = await fetch(
-      `${UNIPROT_BASE}/search?query=${query}&size=1&format=json`,
-      { signal: AbortSignal.timeout(8000), headers: { Accept: "application/json" } }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      const best = (data.results || [])[0];
-      if (best?.primaryAccession) {
-        origins.push({
-          source: "UniProt",
-          id: best.primaryAccession,
-          detail: best.proteinDescription?.recommendedName?.fullName?.value || cleanName,
-        });
+  // Check UniProt — try all terms, only count if we get an accession ID
+  for (const term of searchTerms) {
+    if (origins.find(o => o.source === "UniProt")) break;
+    try {
+      const cleanTerm = term.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
+      if (!cleanTerm) continue;
+      const query = encodeURIComponent(cleanTerm);
+      console.log(`[suggest-correction] Source UniProt search: "${cleanTerm}"`);
+      const res = await fetch(
+        `${UNIPROT_BASE}/search?query=${query}&size=3&format=json`,
+        { signal: AbortSignal.timeout(8000), headers: { Accept: "application/json" } }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const results = data.results || [];
+        for (const best of results) {
+          if (best?.primaryAccession) {
+            const proteinName = best.proteinDescription?.recommendedName?.fullName?.value || cleanTerm;
+            if (isRelevantMatch(cleanTerm, proteinName, searchTerms)) {
+              origins.push({
+                source: "UniProt",
+                id: best.primaryAccession,
+                detail: proteinName,
+              });
+              break;
+            }
+          }
+        }
       }
-    }
-  } catch {}
+    } catch {}
+  }
 
-  // Check PubMed — only count if we get at least one real PMID
-  try {
-    const cleanName = name.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
-    const query = encodeURIComponent(`${cleanName} peptide`);
-    const res = await fetch(
-      `${PUBMED_BASE}/esearch.fcgi?db=pubmed&term=${query}&retmax=3&retmode=json`,
-      { signal: AbortSignal.timeout(8000) }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      const ids = data.esearchresult?.idlist || [];
-      if (ids.length > 0) {
-        origins.push({
-          source: "PubMed",
-          id: `PMID:${ids[0]}`,
-          detail: `${ids.length} artigo(s) encontrado(s)`,
-        });
+  // Check PubMed — try all terms, only count if we get at least one real PMID
+  for (const term of searchTerms) {
+    if (origins.find(o => o.source === "PubMed")) break;
+    try {
+      const cleanTerm = term.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
+      if (!cleanTerm) continue;
+      const query = encodeURIComponent(`${cleanTerm} peptide`);
+      console.log(`[suggest-correction] Source PubMed search: "${cleanTerm}"`);
+      const res = await fetch(
+        `${PUBMED_BASE}/esearch.fcgi?db=pubmed&term=${query}&retmax=5&retmode=json`,
+        { signal: AbortSignal.timeout(8000) }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const ids = data.esearchresult?.idlist || [];
+        if (ids.length > 0) {
+          origins.push({
+            source: "PubMed",
+            id: `PMID:${ids[0]}`,
+            detail: `${ids.length} artigo(s) encontrado(s)`,
+          });
+        }
       }
-    }
-  } catch {}
+    } catch {}
+  }
+
+  // Check PubChem — try to find compound CID
+  for (const term of searchTerms) {
+    if (origins.find(o => o.source === "PubChem")) break;
+    try {
+      const cleanTerm = term.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
+      if (!cleanTerm) continue;
+      console.log(`[suggest-correction] Source PubChem search: "${cleanTerm}"`);
+      const url = `${PUBCHEM_BASE}/compound/name/${encodeURIComponent(cleanTerm)}/JSON`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (res.ok) {
+        const data = await res.json();
+        const cid = data?.PC_Compounds?.[0]?.id?.id?.cid;
+        if (cid) {
+          origins.push({
+            source: "PubChem",
+            id: `CID:${cid}`,
+            detail: `Composto identificado (CID:${cid})`,
+          });
+        }
+      }
+    } catch {}
+  }
+
+  // Check NCBI Protein
+  for (const term of searchTerms) {
+    if (origins.find(o => o.source === "NCBI Protein")) break;
+    try {
+      const cleanTerm = term.replace(/[^a-zA-Z0-9\s-]/g, "").trim();
+      if (!cleanTerm) continue;
+      const query = encodeURIComponent(`${cleanTerm} peptide`);
+      console.log(`[suggest-correction] Source NCBI search: "${cleanTerm}"`);
+      const searchUrl = `${NCBI_PROTEIN_BASE}/esearch.fcgi?db=protein&term=${query}&retmax=1&retmode=json`;
+      const res = await fetch(searchUrl, { signal: AbortSignal.timeout(8000) });
+      if (res.ok) {
+        const data = await res.json();
+        const ids = data.esearchresult?.idlist || [];
+        if (ids.length > 0) {
+          origins.push({
+            source: "NCBI Protein",
+            id: `GI:${ids[0]}`,
+            detail: `Proteína encontrada`,
+          });
+        }
+      }
+    } catch {}
+  }
 
   if (origins.length === 0) return null;
 
@@ -420,8 +484,8 @@ async function searchSources(name: string, aliases: string[]): Promise<any> {
     proposed_value: origins.map(o => o.source),
     source: origins.map(o => o.source).join(", "),
     source_id: origins.map(o => o.id).join(", "),
-    confidence: 80,
-    confidence_level: "high",
+    confidence: origins.length >= 3 ? 90 : origins.length >= 2 ? 80 : 65,
+    confidence_level: origins.length >= 2 ? "high" : "medium",
     change_type: "merge",
     description: `${origins.length} origem(ns) com evidência real para "${name}"`,
     impact: "As origens serão registradas nos metadados de rastreabilidade",
