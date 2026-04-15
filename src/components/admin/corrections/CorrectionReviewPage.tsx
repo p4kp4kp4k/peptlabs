@@ -5,7 +5,7 @@
  * Replaces the old modal with a premium visual diff experience.
  */
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -62,9 +62,15 @@ const CHANGE_TYPE_MAP: Record<string, ChangeHighlightType> = {
 export default function CorrectionReviewPage() {
   const { findingId } = useParams<{ findingId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const rawReturnTo = searchParams.get("returnTo");
+  const returnTo = rawReturnTo?.startsWith("/app/admin")
+    ? rawReturnTo
+    : "/app/admin?tab=integrations&subtab=audit";
+  const goBackToAudit = () => navigate(returnTo, { replace: true });
 
   // UI state
   const [syncScroll, setSyncScroll] = useState(true);

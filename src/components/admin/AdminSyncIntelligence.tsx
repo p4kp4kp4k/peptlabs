@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -182,6 +182,23 @@ const timeAgo = (date: string | null) => {
 // ── Main Component ──
 
 export default function AdminSyncIntelligence() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("subtab") || "overview";
+
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", "integrations");
+    next.set("subtab", value);
+
+    if (value !== "audit") {
+      next.delete("auditSeverity");
+      next.delete("auditPage");
+      next.delete("auditScope");
+    }
+
+    setSearchParams(next, { replace: true });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -198,7 +215,7 @@ export default function AdminSyncIntelligence() {
         <NotificationBell />
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList className="h-9 bg-secondary/60 p-0.5 flex-wrap">
           <TabsTrigger value="overview" className="text-[11px] gap-1.5 data-[state=active]:bg-card px-3 h-8">
             <Activity className="h-3.5 w-3.5" /> Visão Geral
