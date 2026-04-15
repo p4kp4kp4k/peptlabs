@@ -12,6 +12,28 @@ import { fieldLabel } from "./correctionEngine";
 import { isNoChange, normalizeReferences, normalizeSequence } from "./noChangeFilter";
 import { scoreSuggestion, type ConfidenceResult, type ConfidenceLevel, levelLabel } from "./confidenceEngine";
 
+// ── Field mapping: external field names → valid DB columns ──
+const FIELD_MAP: Record<string, string> = {
+  adverse_events: "side_effects",
+  regulatory_update: "side_effects",
+};
+
+const VALID_PEPTIDE_FIELDS = new Set([
+  "name","slug","category","description","benefits","dosage_info","side_effects",
+  "mechanism","classification","half_life","reconstitution","alternative_names",
+  "timeline","dosage_table","protocol_phases","reconstitution_steps","mechanism_points",
+  "interactions","stacks","scientific_references","goals","application","sequence",
+  "sequence_length","organism","biological_activity","structure_info","source_origins",
+  "confidence_score","ncbi_protein_id","dramp_id","apd_id","peptipedia_id",
+  "tier","access_level","evidence_level",
+]);
+
+/** Map external field names to valid DB columns, skip invalid ones */
+function mapField(raw: string): string | null {
+  const mapped = FIELD_MAP[raw] || raw;
+  return VALID_PEPTIDE_FIELDS.has(mapped) ? mapped : null;
+}
+
 export interface Suggestion {
   findingId: string;
   peptideId: string;
@@ -569,7 +591,12 @@ async function suggestIncompleteDataLocal(
 
   if (changes && changes.length > 0) {
     const change = changes[0];
-    const field = change.field_name || "description";
+    const rawField = change.field_name || "description";
+    const field = mapField(rawField);
+    if (!field) {
+      console.log("[SuggestionEngine] SKIP invalid field from detected_changes:", rawField);
+      return null;
+    }
 
     return {
       findingId: finding.id,
@@ -720,7 +747,12 @@ async function suggestCrossSourceConflict(
   if (!changes || changes.length === 0) return null;
 
   const change = changes[0];
-  const field = change.field_name || "description";
+  const rawField = change.field_name || "description";
+  const field = mapField(rawField);
+  if (!field) {
+    console.log("[SuggestionEngine] SKIP invalid field from detected_changes:", rawField);
+    return null;
+  }
   const source = (change as any).integration_sources;
   const newValue = change.new_value;
 
