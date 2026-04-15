@@ -51,6 +51,8 @@ Deno.serve(async (req) => {
     // Categories that support auto-suggestions
     const supportedCategories = ["missing_sequence", "no_references", "no_source", "incomplete_data"];
 
+    const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
     for (const finding of findings) {
       if (!supportedCategories.includes(finding.category)) {
         skipped++;
@@ -77,6 +79,8 @@ Deno.serve(async (req) => {
       }
 
       try {
+        // Rate-limit: wait between calls to avoid 429
+        await delay(1500);
         // Call suggest-correction to get a suggestion
         const suggestRes = await fetch(
           `${Deno.env.get("SUPABASE_URL")}/functions/v1/suggest-correction`,
