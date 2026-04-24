@@ -10,11 +10,11 @@ import { ThemeProvider } from "@/hooks/useThemeColor";
 import AppLayout from "@/components/AppLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FacebookPixel } from "@/components/FacebookPixel";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded pages
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Library = lazy(() => import("./pages/Library"));
@@ -39,7 +39,16 @@ const Store = lazy(() => import("./pages/Store"));
 const ProductDetailStore = lazy(() => import("./pages/ProductDetailStore"));
 const CorrectionReviewPage = lazy(() => import("./components/admin/corrections/CorrectionReviewPage"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function AutoUpdater() {
   useAutoUpdate();
@@ -74,8 +83,8 @@ const App = () => (
           <FacebookPixel />
           <Routes>
             {/* Public */}
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<Suspense fallback={<PageLoader />}><Index /></Suspense>} />
+            <Route path="/auth" element={<Suspense fallback={<PageLoader />}><Auth /></Suspense>} />
             <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
             <Route path="/admin-login" element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>} />
 

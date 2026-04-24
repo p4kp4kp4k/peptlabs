@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,15 +13,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useThemeColor, themeOptions } from "@/hooks/useThemeColor";
 import { cn } from "@/lib/utils";
-import ParticleBackground from "@/components/landing/ParticleBackground";
 import HeroSection from "@/components/landing/HeroSection";
-import AudienceSection from "@/components/landing/AudienceSection";
-import FeaturesSection from "@/components/landing/FeaturesSection";
-import HowItWorksSection from "@/components/landing/HowItWorksSection";
-import FeaturedPeptidesSection from "@/components/landing/FeaturedPeptidesSection";
-import PricingSection from "@/components/landing/PricingSection";
-import FAQSection from "@/components/landing/FAQSection";
-import FinalCTASection from "@/components/landing/FinalCTASection";
+
+// Lazy: below-the-fold sections + heavy bg
+const ParticleBackground = lazy(() => import("@/components/landing/ParticleBackground"));
+const AudienceSection = lazy(() => import("@/components/landing/AudienceSection"));
+const FeaturesSection = lazy(() => import("@/components/landing/FeaturesSection"));
+const HowItWorksSection = lazy(() => import("@/components/landing/HowItWorksSection"));
+const FeaturedPeptidesSection = lazy(() => import("@/components/landing/FeaturedPeptidesSection"));
+const PricingSection = lazy(() => import("@/components/landing/PricingSection"));
+const FAQSection = lazy(() => import("@/components/landing/FAQSection"));
+const FinalCTASection = lazy(() => import("@/components/landing/FinalCTASection"));
+
+const SectionFallback = () => <div className="h-32" />;
 
 const navItems = [
   { id: "hero", label: "Início", icon: Home },
@@ -114,7 +118,7 @@ const Index = () => {
         </video>
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/20 to-background/60" />
       </div>
-      <ParticleBackground />
+      <Suspense fallback={null}><ParticleBackground /></Suspense>
 
       {/* Fixed Sidebar */}
       <aside className="relative z-20 hidden md:flex flex-col w-56 h-screen border-r border-border/20 bg-background/80 backdrop-blur-2xl shrink-0">
@@ -429,25 +433,27 @@ const Index = () => {
         <div ref={setRef("hero")}>
           <HeroSection />
         </div>
-        <div ref={setRef("audience")}>
-          <AudienceSection />
-        </div>
-        <div ref={setRef("features")}>
-          <FeaturesSection />
-        </div>
-        <div ref={setRef("how")}>
-          <HowItWorksSection />
-        </div>
-        <div ref={setRef("peptides")}>
-          <FeaturedPeptidesSection />
-        </div>
-        <div ref={setRef("pricing")}>
-          <PricingSection />
-        </div>
-        <div ref={setRef("faq")}>
-          <FAQSection />
-        </div>
-        <FinalCTASection />
+        <Suspense fallback={<SectionFallback />}>
+          <div ref={setRef("audience")}>
+            <AudienceSection />
+          </div>
+          <div ref={setRef("features")}>
+            <FeaturesSection />
+          </div>
+          <div ref={setRef("how")}>
+            <HowItWorksSection />
+          </div>
+          <div ref={setRef("peptides")}>
+            <FeaturedPeptidesSection />
+          </div>
+          <div ref={setRef("pricing")}>
+            <PricingSection />
+          </div>
+          <div ref={setRef("faq")}>
+            <FAQSection />
+          </div>
+          <FinalCTASection />
+        </Suspense>
       </main>
     </div>
   );
