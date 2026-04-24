@@ -118,7 +118,7 @@ const Index = () => {
         </video>
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/20 to-background/60" />
       </div>
-      <ParticleBackground />
+      <Suspense fallback={null}><ParticleBackground /></Suspense>
 
       {/* Fixed Sidebar */}
       <aside className="relative z-20 hidden md:flex flex-col w-56 h-screen border-r border-border/20 bg-background/80 backdrop-blur-2xl shrink-0">
@@ -433,25 +433,27 @@ const Index = () => {
         <div ref={setRef("hero")}>
           <HeroSection />
         </div>
-        <div ref={setRef("audience")}>
-          <AudienceSection />
-        </div>
-        <div ref={setRef("features")}>
-          <FeaturesSection />
-        </div>
-        <div ref={setRef("how")}>
-          <HowItWorksSection />
-        </div>
-        <div ref={setRef("peptides")}>
-          <FeaturedPeptidesSection />
-        </div>
-        <div ref={setRef("pricing")}>
-          <PricingSection />
-        </div>
-        <div ref={setRef("faq")}>
-          <FAQSection />
-        </div>
-        <FinalCTASection />
+        <Suspense fallback={<SectionFallback />}>
+          <div ref={setRef("audience")}>
+            <AudienceSection />
+          </div>
+          <div ref={setRef("features")}>
+            <FeaturesSection />
+          </div>
+          <div ref={setRef("how")}>
+            <HowItWorksSection />
+          </div>
+          <div ref={setRef("peptides")}>
+            <FeaturedPeptidesSection />
+          </div>
+          <div ref={setRef("pricing")}>
+            <PricingSection />
+          </div>
+          <div ref={setRef("faq")}>
+            <FAQSection />
+          </div>
+          <FinalCTASection />
+        </Suspense>
       </main>
     </div>
   );
