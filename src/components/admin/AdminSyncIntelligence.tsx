@@ -1110,6 +1110,40 @@ function AuditTab() {
     enabled: openPeptideIds.length > 0,
   });
 
+  const { data: manualReviewMap = {} } = useQuery({
+    queryKey: ["manual-review-map", openPeptideIds.join(",")],
+    queryFn: async () => {
+      if (openPeptideIds.length === 0) return {} as Record<string, Set<string>>;
+
+      const { data: sourceChecks } = await supabase
+        .from("peptide_source_checks" as any)
+        .select("peptide_id, source_provider, lookup_status, suggestion_generated")
+        .in("peptide_id", openPeptideIds)
+        .eq("lookup_status", "strong_match")
+        .eq("suggestion_generated", false);
+
+      const sourceToCategories: Record<string, string[]> = {
+        "UniProt": ["missing_sequence", "no_source", "incomplete_data"],
+        "NCBI Protein": ["missing_sequence", "no_source"],
+        "PubMed": ["no_references", "no_source"],
+        "PubChem": ["no_source"],
+        "Peptipedia": ["missing_sequence", "no_source"],
+        "DRAMP": ["missing_sequence", "no_source"],
+        "APD": ["missing_sequence", "no_source"],
+      };
+
+      const map: Record<string, Set<string>> = {};
+      (sourceChecks || []).forEach((sc: any) => {
+        if (!map[sc.peptide_id]) map[sc.peptide_id] = new Set();
+        const cats = sourceToCategories[sc.source_provider] || [];
+        cats.forEach((cat) => map[sc.peptide_id].add(cat));
+      });
+
+      return map;
+    },
+    enabled: openPeptideIds.length > 0,
+  });
+
   const hasSuggestionFor = (finding: AuditFinding): boolean => {
     if (!finding.peptide_id) return false;
     const semanticAvail = semanticChangeMap[finding.peptide_id];
@@ -1123,6 +1157,11 @@ function AuditTab() {
     }
 
     return true;
+  };
+
+  const hasManualReviewFor = (finding: AuditFinding): boolean => {
+    if (!finding.peptide_id) return false;
+    return !!manualReviewMap[finding.peptide_id]?.has(finding.category);
   };
 
   // Get semantic badges for a finding
@@ -1203,7 +1242,7 @@ function AuditTab() {
   };
 
   const countWithSuggestion = reviewableOpen.length;
-  const countManualOnly = allOpen.filter(f => !hasSuggestionFor(f)).length;
+  const countManualOnly = allOpen.filter(f => !hasSuggestionFor(f) && hasManualReviewFor(f)).length;
 
   const filtered = severityFilter === "all"
     ? reviewableOpen
@@ -1212,7 +1251,7 @@ function AuditTab() {
     : severityFilter === "with_suggestion"
     ? reviewableOpen
     : severityFilter === "manual_only"
-    ? allOpen.filter(f => !hasSuggestionFor(f))
+    ? allOpen.filter(f => !hasSuggestionFor(f) && hasManualReviewFor(f))
     : reviewableOpen.filter(f => f.severity === severityFilter);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
