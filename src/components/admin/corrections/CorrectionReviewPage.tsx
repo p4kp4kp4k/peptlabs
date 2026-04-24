@@ -305,14 +305,20 @@ export default function CorrectionReviewPage() {
         return categoryAvail[f.peptide_id].has(f.category);
       };
 
-      // Hide unreviewable: missing_sequence with all providers checked + no strong_match + no suggestion
+      // Hide unreviewable: (1) all providers returned no_change, OR
+      // (2) missing_sequence with no strong_match anywhere
       const isUnreviewable = (f: any) => {
-        if (f.category !== "missing_sequence" || !f.peptide_id) return false;
+        if (!f.peptide_id) return false;
         if (hasSuggForFinding(f)) return false;
         const lookups = lookupByPeptide[f.peptide_id] || {};
         const checked = Object.keys(lookups).length;
         if (checked === 0) return false;
-        return !Object.values(lookups).some((s: any) => s === "strong_match");
+        const statuses = Object.values(lookups);
+        if (statuses.every((s: any) => s === "no_change")) return true;
+        if (f.category === "missing_sequence") {
+          return !statuses.some((s: any) => s === "strong_match");
+        }
+        return false;
       };
 
       const reviewable = allFindings.filter((f: any) => f.id === findingId || !isUnreviewable(f));
