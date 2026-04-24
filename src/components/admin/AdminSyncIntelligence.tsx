@@ -1122,54 +1122,41 @@ function AuditTab() {
     return f.recommendation;
   };
 
-  // Hide findings that are not actionable:
-  //  1) missing_sequence: all providers checked but none returned a strong_match (nothing to import)
-  //  2) any category: all consulted providers returned "no_change" (data already reflects sources)
+  // A finding is only worth reviewing if there is concrete data to apply
+  // (a real suggestion / detected change). Anything else — "no result",
+  // "not consulted", "found data but identical", etc. — is hidden so the
+  // queue only contains actionable items. The "manual_only" tab can still
+  // surface them explicitly on demand.
   const isUnreviewable = (f: AuditFinding): boolean => {
     if (!f.peptide_id) return false;
-    if (hasSuggestionFor(f)) return false; // there IS data to review
-
-    const lookups = lookupStatusMap[f.peptide_id] || {};
-    const providersChecked = Object.keys(lookups).length;
-    if (providersChecked === 0) return false; // not yet checked — keep visible
-
-    const statuses = Object.values(lookups);
-
-    // Rule 2: every consulted provider says "no_change" → data already in sync
-    if (statuses.every(s => s === "no_change")) return true;
-
-    // Rule 1: missing_sequence with no strong_match anywhere → nothing to import
-    if (f.category === "missing_sequence") {
-      return !statuses.some(s => s === "strong_match");
-    }
-
-    return false;
+    return !hasSuggestionFor(f);
   };
 
-  // Apply unreviewable filter globally to OPEN findings (resolved/ignored stay visible)
-  const visibleFindings = findings.filter(f => f.status !== "open" || !isUnreviewable(f));
-  const openFindings = visibleFindings.filter(f => f.status === "open");
+  // Findings without an actionable suggestion are excluded from "Abertos" /
+  // severity tabs, but remain accessible via the "Manual" tab and "Resolvidos".
+  const allOpen = findings.filter(f => f.status === "open");
+  const reviewableOpen = allOpen.filter(f => !isUnreviewable(f));
   const counts = {
-    all: visibleFindings.length,
-    critical: openFindings.filter(f => f.severity === "critical").length,
-    medium: openFindings.filter(f => f.severity === "medium").length,
-    low: openFindings.filter(f => f.severity === "low").length,
-    resolved: visibleFindings.filter(f => f.status === "resolved" || f.status === "ignored").length,
-    open: openFindings.length,
+    all: reviewableOpen.length,
+    critical: reviewableOpen.filter(f => f.severity === "critical").length,
+    medium: reviewableOpen.filter(f => f.severity === "medium").length,
+    low: reviewableOpen.filter(f => f.severity === "low").length,
+    resolved: findings.filter(f => f.status === "resolved" || f.status === "ignored").length,
+    open: reviewableOpen.length,
   };
 
-  const countWithSuggestion = openFindings.filter(f => hasSuggestionFor(f)).length;
-  const countManualOnly = openFindings.filter(f => !hasSuggestionFor(f)).length;
+  const countWithSuggestion = reviewableOpen.length;
+  const countManualOnly = allOpen.filter(f => !hasSuggestionFor(f)).length;
 
   const filtered = severityFilter === "all"
-    ? openFindings
+    ? reviewableOpen
     : severityFilter === "resolved"
-    ? visibleFindings.filter(f => f.status === "resolved" || f.status === "ignored")
+    ? findings.filter(f => f.status === "resolved" || f.status === "ignored")
     : severityFilter === "with_suggestion"
-    ? openFindings.filter(f => hasSuggestionFor(f))
+    ? reviewableOpen
     : severityFilter === "manual_only"
-    ? openFindings.filter(f => !hasSuggestionFor(f))
-    : openFindings.filter(f => f.severity === severityFilter);
+    ? allOpen.filter(f => !hasSuggestionFor(f))
+    : reviewableOpen.filter(f => f.severity === severityFilter);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
