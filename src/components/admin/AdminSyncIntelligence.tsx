@@ -1132,30 +1132,31 @@ function AuditTab() {
     return !hasSuggestionFor(f);
   };
 
-  // Apply unreviewable filter globally to OPEN findings (resolved/ignored stay visible)
-  const visibleFindings = findings.filter(f => f.status !== "open" || !isUnreviewable(f));
-  const openFindings = visibleFindings.filter(f => f.status === "open");
+  // Findings without an actionable suggestion are excluded from "Abertos" /
+  // severity tabs, but remain accessible via the "Manual" tab and "Resolvidos".
+  const allOpen = findings.filter(f => f.status === "open");
+  const reviewableOpen = allOpen.filter(f => !isUnreviewable(f));
   const counts = {
-    all: visibleFindings.length,
-    critical: openFindings.filter(f => f.severity === "critical").length,
-    medium: openFindings.filter(f => f.severity === "medium").length,
-    low: openFindings.filter(f => f.severity === "low").length,
-    resolved: visibleFindings.filter(f => f.status === "resolved" || f.status === "ignored").length,
-    open: openFindings.length,
+    all: reviewableOpen.length,
+    critical: reviewableOpen.filter(f => f.severity === "critical").length,
+    medium: reviewableOpen.filter(f => f.severity === "medium").length,
+    low: reviewableOpen.filter(f => f.severity === "low").length,
+    resolved: findings.filter(f => f.status === "resolved" || f.status === "ignored").length,
+    open: reviewableOpen.length,
   };
 
-  const countWithSuggestion = openFindings.filter(f => hasSuggestionFor(f)).length;
-  const countManualOnly = openFindings.filter(f => !hasSuggestionFor(f)).length;
+  const countWithSuggestion = reviewableOpen.length;
+  const countManualOnly = allOpen.filter(f => !hasSuggestionFor(f)).length;
 
   const filtered = severityFilter === "all"
-    ? openFindings
+    ? reviewableOpen
     : severityFilter === "resolved"
-    ? visibleFindings.filter(f => f.status === "resolved" || f.status === "ignored")
+    ? findings.filter(f => f.status === "resolved" || f.status === "ignored")
     : severityFilter === "with_suggestion"
-    ? openFindings.filter(f => hasSuggestionFor(f))
+    ? reviewableOpen
     : severityFilter === "manual_only"
-    ? openFindings.filter(f => !hasSuggestionFor(f))
-    : openFindings.filter(f => f.severity === severityFilter);
+    ? allOpen.filter(f => !hasSuggestionFor(f))
+    : reviewableOpen.filter(f => f.severity === severityFilter);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
