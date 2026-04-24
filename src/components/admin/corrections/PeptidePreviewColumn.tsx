@@ -14,6 +14,7 @@ import {
 import SequenceSection from "@/components/peptide/SequenceSection";
 import type { Json } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+import { translateMedicalText } from "./medicalTranslations";
 
 /* ── Normalize helpers (same as PeptideDetail) ── */
 interface TimelineItem { period?: string; periodo?: string; description?: string; efeito?: string; }
@@ -266,7 +267,7 @@ export default function PeptidePreviewColumn({
       {p.side_effects && (
         <PreviewSection id="side_effects" icon={AlertTriangle} title="Efeitos Colaterais" iconColor="text-amber-400" highlight={getHighlight("side_effects")} showHighlights={showHighlights} onlyChanges={onlyChanges}>
           <div className="p-2 rounded-lg bg-amber-500/5 border border-amber-500/15">
-            <p className="text-[10px] text-muted-foreground leading-relaxed">{p.side_effects}</p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">{translateMedicalText(p.side_effects)}</p>
           </div>
         </PreviewSection>
       )}
