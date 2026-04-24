@@ -260,56 +260,71 @@ export default function CorrectionReviewPage() {
       const { data: allFindings } = await query;
       if (!allFindings || allFindings.length === 0) return [];
 
-      // For with_suggestion / manual_only, check peptide_source_checks
-      if (auditSeverity === "with_suggestion" || auditSeverity === "manual_only") {
-        const peptideIds = [...new Set(allFindings.map((f: any) => f.peptide_id).filter(Boolean))];
-        const [{ data: sourceChecks }, { data: changes }, { data: refs }] = await Promise.all([
-          supabase.from("peptide_source_checks" as any)
-            .select("peptide_id, source_provider").eq("suggestion_generated", true).in("peptide_id", peptideIds),
-          supabase.from("detected_changes")
-            .select("peptide_id, field_name").eq("status", "pending").in("peptide_id", peptideIds),
-          supabase.from("peptide_references")
-            .select("peptide_id").in("peptide_id", peptideIds),
-        ]);
+      // Compute per-peptide source check + change availability for ALL findings
+      const peptideIds = [...new Set(allFindings.map((f: any) => f.peptide_id).filter(Boolean))];
+      const [{ data: sourceChecksAll }, { data: changes }, { data: refs }] = await Promise.all([
+        supabase.from("peptide_source_checks" as any)
+          .select("peptide_id, source_provider, lookup_status, suggestion_generated").in("peptide_id", peptideIds),
+        supabase.from("detected_changes")
+          .select("peptide_id, field_name").eq("status", "pending").in("peptide_id", peptideIds),
+        supabase.from("peptide_references")
+          .select("peptide_id").in("peptide_id", peptideIds),
+      ]);
 
-        // Build per-peptide availability map keyed by finding category
-        const categoryAvail: Record<string, Set<string>> = {}; // peptide_id → Set<category>
-        (changes || []).forEach((c: any) => {
-          if (!categoryAvail[c.peptide_id]) categoryAvail[c.peptide_id] = new Set();
-          if (c.field_name === "sequence") categoryAvail[c.peptide_id].add("missing_sequence");
-          if (c.field_name === "scientific_reference") categoryAvail[c.peptide_id].add("no_references");
-          categoryAvail[c.peptide_id].add("cross_source_conflict");
-          categoryAvail[c.peptide_id].add("incomplete_data");
-        });
-        (refs || []).forEach((r: any) => {
-          if (!categoryAvail[r.peptide_id]) categoryAvail[r.peptide_id] = new Set();
-          categoryAvail[r.peptide_id].add("no_references");
-        });
-        const srcToCat: Record<string, string[]> = {
-          "UniProt": ["missing_sequence", "incomplete_data"],
-          "NCBI Protein": ["missing_sequence"],
-          "PubMed": ["no_references"],
-          "PubChem": ["no_source"],
-        };
-        (sourceChecks || []).forEach((sc: any) => {
+      const categoryAvail: Record<string, Set<string>> = {};
+      const lookupByPeptide: Record<string, Record<string, string>> = {};
+
+      (changes || []).forEach((c: any) => {
+        if (!categoryAvail[c.peptide_id]) categoryAvail[c.peptide_id] = new Set();
+        if (c.field_name === "sequence") categoryAvail[c.peptide_id].add("missing_sequence");
+        if (c.field_name === "scientific_reference") categoryAvail[c.peptide_id].add("no_references");
+        categoryAvail[c.peptide_id].add("cross_source_conflict");
+        categoryAvail[c.peptide_id].add("incomplete_data");
+      });
+      (refs || []).forEach((r: any) => {
+        if (!categoryAvail[r.peptide_id]) categoryAvail[r.peptide_id] = new Set();
+        categoryAvail[r.peptide_id].add("no_references");
+      });
+      const srcToCat: Record<string, string[]> = {
+        "UniProt": ["missing_sequence", "incomplete_data"],
+        "NCBI Protein": ["missing_sequence"],
+        "PubMed": ["no_references"],
+        "PubChem": ["no_source"],
+      };
+      (sourceChecksAll || []).forEach((sc: any) => {
+        if (!lookupByPeptide[sc.peptide_id]) lookupByPeptide[sc.peptide_id] = {};
+        lookupByPeptide[sc.peptide_id][sc.source_provider] = sc.lookup_status;
+        if (sc.suggestion_generated) {
           if (!categoryAvail[sc.peptide_id]) categoryAvail[sc.peptide_id] = new Set();
           (srcToCat[sc.source_provider] || []).forEach((cat: string) => categoryAvail[sc.peptide_id].add(cat));
-        });
-
-        // A finding "has suggestion" only if its category matches available data
-        const hasSuggForFinding = (f: any) => {
-          if (!f.peptide_id || !categoryAvail[f.peptide_id]) return false;
-          return categoryAvail[f.peptide_id].has(f.category);
-        };
-
-        if (auditSeverity === "with_suggestion") {
-          return allFindings.filter(hasSuggForFinding);
-        } else {
-          return allFindings.filter((f: any) => !hasSuggForFinding(f));
         }
+      });
+
+      const hasSuggForFinding = (f: any) => {
+        if (!f.peptide_id || !categoryAvail[f.peptide_id]) return false;
+        return categoryAvail[f.peptide_id].has(f.category);
+      };
+
+      // Hide unreviewable: missing_sequence with all providers checked + no strong_match + no suggestion
+      const isUnreviewable = (f: any) => {
+        if (f.category !== "missing_sequence" || !f.peptide_id) return false;
+        if (hasSuggForFinding(f)) return false;
+        const lookups = lookupByPeptide[f.peptide_id] || {};
+        const checked = Object.keys(lookups).length;
+        if (checked === 0) return false;
+        return !Object.values(lookups).some((s: any) => s === "strong_match");
+      };
+
+      const reviewable = allFindings.filter((f: any) => f.id === findingId || !isUnreviewable(f));
+
+      if (auditSeverity === "with_suggestion") {
+        return reviewable.filter(hasSuggForFinding);
+      }
+      if (auditSeverity === "manual_only") {
+        return reviewable.filter((f: any) => !hasSuggForFinding(f));
       }
 
-      return allFindings;
+      return reviewable;
     },
     enabled: !!finding,
   });
