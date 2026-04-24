@@ -1067,11 +1067,62 @@ function AuditTab() {
     enabled: openPeptideIds.length > 0,
   });
 
+  const { data: semanticChangeMap = {} } = useQuery({
+    queryKey: ["semantic-change-map", openPeptideIds.join(",")],
+    queryFn: async () => {
+      if (openPeptideIds.length === 0) return {} as Record<string, Set<string>>;
+
+      const { data: changes } = await supabase
+        .from("detected_changes")
+        .select("peptide_id, field_name, old_value, new_value")
+        .in("peptide_id", openPeptideIds)
+        .eq("status", "pending");
+
+      const map: Record<string, Set<string>> = {};
+
+      (changes || []).forEach((change: any) => {
+        const peptideId = change.peptide_id as string | null;
+        if (!peptideId) return;
+
+        const field = FINDING_FIELD_MAP[change.field_name] || change.field_name;
+        if (!field) return;
+
+        const noChange = isNoChange(field, change.old_value, change.new_value);
+        if (noChange.isNoChange) return;
+
+        if (!map[peptideId]) map[peptideId] = new Set();
+
+        if (field === "sequence") map[peptideId].add("missing_sequence");
+        if (field === "scientific_references") map[peptideId].add("no_references");
+
+        map[peptideId].add("cross_source_conflict");
+        map[peptideId].add("incomplete_data");
+        map[peptideId].add("no_source");
+      });
+
+      openPeptideIds.forEach((id) => {
+        if (!map[id]) map[id] = new Set();
+        map[id].add("data_inconsistency");
+      });
+
+      return map;
+    },
+    enabled: openPeptideIds.length > 0,
+  });
+
   const hasSuggestionFor = (finding: AuditFinding): boolean => {
     if (!finding.peptide_id) return false;
+    const semanticAvail = semanticChangeMap[finding.peptide_id];
+    if (semanticAvail?.has(finding.category)) return true;
+
     const avail = suggestionAvailability[finding.peptide_id];
-    if (!avail) return false;
-    return avail.has(finding.category);
+    if (!avail?.has(finding.category)) return false;
+
+    if (finding.category === "cross_source_conflict" || finding.category === "missing_sequence" || finding.category === "incomplete_data" || finding.category === "no_source") {
+      return !!semanticAvail?.has(finding.category);
+    }
+
+    return true;
   };
 
   // Get semantic badges for a finding
