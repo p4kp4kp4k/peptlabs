@@ -371,6 +371,16 @@ export default function CorrectionReviewPage() {
     };
   }, [finding?.category, sourceChecks]);
 
+  const isManualReviewable = useMemo(() => {
+    const expectedProviders = CATEGORY_PROVIDER_MAP[finding?.category || ""] || [];
+    const normalizedChecks = normalizeSourceChecks(sourceChecks);
+
+    return expectedProviders.some((provider) => {
+      const info = normalizedChecks[provider];
+      return info?.status === "strong_match_without_suggestion";
+    });
+  }, [finding?.category, sourceChecks]);
+
   const handleRetrySearch = async () => {
     await refetchSuggestion();
     await refetchSourceChecks();
@@ -382,6 +392,14 @@ export default function CorrectionReviewPage() {
 
   // ── Build corrected peptide ──
   const hasSuggestion = hasRenderableSuggestion;
+
+  useEffect(() => {
+    if (findingLoading || suggestionLoading || !finding || !peptide) return;
+    if (hasSuggestion || noChangeSuggestion || isManualReviewable) return;
+
+    toast({ title: "Finding ocultado", description: "Esse item não tem diferença real para revisar." });
+    goBackToAudit();
+  }, [findingLoading, suggestionLoading, finding, peptide, hasSuggestion, noChangeSuggestion, isManualReviewable, toast]);
 
   const correctedPeptide = (() => {
     if (!peptide || !hasSuggestion || !suggestion) return peptide;
