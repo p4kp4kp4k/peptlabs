@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import CorrectionModal from "./corrections/CorrectionModal";
 import BulkApplyModal from "./bulk/BulkApplyModal";
+import { isNoChange } from "./corrections/noChangeFilter";
 
 // ── Types ──
 
@@ -177,6 +178,11 @@ const timeAgo = (date: string | null) => {
   if (hrs < 24) return `${hrs}h atrás`;
   const days = Math.floor(hrs / 24);
   return `${days}d atrás`;
+};
+
+const FINDING_FIELD_MAP: Record<string, string> = {
+  adverse_events: "side_effects",
+  regulatory_update: "side_effects",
 };
 
 // ── Main Component ──
