@@ -14,6 +14,7 @@ import {
 import SequenceSection from "@/components/peptide/SequenceSection";
 import type { Json } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+import { translateMedicalText } from "./medicalTranslations";
 
 /* ── Normalize helpers (same as PeptideDetail) ── */
 interface TimelineItem { period?: string; periodo?: string; description?: string; efeito?: string; }
