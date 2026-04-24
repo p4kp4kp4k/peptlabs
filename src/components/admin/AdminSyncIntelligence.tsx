@@ -1122,28 +1122,14 @@ function AuditTab() {
     return f.recommendation;
   };
 
-  // Hide findings that are not actionable:
-  //  1) missing_sequence: all providers checked but none returned a strong_match (nothing to import)
-  //  2) any category: all consulted providers returned "no_change" (data already reflects sources)
+  // A finding is only worth reviewing if there is concrete data to apply
+  // (a real suggestion / detected change). Anything else — "no result",
+  // "not consulted", "found data but identical", etc. — is hidden so the
+  // queue only contains actionable items. The "manual_only" tab can still
+  // surface them explicitly on demand.
   const isUnreviewable = (f: AuditFinding): boolean => {
     if (!f.peptide_id) return false;
-    if (hasSuggestionFor(f)) return false; // there IS data to review
-
-    const lookups = lookupStatusMap[f.peptide_id] || {};
-    const providersChecked = Object.keys(lookups).length;
-    if (providersChecked === 0) return false; // not yet checked — keep visible
-
-    const statuses = Object.values(lookups);
-
-    // Rule 2: every consulted provider says "no_change" → data already in sync
-    if (statuses.every(s => s === "no_change")) return true;
-
-    // Rule 1: missing_sequence with no strong_match anywhere → nothing to import
-    if (f.category === "missing_sequence") {
-      return !statuses.some(s => s === "strong_match");
-    }
-
-    return false;
+    return !hasSuggestionFor(f);
   };
 
   // Apply unreviewable filter globally to OPEN findings (resolved/ignored stay visible)
