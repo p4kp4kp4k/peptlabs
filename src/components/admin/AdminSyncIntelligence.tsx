@@ -1122,14 +1122,28 @@ function AuditTab() {
     return f.recommendation;
   };
 
-  // Counts per severity — only open findings for severity tabs to match the filtered list
-  const openFindings = findings.filter(f => f.status === "open");
+  // Hide findings that are not actionable: missing_sequence with no usable source data.
+  // If all expected providers were checked and none returned a strong_match, AND no
+  // pending detected_changes for sequence exist, the reviewer has nothing to fix.
+  const isUnreviewable = (f: AuditFinding): boolean => {
+    if (f.category !== "missing_sequence" || !f.peptide_id) return false;
+    if (hasSuggestionFor(f)) return false; // there IS data to review
+    const lookups = lookupStatusMap[f.peptide_id] || {};
+    const providersChecked = Object.keys(lookups).length;
+    if (providersChecked === 0) return false; // not yet checked — keep visible so admin can trigger search
+    const anyStrongMatch = Object.values(lookups).some(s => s === "strong_match");
+    return !anyStrongMatch; // checked + nothing useful → hide
+  };
+
+  // Apply unreviewable filter globally to OPEN findings (resolved/ignored stay visible)
+  const visibleFindings = findings.filter(f => f.status !== "open" || !isUnreviewable(f));
+  const openFindings = visibleFindings.filter(f => f.status === "open");
   const counts = {
-    all: findings.length,
+    all: visibleFindings.length,
     critical: openFindings.filter(f => f.severity === "critical").length,
     medium: openFindings.filter(f => f.severity === "medium").length,
     low: openFindings.filter(f => f.severity === "low").length,
-    resolved: findings.filter(f => f.status === "resolved" || f.status === "ignored").length,
+    resolved: visibleFindings.filter(f => f.status === "resolved" || f.status === "ignored").length,
     open: openFindings.length,
   };
 
@@ -1137,14 +1151,14 @@ function AuditTab() {
   const countManualOnly = openFindings.filter(f => !hasSuggestionFor(f)).length;
 
   const filtered = severityFilter === "all"
-    ? findings.filter(f => f.status === "open")
+    ? openFindings
     : severityFilter === "resolved"
-    ? findings.filter(f => f.status === "resolved" || f.status === "ignored")
+    ? visibleFindings.filter(f => f.status === "resolved" || f.status === "ignored")
     : severityFilter === "with_suggestion"
     ? openFindings.filter(f => hasSuggestionFor(f))
     : severityFilter === "manual_only"
     ? openFindings.filter(f => !hasSuggestionFor(f))
-    : findings.filter(f => f.severity === severityFilter && f.status === "open");
+    : openFindings.filter(f => f.severity === severityFilter);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
