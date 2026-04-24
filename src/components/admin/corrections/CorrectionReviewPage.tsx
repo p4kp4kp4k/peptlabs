@@ -26,6 +26,7 @@ import {
 import { fieldLabel } from "./correctionEngine";
 import { generateSuggestion, analyzeConflict, getSourceChecksForPeptide, type Suggestion } from "./suggestionEngine";
 import PeptidePreviewColumn, { SECTION_MAP, type ChangedField, type ChangeHighlightType } from "./PeptidePreviewColumn";
+import { isNoChange } from "./noChangeFilter";
 
 /* ── Field → Section mapping ── */
 const FIELD_TO_SECTION: Record<string, string> = {
@@ -85,6 +86,11 @@ const SOURCE_STATUS_META: Record<string, { label: string; className: string }> =
   no_match: { label: "Sem resultado", className: "text-muted-foreground bg-secondary/40 border-border" },
   no_evidence: { label: "Sem evidência", className: "text-amber-400 bg-amber-400/10 border-amber-400/30" },
   not_checked: { label: "Não consultada", className: "text-muted-foreground bg-secondary/40 border-border" },
+};
+
+const FINDING_FIELD_MAP: Record<string, string> = {
+  adverse_events: "side_effects",
+  regulatory_update: "side_effects",
 };
 
 function normalizeSourceChecks(raw: Record<string, SourceCheckSummary>) {
@@ -266,7 +272,7 @@ export default function CorrectionReviewPage() {
         supabase.from("peptide_source_checks" as any)
           .select("peptide_id, source_provider, lookup_status, suggestion_generated").in("peptide_id", peptideIds),
         supabase.from("detected_changes")
-          .select("peptide_id, field_name").eq("status", "pending").in("peptide_id", peptideIds),
+          .select("peptide_id, field_name, old_value, new_value").eq("status", "pending").in("peptide_id", peptideIds),
         supabase.from("peptide_references")
           .select("peptide_id").in("peptide_id", peptideIds),
       ]);
@@ -275,11 +281,16 @@ export default function CorrectionReviewPage() {
       const lookupByPeptide: Record<string, Record<string, string>> = {};
 
       (changes || []).forEach((c: any) => {
+        const field = FINDING_FIELD_MAP[c.field_name] || c.field_name;
+        const noChange = isNoChange(field, c.old_value, c.new_value);
+        if (noChange.isNoChange) return;
+
         if (!categoryAvail[c.peptide_id]) categoryAvail[c.peptide_id] = new Set();
-        if (c.field_name === "sequence") categoryAvail[c.peptide_id].add("missing_sequence");
-        if (c.field_name === "scientific_reference") categoryAvail[c.peptide_id].add("no_references");
+        if (field === "sequence") categoryAvail[c.peptide_id].add("missing_sequence");
+        if (field === "scientific_references") categoryAvail[c.peptide_id].add("no_references");
         categoryAvail[c.peptide_id].add("cross_source_conflict");
         categoryAvail[c.peptide_id].add("incomplete_data");
+        categoryAvail[c.peptide_id].add("no_source");
       });
       (refs || []).forEach((r: any) => {
         if (!categoryAvail[r.peptide_id]) categoryAvail[r.peptide_id] = new Set();
