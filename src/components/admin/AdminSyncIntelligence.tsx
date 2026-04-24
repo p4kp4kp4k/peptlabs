@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import CorrectionModal from "./corrections/CorrectionModal";
 import BulkApplyModal from "./bulk/BulkApplyModal";
+import { isNoChange } from "./corrections/noChangeFilter";
 
 // ── Types ──
 
@@ -177,6 +178,11 @@ const timeAgo = (date: string | null) => {
   if (hrs < 24) return `${hrs}h atrás`;
   const days = Math.floor(hrs / 24);
   return `${days}d atrás`;
+};
+
+const FINDING_FIELD_MAP: Record<string, string> = {
+  adverse_events: "side_effects",
+  regulatory_update: "side_effects",
 };
 
 // ── Main Component ──
@@ -1061,11 +1067,101 @@ function AuditTab() {
     enabled: openPeptideIds.length > 0,
   });
 
+  const { data: semanticChangeMap = {} } = useQuery({
+    queryKey: ["semantic-change-map", openPeptideIds.join(",")],
+    queryFn: async () => {
+      if (openPeptideIds.length === 0) return {} as Record<string, Set<string>>;
+
+      const { data: changes } = await supabase
+        .from("detected_changes")
+        .select("peptide_id, field_name, old_value, new_value")
+        .in("peptide_id", openPeptideIds)
+        .eq("status", "pending");
+
+      const map: Record<string, Set<string>> = {};
+
+      (changes || []).forEach((change: any) => {
+        const peptideId = change.peptide_id as string | null;
+        if (!peptideId) return;
+
+        const field = FINDING_FIELD_MAP[change.field_name] || change.field_name;
+        if (!field) return;
+
+        const noChange = isNoChange(field, change.old_value, change.new_value);
+        if (noChange.isNoChange) return;
+
+        if (!map[peptideId]) map[peptideId] = new Set();
+
+        if (field === "sequence") map[peptideId].add("missing_sequence");
+        if (field === "scientific_references") map[peptideId].add("no_references");
+
+        map[peptideId].add("cross_source_conflict");
+        map[peptideId].add("incomplete_data");
+        map[peptideId].add("no_source");
+      });
+
+      openPeptideIds.forEach((id) => {
+        if (!map[id]) map[id] = new Set();
+        map[id].add("data_inconsistency");
+      });
+
+      return map;
+    },
+    enabled: openPeptideIds.length > 0,
+  });
+
+  const { data: manualReviewMap = {} } = useQuery({
+    queryKey: ["manual-review-map", openPeptideIds.join(",")],
+    queryFn: async () => {
+      if (openPeptideIds.length === 0) return {} as Record<string, Set<string>>;
+
+      const { data: sourceChecks } = await supabase
+        .from("peptide_source_checks" as any)
+        .select("peptide_id, source_provider, lookup_status, suggestion_generated")
+        .in("peptide_id", openPeptideIds)
+        .eq("lookup_status", "strong_match")
+        .eq("suggestion_generated", false);
+
+      const sourceToCategories: Record<string, string[]> = {
+        "UniProt": ["missing_sequence", "no_source", "incomplete_data"],
+        "NCBI Protein": ["missing_sequence", "no_source"],
+        "PubMed": ["no_references", "no_source"],
+        "PubChem": ["no_source"],
+        "Peptipedia": ["missing_sequence", "no_source"],
+        "DRAMP": ["missing_sequence", "no_source"],
+        "APD": ["missing_sequence", "no_source"],
+      };
+
+      const map: Record<string, Set<string>> = {};
+      (sourceChecks || []).forEach((sc: any) => {
+        if (!map[sc.peptide_id]) map[sc.peptide_id] = new Set();
+        const cats = sourceToCategories[sc.source_provider] || [];
+        cats.forEach((cat) => map[sc.peptide_id].add(cat));
+      });
+
+      return map;
+    },
+    enabled: openPeptideIds.length > 0,
+  });
+
   const hasSuggestionFor = (finding: AuditFinding): boolean => {
     if (!finding.peptide_id) return false;
+    const semanticAvail = semanticChangeMap[finding.peptide_id];
+    if (semanticAvail?.has(finding.category)) return true;
+
     const avail = suggestionAvailability[finding.peptide_id];
-    if (!avail) return false;
-    return avail.has(finding.category);
+    if (!avail?.has(finding.category)) return false;
+
+    if (finding.category === "cross_source_conflict" || finding.category === "missing_sequence" || finding.category === "incomplete_data" || finding.category === "no_source") {
+      return !!semanticAvail?.has(finding.category);
+    }
+
+    return true;
+  };
+
+  const hasManualReviewFor = (finding: AuditFinding): boolean => {
+    if (!finding.peptide_id) return false;
+    return !!manualReviewMap[finding.peptide_id]?.has(finding.category);
   };
 
   // Get semantic badges for a finding
@@ -1146,7 +1242,7 @@ function AuditTab() {
   };
 
   const countWithSuggestion = reviewableOpen.length;
-  const countManualOnly = allOpen.filter(f => !hasSuggestionFor(f)).length;
+  const countManualOnly = allOpen.filter(f => !hasSuggestionFor(f) && hasManualReviewFor(f)).length;
 
   const filtered = severityFilter === "all"
     ? reviewableOpen
@@ -1155,7 +1251,7 @@ function AuditTab() {
     : severityFilter === "with_suggestion"
     ? reviewableOpen
     : severityFilter === "manual_only"
-    ? allOpen.filter(f => !hasSuggestionFor(f))
+    ? allOpen.filter(f => !hasSuggestionFor(f) && hasManualReviewFor(f))
     : reviewableOpen.filter(f => f.severity === severityFilter);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
