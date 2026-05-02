@@ -1242,7 +1242,10 @@ function AuditTab() {
   };
 
   const countWithSuggestion = reviewableOpen.length;
-  const countManualOnly = allOpen.filter(f => !hasSuggestionFor(f) && hasManualReviewFor(f)).length;
+  // Manual tab = all open findings without an automatic suggestion (regardless of source check).
+  // These need a human reviewer because no automated source produced applicable data.
+  const manualOnlyList = allOpen.filter(f => !hasSuggestionFor(f));
+  const countManualOnly = manualOnlyList.length;
 
   const filtered = severityFilter === "all"
     ? reviewableOpen
@@ -1251,7 +1254,7 @@ function AuditTab() {
     : severityFilter === "with_suggestion"
     ? reviewableOpen
     : severityFilter === "manual_only"
-    ? allOpen.filter(f => !hasSuggestionFor(f) && hasManualReviewFor(f))
+    ? manualOnlyList
     : reviewableOpen.filter(f => f.severity === severityFilter);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
