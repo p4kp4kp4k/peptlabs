@@ -29,8 +29,11 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
-          if (id.includes("react-dom")) return "react-dom";
-          if (id.match(/[\\/](react|react-router|scheduler)[\\/]/)) return "react";
+          // Keep React, ReactDOM, scheduler, and router in a single chunk
+          // to avoid breaking React's internal SECRET_INTERNALS sharing.
+          if (id.match(/[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/)) {
+            return "react-core";
+          }
           if (id.includes("@radix-ui")) return "radix";
           if (id.includes("framer-motion")) return "motion";
           if (id.includes("@tanstack")) return "query";
